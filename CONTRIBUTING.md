@@ -1,0 +1,40 @@
+# Contributing to PowerData Skills
+
+Thank you for considering a contribution to this library.
+
+## Principles
+
+- Follow the standard skill structure (see [templates/skill-template/](templates/skill-template/)).
+- Include at least one worked example per skill.
+- Avoid sensitive, confidential, or organisation-specific information.
+- Use realistic but generic examples.
+- Prefer practical, opinionated guidance over vague best-practice lists.
+- Avoid vendor lock-in unless the skill is clearly and explicitly vendor-oriented.
+- Keep the target user and use case in mind throughout.
+
+## Skill quality bar
+
+A good skill should:
+
+- Define clearly when it should be used.
+- State minimum required inputs.
+- Give the AI agent a structured procedure to follow, not just a goal.
+- Produce a consistent, predictable output format.
+- Include decision rules and practical trade-offs.
+- Make assumptions explicit.
+- Be useful on its own, without needing additional private context.
+
+## How to submit
+
+- Submit one skill per pull request where possible.
+- Include all four standard files: `SKILL.md`, `README.md`, `example-input.md`, `example-output.md`.
+- Place core skills under `skills/core/` and domain-specific skills under `skills/domain/<domain>/`.
+- Follow the folder naming convention: lowercase, hyphen-separated.
+- Write a short description in your pull request explaining the skill, the target user, and the intended use case.
+
+## Style
+
+- Use Australian/British English where natural (modelling, standardisation, prioritisation).
+- Keep headings concise.
+- Avoid excessive marketing language.
+- Write in plain, professional English.
