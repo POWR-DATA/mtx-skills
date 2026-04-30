@@ -1,3 +1,11 @@
+---
+name: medallion-architecture-designer
+description: Design a bronze/silver/gold lakehouse data layer architecture
+author: PowerData
+version: 1.0.0
+license: MIT
+---
+
 # Medallion Architecture Designer
 
 ## Purpose

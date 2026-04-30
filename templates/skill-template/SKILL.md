@@ -1,3 +1,11 @@
+---
+name: skill-name
+description: One-line description of what this skill does
+author: PowerData
+version: 1.0.0
+license: MIT
+---
+
 # [Skill Name]
 
 ## Purpose

@@ -79,7 +79,17 @@ skills/
 
 Skills are plain Markdown files. There is no installation required. You load them into your AI tool by pasting or referencing the skill content.
 
-### Quickest way to get started
+### Quickest way — install with Skillfish
+
+[Skillfish](https://github.com/knoxgraeme/skillfish) is a CLI tool that installs skills into every AI coding agent on your machine in one command:
+
+```bash
+npx skillfish add POWR-DATA/skills
+```
+
+This works with Claude Code, Cursor, Windsurf, GitHub Copilot, Gemini CLI, and 30+ other agents.
+
+### Manual usage
 
 **Claude.ai (web):** Paste this into a new conversation:
 
@@ -102,7 +112,7 @@ Then in Claude Code: `"Apply the dimensional model designer skill to this use ca
 
 **Any other AI tool:** Open a `SKILL.md` file, copy the content, and paste it as instructions into your tool of choice.
 
-See [docs/usage-patterns.md](docs/usage-patterns.md) for detailed guidance including Claude.ai web options, Claude Code project setup, GitHub Copilot, and creating private team versions.
+See [docs/usage-patterns.md](docs/usage-patterns.md) for detailed guidance including Claude.ai web options, Claude Code project setup, Skillfish, and GitHub Copilot.
 
 ---
 

@@ -1,3 +1,11 @@
+---
+name: data-pipeline-designer
+description: Design a high-level data pipeline for source-to-target data flows
+author: PowerData
+version: 1.0.0
+license: MIT
+---
+
 # Data Pipeline Designer
 
 ## Purpose

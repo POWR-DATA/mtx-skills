@@ -1,3 +1,11 @@
+---
+name: dimensional-model-designer
+description: Design a star schema or dimensional model for BI and analytics reporting
+author: PowerData
+version: 1.0.0
+license: MIT
+---
+
 # Dimensional Model Designer
 
 ## Purpose
