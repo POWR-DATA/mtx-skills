@@ -2,30 +2,142 @@
 
 This page describes how to use skills from this library across common AI tools.
 
----
-
-## General approach
-
-Each skill is defined in a `SKILL.md` file. To use a skill:
-
-1. Open the `SKILL.md` for the skill you want.
-2. Copy the full content.
-3. Paste it into your AI tool as system instructions, a role definition, or a custom agent prompt.
-4. Provide the inputs described in the skill's **Inputs expected** section.
-5. Review the structured output.
+The skills in this repo are plain Markdown files. They do not require installation. You load them into an AI tool by pasting, referencing, or copying them — the method depends on which tool you are using.
 
 ---
 
-## Using skills in Claude Code
+## Claude.ai (web)
 
-You can use skills directly in Claude Code:
-
-- Copy the `SKILL.md` content and paste it into a conversation with a clear instruction such as: "Apply the Use Case to Data Requirements skill to the following use case: [your input]."
-- Or reference the `SKILL.md` file directly as context using the `/` file reference and instruct the AI to apply it.
+There are three practical ways to use these skills in Claude.ai, depending on what your account supports.
 
 ---
 
-## Using skills with GitHub Copilot
+### Option A: Bootstrap prompt (recommended starting point)
+
+This approach asks Claude to read the skills repo and use the skills automatically throughout your conversation. It works best when your Claude.ai account has web access enabled.
+
+Paste this into a new Claude.ai conversation:
+
+```
+I have a set of reusable skills here:
+https://github.com/POWR-DATA/skills
+
+Please:
+1. Read the skills in the repo
+2. Summarise what skills are available
+3. Decide when each should be used
+4. Use them automatically when relevant in this conversation
+
+Confirm once loaded.
+```
+
+Claude will read the repo, summarise the available skills, and apply them when relevant for the rest of that conversation.
+
+> **Note:** This works best when web access is enabled on your Claude.ai account. If Claude cannot fetch the URL, use Option B instead.
+
+---
+
+### Option B: Paste a single skill
+
+If you want to use one specific skill, open the `SKILL.md` file for that skill, copy the full content, and paste it into Claude with this instruction:
+
+```
+Here is a skill. Use it when relevant:
+
+[paste SKILL.md content here]
+```
+
+Then provide your inputs as described in the skill's **Inputs expected** section and ask Claude to apply it.
+
+This works on any Claude.ai account without needing web access or custom skill upload.
+
+---
+
+### Option C: Skill upload (where available)
+
+Some Claude.ai accounts support uploading custom skills directly through the UI. If your account has this feature:
+
+1. Go to [claude.ai](https://claude.ai)
+2. Open **Customize**
+3. Go to **Skills**
+4. Look for a **Create skill** or **Upload skill** option
+
+If you only see a **Directory** or marketplace view, custom skill upload is not yet available on your account. Use Option A or Option B instead.
+
+When upload is available, you can upload a zipped skill folder containing the `SKILL.md` and any supporting files. The skill will then be available to apply in future conversations.
+
+---
+
+### GitHub connector note
+
+Claude.ai supports connecting a GitHub account to read repository content as context. This is useful for giving Claude awareness of your codebase or project files.
+
+However, connecting GitHub is not the same as installing skills. It gives Claude read access to a repo during a conversation — it does not persistently load skills or make them available across sessions.
+
+You can still paste the GitHub repo URL as context even if the custom skill upload UI is unavailable. Used alongside the bootstrap prompt in Option A, this is an effective way to work with the full skills library.
+
+---
+
+## Claude Code
+
+Claude Code works best with skills stored locally in your project. The recommended approach is to copy the skills you need into a `.claude/skills/` folder within your project, so Claude Code can reference them directly.
+
+### Setup
+
+```bash
+# Clone the skills repo
+git clone https://github.com/POWR-DATA/skills.git
+
+# In your project, create the skills folder
+mkdir -p .claude/skills
+
+# Copy the skill you want to use
+cp -r /path/to/skills/skills/core/dimensional-model-designer .claude/skills/
+```
+
+Then open Claude Code from your project directory:
+
+```bash
+claude
+```
+
+### Using a skill
+
+Once Claude Code is open, reference the skill naturally:
+
+```
+Use the dimensional model designer skill in .claude/skills/ to design a
+star schema for this reporting use case.
+```
+
+Or reference the file directly:
+
+```
+Apply the skill defined in .claude/skills/dimensional-model-designer/SKILL.md
+to the following use case: [your input]
+```
+
+### Using multiple skills
+
+To make several skills available across a project, copy all the skill folders you need into `.claude/skills/`. You can also add a reference to them in your project's `CLAUDE.md` file so Claude Code is aware of them at the start of every session:
+
+```markdown
+## Available skills
+
+The following reusable skills are available in `.claude/skills/`:
+
+- `dimensional-model-designer` — design star schemas and dimensional models
+- `medallion-architecture-designer` — design bronze/silver/gold lakehouse layers
+- `data-pipeline-designer` — design source-to-target data pipelines
+
+Apply these skills when the user's request matches their purpose.
+```
+
+> **Note:** `.claude/skills/` is a convention, not a built-in Claude Code path. The skills work because Claude Code reads files from your project. The folder name helps keep things organised — you can use any location that makes sense for your project.
+
+---
+
+## GitHub Copilot
 
 Skills can be adapted into Copilot prompt files:
 
@@ -35,10 +147,10 @@ Skills can be adapted into Copilot prompt files:
 
 ---
 
-## Using skills in Cursor or similar tools
+## Cursor or similar tools
 
-- Paste the skill content into a custom agent instruction or system prompt.
-- Skills work well as agent instructions in tools that support persistent context or project rules files.
+- Paste the skill content into a custom agent instruction, system prompt, or project rules file.
+- Skills work well as agent instructions in tools that support persistent context.
 
 ---
 
