@@ -77,13 +77,32 @@ skills/
 
 ## How to use these skills
 
-1. Find the skill that matches your task.
-2. Open the `SKILL.md` file in that folder.
-3. Copy the skill content and paste it as instructions into your AI tool (Claude Code, GitHub Copilot, Cursor, or similar).
-4. Provide your inputs as described in the skill's **Inputs expected** section.
-5. Review the structured output.
+Skills are plain Markdown files. There is no installation required. You load them into your AI tool by pasting or referencing the skill content.
 
-See [docs/usage-patterns.md](docs/usage-patterns.md) for detailed guidance on using skills across different AI tools.
+### Quickest way to get started
+
+**Claude.ai (web):** Paste this into a new conversation:
+
+```
+I have a set of reusable skills here:
+https://github.com/POWR-DATA/skills
+
+Please read the skills, summarise what is available, and use them
+automatically when relevant in this conversation. Confirm once loaded.
+```
+
+**Claude Code:** Copy a skill into your project and reference it directly:
+
+```bash
+mkdir -p .claude/skills
+cp -r /path/to/skills/skills/core/dimensional-model-designer .claude/skills/
+```
+
+Then in Claude Code: `"Apply the dimensional model designer skill to this use case."`
+
+**Any other AI tool:** Open a `SKILL.md` file, copy the content, and paste it as instructions into your tool of choice.
+
+See [docs/usage-patterns.md](docs/usage-patterns.md) for detailed guidance including Claude.ai web options, Claude Code project setup, GitHub Copilot, and creating private team versions.
 
 ---
 
