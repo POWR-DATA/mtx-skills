@@ -12,9 +12,17 @@ A skill is not a prompt. It is a lightweight operating procedure for an AI agent
 
 ## Structure
 
-Every skill should follow this structure:
+Every skill must begin with YAML frontmatter, followed by the standard sections:
 
 ```
+---
+name: skill-name
+description: One-line description of what this skill does
+author: Your name or organisation
+version: 1.0.0
+license: MIT
+---
+
 # Skill Name
 
 ## Purpose
@@ -27,6 +35,14 @@ Every skill should follow this structure:
 ## Avoid
 ## Example usage
 ```
+
+The frontmatter is required for [Skillfish](https://github.com/knoxgraeme/skillfish) compatibility, which allows users to install skills across multiple AI agents in a single command.
+
+**Frontmatter field rules:**
+- `name` — lowercase, hyphen-separated, no spaces, maximum 64 characters (e.g. `dimensional-model-designer`)
+- `description` — one sentence, plain English
+- `version` — use semantic versioning (`1.0.0`)
+- `license` — use `MIT` unless you have a specific reason not to
 
 Use the [skill template](../templates/skill-template/SKILL.md) as your starting point.
 
