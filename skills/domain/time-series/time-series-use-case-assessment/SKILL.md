@@ -1,3 +1,11 @@
+---
+name: time-series-use-case-assessment
+description: Assess time-series use cases and translate them into data ingestion and analytics requirements
+author: PowerData
+version: 1.0.0
+license: MIT
+---
+
 # Time-Series Use Case Assessment
 
 ## Purpose

@@ -1,3 +1,11 @@
+---
+name: use-case-to-data-requirements
+description: Translate a business use case into structured data requirements
+author: PowerData
+version: 1.0.0
+license: MIT
+---
+
 # Use Case to Data Requirements
 
 ## Purpose

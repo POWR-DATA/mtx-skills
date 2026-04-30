@@ -6,6 +6,54 @@ The skills in this repo are plain Markdown files. They do not require installati
 
 ---
 
+## Skillfish (multi-agent install)
+
+[Skillfish](https://github.com/knoxgraeme/skillfish) is an npm-based CLI tool that installs skills from a GitHub repository into every supported AI coding agent on your machine in a single command. It supports over 30 agents including Claude Code, Cursor, Windsurf, GitHub Copilot, and Gemini CLI.
+
+### Install all PowerData skills
+
+```bash
+npx skillfish add POWR-DATA/skills
+```
+
+This detects which AI coding agents are installed on your machine and copies the skills into the appropriate directory for each one.
+
+### Install Skillfish globally (optional)
+
+If you use Skillfish regularly, install it globally:
+
+```bash
+npm install -g skillfish
+skillfish add POWR-DATA/skills
+```
+
+### Pin to a specific version
+
+```bash
+npx skillfish add POWR-DATA/skills@v1.0.0
+```
+
+### Team projects
+
+Add a `skillfish.json` manifest to your project so team members can install all required skills with one command:
+
+```json
+{
+  "version": 1,
+  "skills": ["POWR-DATA/skills"]
+}
+```
+
+Then any team member can run:
+
+```bash
+npx skillfish install
+```
+
+> **Note:** PowerData Skills uses a monorepo structure (multiple skills in one repo). Skillfish behaviour with monorepos should be tested on your machine. If individual skill paths are required, reference them as `POWR-DATA/skills/skills/core/dimensional-model-designer` or similar.
+
+---
+
 ## Claude.ai (web)
 
 There are three practical ways to use these skills in Claude.ai, depending on what your account supports.
