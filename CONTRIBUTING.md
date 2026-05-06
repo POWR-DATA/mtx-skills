@@ -28,7 +28,7 @@ A good skill should:
 
 - Submit one skill per pull request where possible.
 - Include all four standard files: `SKILL.md`, `README.md`, `example-input.md`, `example-output.md`.
-- Place core skills under `skills/core/` and domain-specific skills under `skills/domain/<domain>/`.
+- Place data skills under `skills/data/`, app skills under `skills/app/`, and domain-specific skills under `skills/domain/<domain>/`.
 - Follow the folder naming convention: lowercase, hyphen-separated.
 - Include YAML frontmatter at the top of `SKILL.md` (required for Skillfish compatibility — see the [skill template](templates/skill-template/SKILL.md) for the correct format).
 - Write a short description in your pull request explaining the skill, the target user, and the intended use case.

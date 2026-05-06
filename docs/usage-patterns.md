@@ -50,7 +50,7 @@ Then any team member can run:
 npx skillfish install
 ```
 
-> **Note:** PowerData Skills uses a monorepo structure (multiple skills in one repo). Skillfish behaviour with monorepos should be tested on your machine. If individual skill paths are required, reference them as `POWR-DATA/skills/skills/core/dimensional-model-designer` or similar.
+> **Note:** PowerData Skills uses a monorepo structure (multiple skills in one repo). Skillfish behaviour with monorepos should be tested on your machine. If individual skill paths are required, reference them as `POWR-DATA/skills/skills/data/dimensional-model-designer` or similar.
 
 ---
 
@@ -140,7 +140,7 @@ git clone https://github.com/POWR-DATA/skills.git
 mkdir -p .claude/skills
 
 # Copy the skill you want to use
-cp -r /path/to/skills/skills/core/dimensional-model-designer .claude/skills/
+cp -r /path/to/skills/skills/data/dimensional-model-designer .claude/skills/
 ```
 
 Then open Claude Code from your project directory:

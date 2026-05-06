@@ -8,7 +8,7 @@ assignees: ''
 
 ## Skill
 
-<!-- Which skill does this improvement relate to? e.g. skills/core/dimensional-model-designer -->
+<!-- Which skill does this improvement relate to? e.g. skills/data/dimensional-model-designer -->
 
 ## What is the issue or gap?
 
