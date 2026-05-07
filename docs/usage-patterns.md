@@ -10,6 +10,18 @@ The skills in this repo are plain Markdown files. They do not require installati
 
 [Skillfish](https://github.com/knoxgraeme/skillfish) is an npm-based CLI tool that installs skills from a GitHub repository into every supported AI coding agent on your machine in a single command. It supports over 30 agents including Claude Code, Cursor, Windsurf, GitHub Copilot, and Gemini CLI.
 
+**Prerequisites:** Skillfish requires Node.js. If `npx` is not found, install Node.js first:
+
+```bash
+# Windows (winget)
+winget install OpenJS.NodeJS --accept-source-agreements --accept-package-agreements
+
+# macOS (Homebrew)
+brew install node
+```
+
+Restart your terminal after installing before running any `npx` command.
+
 ### Install all PowerData skills
 
 ```bash
