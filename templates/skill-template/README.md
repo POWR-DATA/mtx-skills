@@ -13,7 +13,7 @@ This folder contains the blank template for creating a new skill.
 
 ## How to use this template
 
-1. Copy the `skill-template/` folder into the appropriate location under `skills/core/` or `skills/domain/<domain>/`.
+1. Copy the `skill-template/` folder into the appropriate location under `skills/data/` or `skills/domain/<domain>/`.
 2. Rename the folder using lowercase, hyphen-separated naming (for example, `customer-churn-assessment`).
 3. Fill in each section of `SKILL.md` using the [skill authoring guide](../../docs/skill-authoring-guide.md) as a reference.
 4. Replace `example-input.md` and `example-output.md` with a realistic worked example.

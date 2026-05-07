@@ -1,4 +1,4 @@
-# Core Skills
+# Data Skills
 
 Foundation skills for common data delivery tasks.
 
@@ -26,6 +26,6 @@ Use Case to Data Requirements
 
 Not every use case needs every skill. A simple reporting request may go straight to the Dimensional Model Designer. A pure ingestion task may start at the Medallion Architecture Designer or Data Pipeline Designer.
 
-## Adding a new core skill
+## Adding a new data skill
 
 Use the [skill template](../../templates/skill-template/) as your starting point. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for submission guidance.

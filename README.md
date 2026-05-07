@@ -38,10 +38,10 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 
 | Skill | Description |
 |---|---|
-| [Use Case to Data Requirements](skills/core/use-case-to-data-requirements/) | Translate a business use case into structured data requirements |
-| [Dimensional Model Designer](skills/core/dimensional-model-designer/) | Design star schema and dimensional models for BI and reporting |
-| [Medallion Architecture Designer](skills/core/medallion-architecture-designer/) | Design bronze/silver/gold lakehouse data layers |
-| [Data Pipeline Designer](skills/core/data-pipeline-designer/) | Design high-level data pipelines for source-to-target data flows |
+| [Use Case to Data Requirements](skills/data/use-case-to-data-requirements/) | Translate a business use case into structured data requirements |
+| [Dimensional Model Designer](skills/data/dimensional-model-designer/) | Design star schema and dimensional models for BI and reporting |
+| [Medallion Architecture Designer](skills/data/medallion-architecture-designer/) | Design bronze/silver/gold lakehouse data layers |
+| [Data Pipeline Designer](skills/data/data-pipeline-designer/) | Design high-level data pipelines for source-to-target data flows |
 
 ### Domain skills
 
@@ -105,7 +105,7 @@ automatically when relevant in this conversation. Confirm once loaded.
 
 ```bash
 mkdir -p .claude/skills
-cp -r /path/to/skills/skills/core/dimensional-model-designer .claude/skills/
+cp -r /path/to/skills/skills/data/dimensional-model-designer .claude/skills/
 ```
 
 Then in Claude Code: `"Apply the dimensional model designer skill to this use case."`
