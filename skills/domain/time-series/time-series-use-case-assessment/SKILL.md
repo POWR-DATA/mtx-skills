@@ -101,3 +101,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 ## Example usage
 
 > "Apply the Time-Series Use Case Assessment skill to the following use case: we want to monitor energy consumption across a manufacturing facility's production lines using data from electrical sub-meters, and identify anomalies and high-consumption periods."
+
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

@@ -4,7 +4,7 @@ This document describes the planned development of the PowerData Skills library.
 
 ---
 
-## V1 — Foundation (current)
+## V1 — Foundation (complete)
 
 - Core skill scaffolds for common data delivery patterns
 - Consistent skill template and file structure
@@ -14,19 +14,26 @@ This document describes the planned development of the PowerData Skills library.
 
 ---
 
-## V2 — Examples and evaluation
+## V2 — App skills (current)
 
-- Additional worked examples for each core skill
+Multi-platform Python app development skills:
+
+- Flet + Supabase App Framework — project scaffolding and integration patterns
+- Flet Multi-Platform Build — Android, iOS, and web Docker CI/CD pipelines
+- Flet ACA Deploy — Azure Container Apps deployment with WebSocket and GHCR guidance
+- App Icon Asset Generation — production icon sets from an approved high-resolution logo
+
+---
+
+## V3 — Data skill depth and domain packs
+
+- Additional worked examples for each data skill
 - Test prompts for evaluating skill quality
 - AI evaluation checklist for reviewing skill output
 - Extensions for reporting and semantic model patterns
 - Additional coverage of BI and metric layer design
 
----
-
-## V3 — Domain packs
-
-Domain-specific skill packs extending the core library:
+Domain-specific skill packs:
 
 - Time-series and industrial data patterns
 - ERP and transactional data ingestion

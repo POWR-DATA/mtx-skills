@@ -102,3 +102,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 ## Example usage
 
 > "Apply the Data Pipeline Designer skill to design a pipeline for ingesting daily CSV sales files from a cloud storage location into a cloud lakehouse. The target consumers are a BI reporting layer and a data science team."
+
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

@@ -365,3 +365,7 @@ Use the fastest tier that answers your question — never push to trigger a CI b
 ## Example usage
 
 > "Scaffold a Flet + Supabase app called GardenTrack targeting Android and web. Users log in then see a list of their plants. Supabase tables: plants (id, user_id, name, species, last_watered date, watering_interval_days int). Show me the full project structure and all files."
+
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

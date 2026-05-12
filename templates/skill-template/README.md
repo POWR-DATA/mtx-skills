@@ -1,26 +1,49 @@
-# Skill Template
+# [Skill Name]
 
-This folder contains the blank template for creating a new skill.
+[One sentence explaining the practical purpose of this skill using clear domain language.]
 
-## Files
+## What this skill does
 
-| File | Purpose |
+[Two to four sentences explaining the task this skill supports, the type of input it expects, and the type of output it produces. Use relevant terms naturally, such as data pipeline design, dimensional modelling, lakehouse architecture, time-series assessment, semantic modelling, analytics engineering or data requirements, only where they genuinely apply.]
+
+## When to use it
+
+- [Scenario 1]
+- [Scenario 2]
+- [Scenario 3]
+- [Scenario 4]
+
+## Example use cases
+
+- [Plain-language example 1]
+- [Plain-language example 2]
+- [Plain-language example 3]
+- [Plain-language example 4]
+
+## Files in this folder
+
+| File | Required | Description |
+|---|---|---|
+| `SKILL.md` | Yes | Full skill definition |
+| `README.md` | Yes | Short navigation guide for this skill (this file) |
+| `example-input.md` | Optional | Example input — include when it helps users frame their request |
+| `example-output.md` | Optional | Example output — include when it sets a useful quality bar or the output is a concrete artefact |
+
+## How to use
+
+Copy the content of `SKILL.md` into your AI tool as an instruction or system prompt. Provide the expected inputs, then review the structured output.
+
+---
+
+*To create a new skill using this template, see the [skill authoring guide](../../docs/skill-authoring-guide.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md).*
+
+---
+
+## Source and attribution
+
+| Item | Details |
 |---|---|
-| `SKILL.md` | The skill definition — copy this to start a new skill |
-| `README.md` | Short navigation guide (this file) |
-| `example-input.md` | Template for documenting an example input |
-| `example-output.md` | Template for documenting an example output |
-
-## How to use this template
-
-1. Copy the `skill-template/` folder into the appropriate location under `skills/data/` or `skills/domain/<domain>/`.
-2. Rename the folder using lowercase, hyphen-separated naming (for example, `customer-churn-assessment`).
-3. Fill in each section of `SKILL.md` using the [skill authoring guide](../../docs/skill-authoring-guide.md) as a reference.
-4. Replace `example-input.md` and `example-output.md` with a realistic worked example.
-5. Update `README.md` to describe the specific skill.
-
-## Naming conventions
-
-- Folder names: lowercase, hyphen-separated
-- Skill name in `SKILL.md`: title case
-- File names: keep the standard names (`SKILL.md`, `README.md`, `example-input.md`, `example-output.md`)
+| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Maintained by | [PowerData](https://powrdata.com.au) |
+| More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
+| Licence | MIT |

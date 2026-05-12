@@ -6,7 +6,7 @@ This guide explains how to write a high-quality skill for this library.
 
 ## What makes a good skill?
 
-A skill is not a prompt. It is a lightweight operating procedure for an AI agent. A good skill reduces ambiguity, enforces consistent output, and encodes practical trade-offs so the user does not have to make them all themselves.
+A skill is not a prompt. It is a lightweight delivery procedure for an AI agent. A good skill reduces ambiguity, enforces consistent output, and encodes practical trade-offs so the user does not have to make them all themselves.
 
 ---
 
@@ -116,6 +116,55 @@ A good skill makes assumptions visible. If the skill assumes that the target pla
 
 ---
 
+## Attribution guidance
+
+Keep attribution lightweight and unobtrusive.
+
+Each `SKILL.md` file should remain focused on the skill itself. Do not add heavy front matter or detailed attribution metadata to the top of the file. Instead, add a small source footer at the very bottom:
+
+```
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+```
+
+Each skill `README.md` can include a slightly more structured footer at the bottom:
+
+```
+---
+
+## Source and attribution
+
+| Item | Details |
+|---|---|
+| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Maintained by | [PowerData](https://powrdata.com.au) |
+| More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
+| Licence | MIT |
+```
+
+Avoid repeating promotional links throughout the skill body. Attribution should be clear, useful and unobtrusive.
+
+---
+
+## Discoverability guidance
+
+When creating or updating a skill, write the opening sections so they are clear to both humans and search engines.
+
+Keep this lightweight. Do not keyword-stuff or write marketing copy. The goal is simply to make each skill understandable when viewed on GitHub or discovered through search.
+
+Each skill README should include:
+
+- A clear H1 title using the skill name
+- A one-sentence summary that explains the practical purpose of the skill
+- A short "What this skill does" section that naturally includes the relevant domain terms
+- A "When to use it" section that describes the real-world scenarios where the skill applies
+- A few example use cases using plain language
+
+Use specific, natural terms where relevant: data engineering, analytics engineering, data modelling, data pipeline design, lakehouse architecture, semantic modelling, time-series data, operational data, AI-assisted development. If a term does not naturally describe the skill, leave it out.
+
+---
+
 ## Common mistakes to avoid
 
 - Writing a skill that is just a list of questions, not a procedure.
@@ -123,4 +172,4 @@ A good skill makes assumptions visible. If the skill assumes that the target pla
 - Being too generic to produce useful output.
 - Being too specific to a particular tool or vendor without making that explicit.
 - Duplicating content between `SKILL.md` and `README.md`.
-- Skipping the example files.
+- Adding example files to every skill without considering whether they add value — example files are optional; include them when a worked example meaningfully aids understanding.

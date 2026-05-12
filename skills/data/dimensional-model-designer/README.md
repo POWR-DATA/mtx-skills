@@ -32,3 +32,14 @@ This skill takes a reporting or analytics requirement and produces a structured 
 ## How to use
 
 Copy the content of `SKILL.md` into your AI tool as an instruction or system prompt. Provide the inputs listed in the skill's **Inputs expected** section, then review the structured output.
+
+---
+
+## Source and attribution
+
+| Item | Details |
+|---|---|
+| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Maintained by | [PowerData](https://powrdata.com.au) |
+| More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
+| Licence | MIT |

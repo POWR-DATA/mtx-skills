@@ -102,3 +102,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 ## Example usage
 
 > "Apply the Medallion Architecture Designer skill to design a lakehouse architecture for ingesting daily sales transaction files from a point-of-sale system. The target is a cloud lakehouse. Consumers include a BI reporting layer and a data science team."
+
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
