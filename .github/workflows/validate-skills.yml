@@ -1,0 +1,59 @@
+name: Validate skill documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required skill files
+        run: |
+          set -e
+          REQUIRED_FILES="SKILL.md README.md"
+          ERRORS=0
+
+          for skill_dir in skills/data/*/ skills/app/*/ skills/domain/*/*/; do
+            [ -d "$skill_dir" ] || continue
+            for file in $REQUIRED_FILES; do
+              if [ ! -f "${skill_dir}${file}" ]; then
+                echo "MISSING: ${skill_dir}${file}"
+                ERRORS=$((ERRORS + 1))
+              fi
+            done
+          done
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo ""
+            echo "ERROR: $ERRORS required file(s) missing. Every skill must have SKILL.md and README.md."
+            exit 1
+          fi
+
+          echo "All skill folders have the required files."
+
+      - name: Check README lists all skills
+        run: |
+          set -e
+          ERRORS=0
+
+          for skill_dir in skills/data/*/ skills/app/*/ skills/domain/*/*/; do
+            [ -d "$skill_dir" ] || continue
+            skill_path="${skill_dir%/}"   # strip trailing slash
+            if ! grep -qF "$skill_path" README.md; then
+              echo "NOT LISTED IN README: $skill_path"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo ""
+            echo "ERROR: $ERRORS skill(s) not listed in README.md. Add them to the skill categories table."
+            exit 1
+          fi
+
+          echo "All skills are listed in README.md."

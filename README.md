@@ -1,10 +1,10 @@
 # PowerData Skills
 
-Reusable AI skills for practical data delivery.
+Reusable AI agent skills for practical data, analytics and architecture delivery.
 
-PowerData Skills is a public library of structured AI skills designed to help data professionals apply repeatable delivery methods using AI coding assistants and agentic tools.
+PowerData Skills is a public library of structured Markdown skills designed to help AI assistants, coding agents and data professionals apply repeatable delivery methods across data engineering, analytics engineering, data modelling, lakehouse architecture and operational data use cases.
 
-These skills are not just prompts. They are lightweight operating procedures that define context, decision rules, expected inputs, and output formats for common data delivery tasks.
+These skills are not just prompts. They are lightweight delivery procedures that define when to use a skill, what inputs are required, what decisions need to be made, and what a useful output should look like.
 
 ---
 
@@ -19,9 +19,9 @@ These skills are not just prompts. They are lightweight operating procedures tha
 
 ---
 
-## What is an AI skill?
+## What is an AI agent skill?
 
-An AI skill is a structured, reusable set of instructions for an AI assistant. It defines:
+An AI agent skill is a structured, reusable instruction set for an AI assistant or coding agent. It defines:
 
 - **When to use it** — the context in which the skill applies
 - **What inputs are needed** — the information to provide before starting
@@ -34,7 +34,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 
 ## Skill categories
 
-### Core skills
+### Data skills
 
 | Skill | Description |
 |---|---|
@@ -42,6 +42,15 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Dimensional Model Designer](skills/data/dimensional-model-designer/) | Design star schema and dimensional models for BI and reporting |
 | [Medallion Architecture Designer](skills/data/medallion-architecture-designer/) | Design bronze/silver/gold lakehouse data layers |
 | [Data Pipeline Designer](skills/data/data-pipeline-designer/) | Design high-level data pipelines for source-to-target data flows |
+
+### App skills
+
+| Skill | Description |
+|---|---|
+| [Flet + Supabase App Framework](skills/app/flet-supabase-framework/) | Scaffold a Flet + Supabase multi-platform Python app with correct project structure and integration patterns |
+| [Flet Multi-Platform Build](skills/app/flet-multiplatform-build/) | Configure Android, iOS, and web Docker build pipelines for a Flet app with CI/CD |
+| [Flet ACA Deploy](skills/app/flet-aca-deploy/) | Deploy a Flet web app to Azure Container Apps |
+| [App Icon Asset Generation](skills/app/app-icon-asset-generation/) | Generate a consistent application icon asset set from an approved high-resolution logo |
 
 ### Domain skills
 
@@ -63,13 +72,15 @@ skills/
   docs/
     skill-authoring-guide.md     # How to write a good skill
     usage-patterns.md            # How to use skills across AI tools
+    databricks-genie-code.md     # Using skills with Databricks Genie Code
     roadmap.md                   # Planned additions
 
   templates/
     skill-template/              # Blank template for new skills
 
   skills/
-    core/                        # Foundation skills for data delivery
+    data/                        # Foundation skills for data delivery
+    app/                         # Skills for multi-platform app development
     domain/                      # Domain-specific skill packs
 ```
 
@@ -112,7 +123,18 @@ Then in Claude Code: `"Apply the dimensional model designer skill to this use ca
 
 **Any other AI tool:** Open a `SKILL.md` file, copy the content, and paste it as instructions into your tool of choice.
 
-See [docs/usage-patterns.md](docs/usage-patterns.md) for detailed guidance including Claude.ai web options, Claude Code project setup, Skillfish, and GitHub Copilot.
+For full installation and usage guidance across all supported tools, see the [Documentation](#documentation) section below.
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [docs/usage-patterns.md](docs/usage-patterns.md) | How to use skills across Claude, Cursor, Skillfish, GitHub Copilot, and other tools |
+| [docs/databricks-genie-code.md](docs/databricks-genie-code.md) | Installing and using skills with Databricks Genie Code |
+| [docs/skill-authoring-guide.md](docs/skill-authoring-guide.md) | How to write a well-structured skill |
+| [docs/roadmap.md](docs/roadmap.md) | Planned additions to the library |
 
 ---
 
@@ -122,17 +144,19 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidance.
 
 ---
 
-## Roadmap
-
-See [docs/roadmap.md](docs/roadmap.md) for planned additions.
-
----
-
 ## Disclaimer
 
 This repository is intentionally generic and public-safe. Skills represent generalised patterns for common data delivery tasks.
 
 Organisation-specific implementations should be created privately by extending these baseline skills with internal standards, platform constraints, naming conventions, security requirements, and governance requirements.
+
+---
+
+## Maintained by
+
+PowerData Skills is maintained by [PowerData](https://powrdata.com.au).
+
+For more context about the skills library, visit the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills).
 
 ---
 

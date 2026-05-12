@@ -369,3 +369,7 @@ echo "$SP_JSON" | "$GH" secret set AZURE_CREDENTIALS --repo "$REPO"
 ## Example usage
 
 > "The Flet web Docker image is building and pushing to GHCR. Set up Azure Container Apps and the GitHub Actions deploy job. Provision everything from scratch using the az CLI and store the AZURE_CREDENTIALS secret automatically."
+
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

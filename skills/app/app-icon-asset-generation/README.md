@@ -22,3 +22,14 @@ Generate a complete, production-ready icon asset set for a multi-platform applic
 ## Target platforms
 
 Android, iOS, Flet, Flutter, web (PWA), desktop.
+
+---
+
+## Source and attribution
+
+| Item | Details |
+|---|---|
+| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Maintained by | [PowerData](https://powrdata.com.au) |
+| More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
+| Licence | MIT |

@@ -230,3 +230,7 @@ When creating micro icons:
 ## Example usage
 
 > "I have uploaded a 2048x2048 app logo that I'm happy with. Use it as the source of truth and generate a complete app/web icon set. I need transparent PNGs at 2048, 1024, 512, 192, and 120px. I also need a simplified micro icon based on the centre of the logo, delivered as SVG plus 28x28 and 32x32 PNG previews. Please provide separate download links for each file."
+
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

@@ -397,3 +397,7 @@ If the app installs but crashes on first screen with `ModuleNotFoundError`:
 4. Pause OneDrive, delete `arm64-v8a/` and `build/.hash/package`, rebuild with `-vv`
 5. Confirm pip runs for 3-8 minutes and installs ~80 packages
 6. If pip runs but a specific package fails: check `pypi.flet.dev` for arm64-v8a wheel availability
+
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

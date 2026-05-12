@@ -100,3 +100,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 ## Example usage
 
 > "Apply the Dimensional Model Designer skill to design a star schema for sales performance reporting. The business needs to analyse revenue, units sold, and margin by product category, store, region, and time period, with daily data and two years of history."
+
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

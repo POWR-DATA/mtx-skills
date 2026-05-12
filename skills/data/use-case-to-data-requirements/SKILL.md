@@ -98,3 +98,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 ## Example usage
 
 > "Apply the Use Case to Data Requirements skill to the following use case: our sales team wants to understand which product categories are driving revenue decline in the past quarter, broken down by region and customer segment."
+
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

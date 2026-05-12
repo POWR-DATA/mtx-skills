@@ -10,7 +10,7 @@ license: MIT
 
 ## Purpose
 
-[One to two sentences. What does this skill do? Be specific.]
+[One to two sentences. Explain what this skill does in practical terms. Use natural domain language that helps someone understand the skill from search or GitHub browsing, but do not keyword-stuff.]
 
 ## When to use
 
@@ -62,3 +62,7 @@ The AI should structure its response as follows:
 ## Example usage
 
 > [Short illustrative prompt demonstrating how to invoke this skill]
+
+---
+
+_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

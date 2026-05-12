@@ -28,3 +28,14 @@ Deploy a Flet web app to Azure Container Apps — covering every pitfall from co
 - GHCR image publishing configured in GitHub Actions
 - Azure CLI installed and authenticated (`az login`)
 - GitHub CLI installed and authenticated (`gh auth login`)
+
+---
+
+## Source and attribution
+
+| Item | Details |
+|---|---|
+| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Maintained by | [PowerData](https://powrdata.com.au) |
+| More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
+| Licence | MIT |
