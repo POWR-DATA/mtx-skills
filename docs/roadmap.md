@@ -14,7 +14,7 @@ This document describes the planned development of the PowerData Skills library.
 
 ---
 
-## V2 — App skills (current)
+## V2 — App skills and domain expansion (current)
 
 Multi-platform Python app development skills:
 
@@ -22,6 +22,11 @@ Multi-platform Python app development skills:
 - Flet Multi-Platform Build — Android, iOS, and web Docker CI/CD pipelines
 - Flet ACA Deploy — Azure Container Apps deployment with WebSocket and GHCR guidance
 - App Icon Asset Generation — production icon sets from an approved high-resolution logo
+
+Web skills (`skills/web/`):
+
+- Static Website Hosting — Azure Static Web Apps with custom domains, DNS, Bicep IaC, and GitHub Actions
+- Website SEO and Indexing — canonical URLs, sitemap.xml, robots.txt, and Google Search Console setup
 
 ---
 

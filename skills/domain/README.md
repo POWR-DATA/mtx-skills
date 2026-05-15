@@ -4,11 +4,11 @@ Domain-specific skills extending the core library.
 
 These skills address patterns that arise in particular industries, data types, or problem domains. They are more specialised than the core skills and are designed to complement them — a domain skill typically feeds into one or more core skills once the domain-specific assessment is complete.
 
-## Domains
+## Skills in this folder
 
-| Domain | Description |
+| Skill | Description |
 |---|---|
-| [Time-Series](time-series/) | Skills for sensor, historian, IoT, and industrial time-series data |
+| [Time-Series Use Case Assessment](time-series-use-case-assessment/) | Assess time-series use cases and translate them into data ingestion and analytics requirements |
 
 ## Relationship to core skills
 
@@ -22,8 +22,8 @@ Time-Series Use Case Assessment (domain)
         -> Data Pipeline Designer (core)
 ```
 
-## Adding a new domain
+## Adding a new skill
 
-Create a folder under `skills/domain/` named after the domain (lowercase, hyphen-separated). Add a `README.md` for the domain and at least one skill following the standard structure.
+Create a folder directly under `skills/domain/` named after the skill (lowercase, hyphen-separated). Add a `SKILL.md` and `README.md` following the standard structure.
 
 See [CONTRIBUTING.md](../../CONTRIBUTING.md) for submission guidance.
