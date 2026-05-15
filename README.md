@@ -52,13 +52,18 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Flet ACA Deploy](skills/app/flet-aca-deploy/) | Deploy a Flet web app to Azure Container Apps |
 | [App Icon Asset Generation](skills/app/app-icon-asset-generation/) | Generate a consistent application icon asset set from an approved high-resolution logo |
 
+### Web skills
+
+| Skill | Description |
+|---|---|
+| [Static Website Hosting](skills/web/static-website-hosting/) | Plan and deploy a static website on Azure Static Web Apps with custom domains, DNS, IaC, and CI/CD |
+| [Website SEO and Indexing](skills/web/website-seo-and-indexing/) | Prepare a static website for search engine indexing and submit it to Google Search Console |
+
 ### Domain skills
 
 | Skill | Description |
 |---|---|
 | [Time-Series Use Case Assessment](skills/domain/time-series-use-case-assessment/) | Assess time-series use cases and translate them into data requirements |
-| [Static Website Hosting](skills/domain/static-website-hosting/) | Plan and deploy a static website on Azure Static Web Apps with custom domains, DNS, IaC, and CI/CD |
-| [Website SEO and Indexing](skills/domain/website-seo-and-indexing/) | Prepare a static website for search engine indexing and submit it to Google Search Console |
 
 ---
 
@@ -83,6 +88,7 @@ skills/
   skills/
     data/                        # Foundation skills for data delivery
     app/                         # Skills for multi-platform app development
+    web/                         # Skills for website delivery and optimisation
     domain/                      # Domain-specific skill packs
 ```
 

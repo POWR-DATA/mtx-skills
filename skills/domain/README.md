@@ -9,8 +9,6 @@ These skills address patterns that arise in particular industries, data types, o
 | Skill | Description |
 |---|---|
 | [Time-Series Use Case Assessment](time-series-use-case-assessment/) | Assess time-series use cases and translate them into data ingestion and analytics requirements |
-| [Static Website Hosting](static-website-hosting/) | Plan and deploy a static website on Azure Static Web Apps with custom domains, DNS, IaC, and CI/CD |
-| [Website SEO and Indexing](website-seo-and-indexing/) | Prepare a static website for search engine indexing and submit it to Google Search Console |
 
 ## Relationship to core skills
 

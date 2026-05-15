@@ -5,7 +5,7 @@ Thank you for considering a contribution to this library.
 ## Principles
 
 - Follow the standard skill structure (see [templates/skill-template/](templates/skill-template/)).
-- Include at least one worked example per skill.
+- Include `SKILL.md` and `README.md` in every skill; include example files where they meaningfully aid understanding.
 - Avoid sensitive, confidential, or organisation-specific information.
 - Use realistic but generic examples.
 - Prefer practical, opinionated guidance over vague best-practice lists.
@@ -28,7 +28,7 @@ A good skill should:
 
 - Submit one skill per pull request where possible.
 - Include `SKILL.md` and `README.md` in every skill. Include `example-input.md` and `example-output.md` where a worked example adds meaningful value — skip them if the skill is self-explanatory or the output cannot be usefully represented in Markdown.
-- Place data skills under `skills/data/`, app skills under `skills/app/`, and domain-specific skills under `skills/domain/<domain>/`.
+- Place data skills under `skills/data/`, app skills under `skills/app/`, website skills under `skills/web/`, and domain-specific skills under `skills/domain/`.
 - Follow the folder naming convention: lowercase, hyphen-separated.
 - Include YAML frontmatter at the top of `SKILL.md` (required for Skillfish compatibility — see the [skill template](templates/skill-template/SKILL.md) for the correct format).
 - Write a short description in your pull request explaining the skill, the target user, and the intended use case.

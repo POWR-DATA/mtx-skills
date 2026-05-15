@@ -44,7 +44,13 @@ After installation, your `.assistant/skills/` directory should look like this:
       SKILL.md
     time-series-use-case-assessment/
       SKILL.md
+    static-website-hosting/
+      SKILL.md
+    website-seo-and-indexing/
+      SKILL.md
 ```
+
+> **Note:** `static-website-hosting` and `website-seo-and-indexing` are sourced from `skills/web/` in the repository but installed flat into `.assistant/skills/` alongside all other skills.
 
 Genie Code requires only `SKILL.md` in each folder to recognise a skill. Including additional files such as `README.md` and example files is optional but harmless — they do not interfere with skill discovery.
 
@@ -97,7 +103,9 @@ skill_dirs = [
     "skills/app/flet-multiplatform-build",
     "skills/app/flet-aca-deploy",
     "skills/app/app-icon-asset-generation",
-    "skills/domain/time-series/time-series-use-case-assessment",
+    "skills/domain/time-series-use-case-assessment",
+    "skills/web/static-website-hosting",
+    "skills/web/website-seo-and-indexing",
 ]
 
 os.makedirs(target_root, exist_ok=True)
@@ -162,7 +170,7 @@ Follow these steps exactly using Python. Do not use dbutils.fs, workspace CLI co
    - Exclude any folder whose path contains a "templates" component.
 
 4. For each skill folder found:
-   - Use only the deepest folder name as the install name (e.g. skills/domain/time-series/time-series-use-case-assessment installs as time-series-use-case-assessment).
+   - Use only the deepest folder name as the install name (e.g. skills/domain/time-series-use-case-assessment installs as time-series-use-case-assessment).
    - If two skills resolve to the same install name, prefix each with its immediate parent category name separated by a hyphen (e.g. data-assessment and domain-assessment) and print a warning.
    - Copy the entire skill folder — including SKILL.md, README.md, example-input.md, example-output.md, and any other files present — to <target_root>/<install-name>/ using shutil.copytree with dirs_exist_ok=True.
    - Do not copy repo-level files or folders (docs/, .github/, templates/, LICENSE, CONTRIBUTING.md, README.md at the repo root).
