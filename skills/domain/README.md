@@ -9,6 +9,7 @@ These skills address patterns that arise in particular industries, data types, o
 | Domain | Description |
 |---|---|
 | [Time-Series](time-series/) | Skills for sensor, historian, IoT, and industrial time-series data |
+| [Web](web/) | Skills for static website hosting, DNS, and search engine indexing |
 
 ## Relationship to core skills
 
