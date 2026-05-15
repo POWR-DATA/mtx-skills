@@ -18,7 +18,7 @@ jobs:
           REQUIRED_FILES="SKILL.md README.md"
           ERRORS=0
 
-          for skill_dir in skills/data/*/ skills/app/*/ skills/domain/*/*/; do
+          for skill_dir in skills/data/*/ skills/app/*/ skills/domain/*/; do
             [ -d "$skill_dir" ] || continue
             for file in $REQUIRED_FILES; do
               if [ ! -f "${skill_dir}${file}" ]; then
@@ -41,7 +41,7 @@ jobs:
           set -e
           ERRORS=0
 
-          for skill_dir in skills/data/*/ skills/app/*/ skills/domain/*/*/; do
+          for skill_dir in skills/data/*/ skills/app/*/ skills/domain/*/; do
             [ -d "$skill_dir" ] || continue
             skill_path="${skill_dir%/}"   # strip trailing slash
             if ! grep -qF "$skill_path" README.md; then

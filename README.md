@@ -56,7 +56,9 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 
 | Skill | Description |
 |---|---|
-| [Time-Series Use Case Assessment](skills/domain/time-series/time-series-use-case-assessment/) | Assess time-series use cases and translate them into data requirements |
+| [Time-Series Use Case Assessment](skills/domain/time-series-use-case-assessment/) | Assess time-series use cases and translate them into data requirements |
+| [Static Website Hosting](skills/domain/static-website-hosting/) | Plan and deploy a static website on Azure Static Web Apps with custom domains, DNS, IaC, and CI/CD |
+| [Website SEO and Indexing](skills/domain/website-seo-and-indexing/) | Prepare a static website for search engine indexing and submit it to Google Search Console |
 
 ---
 
