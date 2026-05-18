@@ -392,11 +392,37 @@ Use these at the end of a session in ChatGPT, Copilot, another Claude session, o
 
 ---
 
-**4. Bring the output across and run the command**
+**4. Paste the summary into the Claude Code chat first, then run the command**
 
-Paste the structured summary into your Claude Code session in the skills repo as context, then run the appropriate command. For example:
+The `/skill` command checks the conversation for context before asking questions. If you paste your structured summary first and then run the command, it will skip the "what needs updating?" step and go straight to proposing edits for your confirmation.
 
-> "In a website hosting session I found that Azure SWA Free tier does not support custom cache-control headers per route — only a global setting. The current skill implies per-route control is possible. I want to update the Avoid section and fix step 6."
+**Recommended flow — paste first, then run:**
+
+```
+[paste your structured summary from the other session here]
+```
+
+Then:
+
+```
+/skill update static-website-hosting
+```
+
+The command reads your summary from the conversation, reads the existing skill files, and immediately presents proposed changes for you to confirm.
+
+**Alternative — run first, then answer interactively:**
+
+If you run the command without pasting anything first, it will ask what needs updating. You can paste or describe the changes in response. This works just as well — it just adds one extra round of back-and-forth.
+
+```
+/skill update static-website-hosting
+```
+
+> What needs updating?
+
+```
+[paste your structured summary here, or describe what changed]
+```
 
 **5. Run `/skill update <skill-name>` or `/skill new`**
 

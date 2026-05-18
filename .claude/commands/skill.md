@@ -48,7 +48,7 @@ Do not start any workflow until the action is confirmed.
 
 ### Step 1: Gather requirements
 
-Check the current conversation for context. If the user has already described the skill idea in enough detail, extract:
+Check the current conversation for context first. If the user has already pasted a structured summary from another session, extract everything you can from it before asking any questions — only ask about what is genuinely missing. If the user has already described the skill idea in enough detail, extract:
 
 - **Purpose** — what the skill does and what problem it solves
 - **Target user** — who will use this skill
@@ -230,7 +230,9 @@ Read `SKILL.md`, `README.md`, `example-input.md`, and `example-output.md` for th
 
 ### Step 3: Understand what needs changing
 
-Check the current conversation for context about what should change. If unclear, ask in a single message:
+Check the current conversation for context first. If the user has already pasted a structured summary, notes, or description of what changed, extract the relevant changes from that and proceed directly to Step 4 without asking questions.
+
+If the conversation contains no useful context, ask in a single message:
 
 > What needs updating? For example:
 > - A process step that is wrong or incomplete
@@ -238,8 +240,10 @@ Check the current conversation for context about what should change. If unclear,
 > - Output format changes
 > - Example files that no longer reflect the skill
 > - A correction to the When to use or Avoid sections
+>
+> If you have a summary from another session, paste it here.
 
-If answers are still vague, ask one focused follow-up. **Maximum two rounds of questions.**
+If answers are still vague after one round, ask one focused follow-up. **Maximum two rounds of questions.**
 
 ### Step 4: Confirm the proposed changes
 
