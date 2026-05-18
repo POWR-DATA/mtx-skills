@@ -28,6 +28,11 @@ Web skills (`skills/web/`):
 - Static Website Hosting — Azure Static Web Apps with custom domains, DNS, Bicep IaC, and GitHub Actions
 - Website SEO and Indexing — canonical URLs, sitemap.xml, robots.txt, and Google Search Console setup
 
+AI skills (`skills/ai/`):
+
+- Category established; first skills in development
+- `/skill` Claude Code slash command added — creates new skills or updates existing ones interactively, following contribution conventions
+
 ---
 
 ## V3 — Data skill depth and domain packs
