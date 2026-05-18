@@ -24,21 +24,31 @@ Do not proceed until the repo context is confirmed.
 
 ---
 
-## Determine the action
+## Determine the action and target
 
-Read `$ARGUMENTS`:
+Parse `$ARGUMENTS` into two parts: **action** and **target**.
 
-- Starts with `new` → **New Skill** workflow
-- Starts with `update` or `edit` → **Update Skill** workflow
-- Starts with `validate` or `check` → **Validate Skill** workflow
-- Starts with `review` → **Review Skill** workflow
-- Empty or unclear → ask in a single message:
+**Action** is the first word:
+- `new` → **New Skill** workflow
+- `update` or `edit` → **Update Skill** workflow
+- `validate` or `check` → **Validate Skill** workflow
+- `review` → **Review Skill** workflow
+- Empty or unclear → ask the user to choose (see below)
+
+**Target** is everything after the action word. It can be:
+- A specific skill name: `update static-website-hosting`
+- A category path: `validate web` or `review data` — runs the workflow across all skills in that category
+- Empty: the workflow will ask which skill
+
+**Category paths** map as follows: `web` → `skills/web/`, `data` → `skills/data/`, `app` → `skills/app/`, `ai` → `skills/ai/`, `domain` → `skills/domain/`. List all skill subdirectories found under the path and apply the workflow to each.
+
+If action is empty or unclear, ask in a single message:
 
   > What would you like to do?
   > - **new** — create a new skill from scratch
-  > - **update** — edit an existing skill
-  > - **validate** — check a skill's structure and formatting against library standards
-  > - **review** — assess the content quality of a skill and get improvement suggestions
+  > - **update \<skill-name or category\>** — edit a skill or all skills in a category (e.g. `update web`)
+  > - **validate \<skill-name or category\>** — structural check (e.g. `validate web`)
+  > - **review \<skill-name or category\>** — content quality assessment (e.g. `review data`)
 
 Do not start any workflow until the action is confirmed.
 
@@ -212,17 +222,14 @@ List every file created and every file modified. Remind the user to:
 
 ### Step 1: Identify the skill
 
-If `$ARGUMENTS` includes a skill name (e.g. `/skill update dimensional-model-designer`), use that.
+If the target is a specific skill name (e.g. `/skill update static-website-hosting`), use that directly.
 
-Otherwise ask:
+If the target is a category (e.g. `/skill update web`), read `skills/<category>/` to list all skills present, then ask:
 
-> Which skill would you like to update? Available skills:
->
-> **data/** — use-case-to-data-requirements, dimensional-model-designer, medallion-architecture-designer, data-pipeline-designer
-> **app/** — flet-supabase-framework, flet-multiplatform-build, flet-aca-deploy, app-icon-asset-generation
-> **web/** — static-website-hosting, website-seo-and-indexing
-> **ai/** — (list any present)
-> **domain/** — time-series-use-case-assessment
+> Found these skills in `web/`: static-website-hosting, website-seo-and-indexing
+> Which would you like to update, or update all in sequence?
+
+If no target was given, ask which skill or category to update.
 
 ### Step 2: Read all existing files
 
@@ -283,7 +290,7 @@ Structural and mechanical check. Read-only — no file changes.
 
 ### Step 1: Identify the skill
 
-If `$ARGUMENTS` includes a skill name (e.g. `/skill validate dimensional-model-designer`), use that. Otherwise ask which skill to validate.
+If the target is a specific skill name (e.g. `/skill validate static-website-hosting`), validate that skill. If the target is a category (e.g. `/skill validate web`), read `skills/<category>/` to find all skills and run validation on each in sequence, presenting a combined report. If no target was given, ask which skill or category to validate.
 
 ### Step 2: Read all files
 
@@ -337,7 +344,7 @@ Qualitative content review. Read-only — no file changes.
 
 ### Step 1: Identify the skill
 
-If `$ARGUMENTS` includes a skill name (e.g. `/skill review dimensional-model-designer`), use that. Otherwise ask which skill to review.
+If the target is a specific skill name (e.g. `/skill review static-website-hosting`), review that skill. If the target is a category (e.g. `/skill review web`), read `skills/<category>/` to find all skills and run the review on each in sequence, presenting a combined report. If no target was given, ask which skill or category to review.
 
 ### Step 2: Read all files
 

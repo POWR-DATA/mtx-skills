@@ -2,7 +2,7 @@
 name: website-seo-and-indexing
 description: Prepare a static website for search engine indexing and submit it to Google Search Console
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -39,6 +39,11 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - Submit the sitemap in GSC after verification. Use the URL Inspection tool to check individual pages after submission.
 - `lastmod` dates in `sitemap.xml` should reflect actual content changes. Do not set future dates. Priority values (0.0–1.0) are relative — the homepage is typically 1.0.
 - Avoid duplicate indexing by ensuring the non-canonical URL (apex, http) redirects to the canonical before Google crawls it. On Azure SWA, the apex → www redirect is automatic but takes 20–30 minutes to activate after domain validation.
+- Audit existing canonical tags before adding new ones. The tag may already exist and be correct — if it is, the redirect and internal links are the more likely cause of any GSC duplicate signal, not a missing canonical.
+- A 301 redirect on `/index.html → /` is only half the fix for a GSC duplicate. Googlebot follows internal links before encountering redirects — if navigation or anchor links still reference `index.html`, the duplicate persists. The redirect and internal link cleanup are required together.
+- When one `.html` URL duplicate is found in GSC, check all pages for the same pattern. If `index.html` creates a duplicate on one page, it almost certainly exists across the whole site.
+- OG image must use a solid background. Transparent PNGs appear invisible or broken on social share cards — platforms render cards on varying backgrounds. This failure only surfaces when a URL is actually shared, not during local testing.
+- `width` and `height` attributes on `<img>` elements serve aspect ratio reservation for CLS prevention, not display sizing. The browser uses them to pre-allocate space before the image loads. The ratio matters; exact pixel values do not need to match CSS dimensions.
 
 ## Process
 
@@ -47,48 +52,55 @@ Provide as many of the following as available. Partial inputs are acceptable —
 2. **Audit existing pages**
    - List all public HTML pages
    - Check each for `<link rel="canonical">`, `<title>`, and `<meta name="description">`
+   - Check OG tags: `og:title`, `og:description`, `og:image` — note any missing or using a transparent image
+   - Check for `.html` URL variants (e.g. `/index.html`, `/page.html`) that could create GSC duplicate entries
+   - Check that `<title>` tags are unique across all pages and use the correct brand name — these are invisible in browser UI and inconsistencies persist without an explicit audit
 
-3. **Add canonical tags**
+3. **Audit internal links for `.html` references**
+   - If redirects exist for `.html` → clean URL paths, check that navigation and anchor links do not reference the `.html` form
+   - Googlebot follows links before encountering redirects — internal links pointing to `index.html` will direct Googlebot to the duplicate regardless of the redirect
+
+4. **Add or verify canonical tags**
    - Add `<link rel="canonical" href="https://www.<domain>/<path>" />` to the `<head>` of every HTML page
    - Homepage: `https://www.<domain>/`
    - Other pages: `https://www.<domain>/<slug>` (no trailing slash for non-root pages)
 
-4. **Write `sitemap.xml`**
+5. **Write `sitemap.xml`**
    - Include one `<url>` block per public page
    - Fields: `<loc>`, `<lastmod>` (YYYY-MM-DD format), `<changefreq>`, `<priority>`
    - Homepage priority: 1.0; other pages: 0.7–0.9 depending on importance
    - Place at the site root (`/sitemap.xml`)
 
-5. **Write `robots.txt`**
+6. **Write `robots.txt`**
    - Allow all crawlers: `User-agent: *` / `Allow: /`
    - Add `Sitemap: https://www.<domain>/sitemap.xml`
    - Place at the site root (`/robots.txt`)
 
-6. **Verify static file serving**
+7. **Verify static file serving**
    - Confirm `sitemap.xml` is served with `Content-Type: application/xml`
    - Confirm `robots.txt` is served with `Content-Type: text/plain`
    - On Azure SWA: add explicit route for `/sitemap.xml` in `staticwebapp.config.json` and register `.xml` MIME type
 
-7. **Check per-page meta tags**
+8. **Check per-page meta tags**
    - Each page should have a unique `<title>` and `<meta name="description">`
    - Title: 50–60 characters; description: 120–160 characters
    - Avoid identical titles or descriptions across pages
 
-8. **Add a favicon**
+9. **Add a favicon**
    - Place `favicon.png` or `favicon.ico` at the site root
    - Add `<link rel="icon" type="image/png" href="favicon.png" />` to each page's `<head>`
 
-9. **Set up Google Search Console**
+10. **Set up Google Search Console**
    - Go to [Google Search Console](https://search.google.com/search-console)
    - Create a **Domain property** for `<domain>` (without protocol or www)
    - Add the provided DNS TXT verification record to the domain's DNS at the registrar or DNS host
    - Wait for DNS to propagate, then click **Verify**
 
-10. **Submit the sitemap**
+11. **Submit the sitemap**
     - In GSC: go to **Sitemaps** → enter `sitemap.xml` → **Submit**
     - Wait 24–72 hours for initial crawl
 
-11. **Inspect URLs**
+12. **Inspect URLs**
     - Use the **URL Inspection** tool in GSC on the homepage and key pages
     - Check that Google can render the page and that the canonical reported by Google matches the intended canonical
 
@@ -116,6 +128,9 @@ The AI should produce:
 - [ ] Sitemap submitted in GSC
 - [ ] URL Inspection confirms Google can render the homepage
 - [ ] Apex and http URLs redirect to the canonical (www, https) before indexing
+- [ ] Internal links do not reference `.html` URLs where redirects exist for those paths
+- [ ] OG image uses a solid background — no transparency
+- [ ] All `<title>` tags are unique and use the correct brand name, including secondary pages
 
 ## Avoid
 
@@ -125,6 +140,10 @@ The AI should produce:
 - Do not serve `sitemap.xml` through a SPA fallback — verify the actual `Content-Type` header in a browser dev tools network tab
 - Do not add `Disallow: /` to `robots.txt` while testing and forget to remove it before launch — this blocks all crawlers
 - Do not assume GSC verification via DNS is instant — allow up to 24–48 hours for TXT record propagation
+- Do not add a canonical tag without first checking whether one already exists and is correct — if it is, the redirect and internal links are the more likely cause of any GSC duplicate signal
+- Do not treat a 301 redirect on `/index.html → /` as a complete fix — internal links pointing to `index.html` must also be updated, or Googlebot will still follow them to the duplicate URL
+- Do not stop at the first `.html` duplicate found — check all pages, as the pattern typically exists across the whole site
+- Do not assume `<title>` tags are correct — they are invisible in browser UI and brand name inconsistencies on secondary pages can persist indefinitely without a deliberate audit pass
 
 ## Example usage
 

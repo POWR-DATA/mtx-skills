@@ -2,7 +2,7 @@
 name: static-website-hosting
 description: Plan and deploy a static website on Azure Static Web Apps with custom domains, DNS, IaC, and CI/CD
 author: PowerData
-version: 1.0.0
+version: 1.0.1
 license: MIT
 ---
 
@@ -46,6 +46,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - For apex domain validation on Azure SWA, use the `dns-txt-token` validation method via the REST API (`az rest --method put`). The standard `az staticwebapp hostname set` command fails for apex domains when DNS hasn't yet propagated.
 - Static A records for apex domains can become stale if Azure changes the underlying IP. Document the current IP and add a note to re-verify it after any Azure infrastructure event. Use ALIAS/ANAME records if the DNS provider supports them.
 - Keep `staticwebapp.config.json` in source control. Use it to set security headers globally, configure MIME types for non-HTML files (XML, JSON), and add explicit routes for files like `sitemap.xml` that would otherwise be intercepted by the SPA fallback.
+- Use `globalHeaders` in `staticwebapp.config.json` for security headers, not a `/*` route. Route-based headers only apply to HTML responses — CSS, JS, and image requests will be served without them. `globalHeaders` applies to every response type.
 - Set `Cache-Control: public, must-revalidate, max-age=30` globally on Azure SWA Free tier. The Free tier does not support long-lived cache invalidation, so low max-age is the safe default.
 - Write a validation script that checks DNS, HTTPS, and redirect behaviour on both domains. Run it after every deployment or DNS change.
 
@@ -75,7 +76,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 
 6. **Write `staticwebapp.config.json`**
    - Add explicit route for `/sitemap.xml` with `Content-Type: application/xml`
-   - Add security headers to `/*`
+   - Add security headers to `globalHeaders` (not `/*` — route headers only apply to HTML responses)
    - Add global `Cache-Control` header
    - Register `.xml` and `.json` MIME types
 
@@ -123,7 +124,7 @@ The AI should produce:
 - [ ] Resources named using CAF conventions
 - [ ] Deployment token stored in GitHub Secrets, not in any file
 - [ ] `staticwebapp.config.json` has explicit route for `sitemap.xml`
-- [ ] Security headers present on `/*`
+- [ ] Security headers present on all response types — configured via `globalHeaders`, not `/*`
 - [ ] Both www and apex domains added to SWA and showing `Ready`
 - [ ] HTTPS working on both domains
 - [ ] Apex redirecting to www (may take 20–30 min after domain validation)
@@ -138,6 +139,7 @@ The AI should produce:
 - Do not use `2>&1` on native Azure CLI commands in PowerShell 5.1 — it wraps stderr into error records and breaks `ConvertFrom-Json`
 - Do not assume the apex A record IP is permanent — document it and verify if the site ever stops resolving at the apex
 - Do not rely on the Azure portal for reproducible deployments — all configuration should be expressible as Bicep or CLI
+- Do not add security headers to the `/*` route — they will only apply to HTML responses. Use `globalHeaders` to ensure headers are present on CSS, JS, image, and all other response types
 
 ## Example usage
 
