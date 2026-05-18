@@ -140,6 +140,200 @@ You can still paste the GitHub repo URL as context even if the custom skill uplo
 
 ## Claude Code
 
+There are two distinct ways skills integrate with Claude Code. Understanding the difference matters before you start.
+
+### Library skills vs. slash commands
+
+**Library skills** are the skills in this repository (`skills/data/`, `skills/app/`, `skills/web/`, `skills/ai/`, `skills/domain/`). They are plain Markdown files you copy into a project so Claude Code can read them as context. Claude Code treats them as instructions to follow when relevant.
+
+**Slash commands** live in `.claude/commands/` and are invoked directly in Claude Code with a `/` prefix. They are repo workflow tools — not content skills. This repo ships one: `/skill`, which creates, updates, validates, and reviews skills following the library's conventions. Slash commands are a Claude Code-specific mechanism with no cross-tool equivalent at this stage. Other AI tools (Cursor, Copilot, Windsurf) have their own analogous patterns but use different formats and invocation methods — this repo does not currently provide equivalents for those tools.
+
+If you are using skills from this library in a project, you want the library skills approach below. If you are contributing a new skill to this repo using Claude Code, use `/skill`.
+
+### `/skill` command reference
+
+> **Claude Code only.** The `/skill` command is implemented as a Claude Code slash command and is not available in other AI tools. Library skills (the `SKILL.md` files in `skills/`) remain cross-tool and work in any AI assistant. There is no equivalent cross-tool standard for custom workflow commands at this stage.
+
+The `/skill` command supports four actions. Invoke it with an action keyword and optional skill name, or with no arguments to be prompted.
+
+| Action | Invocation | What it does |
+|---|---|---|
+| `new` | `/skill new` | Create a new skill from scratch. Guides you through category, purpose, and inputs, then generates all four files and updates the root README. |
+| `update` | `/skill update <skill-name>` | Edit an existing skill. Reads current files, asks what needs changing, makes targeted edits, and bumps the version number. |
+| `validate` | `/skill validate <skill-name>` | Structural check — verifies frontmatter, required sections, file lengths, placeholder text, attribution, and root README listing. Read-only. |
+| `review` | `/skill review <skill-name>` | Content quality review — assesses whether principles are opinionated, process steps are actionable, examples are realistic, and the skill is well-scoped. Read-only. |
+
+`new` and `update` support up to two rounds of clarifying questions before generating anything. `validate` and `review` are read-only and make no file changes.
+
+The full procedure for each action is defined in [`.claude/commands/skill.md`](.claude/commands/skill.md).
+
+### Example session
+
+The following example shows all four actions using a single skill created from notes gathered in an external AI session (e.g. ChatGPT, Copilot). The skill is an IT managed service provider onboarding assessment.
+
+---
+
+**`/skill new`** — create the skill from scratch
+
+```
+/skill new
+```
+
+> What should this skill do, who is the target user, and which category?
+
+```
+It should guide an AI through onboarding a new business client for an IT
+managed service provider — covering discovery, network and security
+assessment, documentation, and tool deployment. Target user is an IT
+consultant or MSP. Category: domain/it-services.
+```
+
+> Here's the plan:
+> - **Skill name:** `it-client-onboarding-assessment`
+> - **Folder:** `skills/domain/it-client-onboarding-assessment/`
+> - **Description:** Guide an IT managed service provider through structured client discovery and onboarding assessment
+> - **Target user:** IT consultant or managed service provider
+> - **Key inputs:** Client size, existing environment, current tooling, security posture
+> - **Key output:** Environment assessment, security baseline gaps, priority action list
+>
+> Confirm to proceed?
+
+```
+yes
+```
+
+> Created:
+> - `skills/domain/it-client-onboarding-assessment/SKILL.md`
+> - `skills/domain/it-client-onboarding-assessment/README.md`
+> - `skills/domain/it-client-onboarding-assessment/example-input.md`
+> - `skills/domain/it-client-onboarding-assessment/example-output.md`
+>
+> Modified:
+> - `README.md` — added to Domain skills table
+
+---
+
+**`/skill update`** — improve the skill after a follow-up session
+
+After a further session refining the security assessment step:
+
+```
+/skill update it-client-onboarding-assessment
+```
+
+> I'm looking at `it-client-onboarding-assessment` v1.0.0. What needs updating?
+
+```
+The security baseline step is too vague. It needs to cover MFA status,
+patch posture, and EDR. Also want a principle about checking cyber
+insurance early.
+```
+
+> Proposed changes to `SKILL.md`:
+>
+> 1. **Process step 4** — expand to four sub-steps: password policy audit,
+>    MFA status across email and remote access, patch posture review, EDR
+>    coverage confirmation
+> 2. **Guiding principles** — add: "Confirm cyber insurance status and policy
+>    limits before completing the assessment — coverage gaps often determine
+>    which remediation items are prioritised first."
+>
+> Version: `1.0.0` → `1.1.0`. No changes to example files or root README needed.
+> Confirm?
+
+```
+yes
+```
+
+> Modified:
+> - `skills/domain/it-client-onboarding-assessment/SKILL.md` — v1.0.0 → v1.1.0
+
+---
+
+**`/skill validate`** — structural check before raising a PR
+
+```
+/skill validate it-client-onboarding-assessment
+```
+
+```
+Validating: it-client-onboarding-assessment (v1.1.0)
+
+Frontmatter
+✓ name: it-client-onboarding-assessment (valid)
+✓ description: one sentence, no trailing period
+✓ author, version, license present
+✓ version: 1.1.0 (valid semver)
+
+SKILL.md structure
+✓ All 9 required sections present
+✓ Length: 118 lines (within 80–150)
+✓ Attribution footer present
+✓ No placeholder text found
+
+README.md
+✓ Length: 52 lines (within 40–60)
+✓ Files table and attribution table present
+✓ No placeholder text
+
+example-input.md
+✓ File exists, 24 lines (within 15–40)
+✓ No placeholder text
+
+example-output.md
+✗ Length: 183 lines — outside expected range. The Priority action list
+  section runs 60+ lines. Consider trimming or confirm the output
+  complexity warrants this length.
+
+Repository
+✓ Listed in root README.md
+
+Result: 14/15 passed. 1 warning — no blocking issues. Ready to submit.
+```
+
+---
+
+**`/skill review`** — content quality assessment
+
+```
+/skill review it-client-onboarding-assessment
+```
+
+```
+Reviewing: it-client-onboarding-assessment (v1.1.0)
+
+Structural validation: 14/15 passed (1 warning — see validate output)
+
+Strengths
+- Purpose is specific: states what the skill produces, not just what it
+  "helps with"
+- Cyber insurance principle and "document before you change anything" are
+  the kind of opinionated heuristics that make a skill genuinely useful
+- Process steps are actionable and sequenced logically; each has a clear
+  deliverable
+
+Suggested improvements
+- When to use: missing lifecycle position — add "Apply before any technical
+  work begins; output feeds directly into the statement of work"
+- Guiding principles: "understand the client's risk tolerance" is too vague;
+  replace with something measurable, e.g. "Ask the client to state their
+  acceptable downtime in hours — this determines backup frequency and
+  whether failover is required"
+- Avoid section: only 2 items — consider adding "Do not begin remote access
+  setup before completing the environment inventory"
+- example-output.md: Priority action list is 3 lines; expand to match the
+  depth of the Environment assessment section
+
+Scope
+Well-scoped — covers discovery only, stops before solution design. No
+overlap with existing skills. Could pair with a future IT Statement of
+Work skill but works independently as-is.
+```
+
+---
+
+### Using library skills in a project
+
 Claude Code works best with skills stored locally in your project. The recommended approach is to copy the skills you need into a `.claude/skills/` folder within your project, so Claude Code can reference them directly.
 
 ### Setup
