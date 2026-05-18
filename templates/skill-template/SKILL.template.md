@@ -1,7 +1,7 @@
 <!--
-  This is the blank template for a new skill. Copy this folder to skills/<category>/<skill-name>/
-  and fill in all sections before submitting. Remove this comment block and add the YAML
-  frontmatter below with real values:
+  This is the blank template for a new skill. Copy this folder to skills/<category>/<skill-name>/,
+  rename this file to SKILL.md, and fill in all sections before submitting.
+  Remove this comment block and add the YAML frontmatter below with real values:
 
   ---
   name: your-skill-name
