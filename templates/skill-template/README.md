@@ -24,7 +24,7 @@
 
 | File | Required | Description |
 |---|---|---|
-| `SKILL.md` | Yes | Full skill definition |
+| `SKILL.template.md` | Yes | Full skill definition template — rename to `SKILL.md` when creating a real skill |
 | `README.md` | Yes | Short navigation guide for this skill (this file) |
 | `example-input.md` | Optional | Example input — include when it helps users frame their request |
 | `example-output.md` | Optional | Example output — include when it sets a useful quality bar or the output is a concrete artefact |
