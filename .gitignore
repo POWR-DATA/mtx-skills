@@ -6,10 +6,9 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Claude Code — ignore all local config, only commit shared contributor commands
-.claude/
-!.claude/commands/
-!.claude/commands/**
+# Claude Code — ignore machine-specific config, commit commands/ and project settings
+.claude/settings.json
+.claude/settings.local.json
 
 # Environment files
 .env

@@ -2,7 +2,25 @@
 
 $ARGUMENTS
 
-You are helping the user work with a skill in the PowerData Skills library. Your first job is to determine what action they want to take.
+You are helping the user work with a skill in the PowerData Skills library.
+
+---
+
+## Before you start — verify repo context
+
+Before doing anything else, confirm you are running inside the PowerData Skills repository by checking that a `skills/` directory exists at the project root and that `README.md` contains the skill category tables.
+
+If those are not present, stop immediately and tell the user:
+
+> This command must be run from within the PowerData Skills repository. It writes to `skills/`, updates the root `README.md`, and follows conventions specific to this library — it will not work from another project directory.
+>
+> **Correct workflow when learning from another Claude session:**
+> 1. Finish your work in the other project session (website, app, etc.)
+> 2. Open the PowerData Skills repo in Claude Code as a separate session
+> 3. Bring your learnings across as context — paste notes, describe what changed, or summarise what you discovered
+> 4. Run `/skill update <skill-name>` or `/skill new` here
+
+Do not proceed until the repo context is confirmed.
 
 ---
 

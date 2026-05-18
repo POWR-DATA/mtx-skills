@@ -152,7 +152,11 @@ If you are using skills from this library in a project, you want the library ski
 
 ### `/skill` command reference
 
-> **Claude Code only.** The `/skill` command is implemented as a Claude Code slash command and is not available in other AI tools. Library skills (the `SKILL.md` files in `skills/`) remain cross-tool and work in any AI assistant. There is no equivalent cross-tool standard for custom workflow commands at this stage.
+> **Claude Code only — and only within this repo.**
+>
+> The `/skill` command is a contributor tool for the PowerData Skills library. It writes to `skills/`, updates the root `README.md`, and follows conventions specific to this repo. It must be run with Claude Code opened in the skills repo root. Running it from another project (a website, an app, a client repo) will not work — the required paths and structure will not be found.
+>
+> Library skills (the `SKILL.md` files in `skills/`) are cross-tool and work in any AI assistant. The `/skill` command is separate from the library skills and is not installed by Skillfish.
 
 The `/skill` command supports four actions. Invoke it with an action keyword and optional skill name, or with no arguments to be prompted.
 
@@ -329,6 +333,40 @@ Well-scoped — covers discovery only, stops before solution design. No
 overlap with existing skills. Could pair with a future IT Statement of
 Work skill but works independently as-is.
 ```
+
+### Using `/skill` from another project session
+
+A common scenario: you have been working in a separate Claude Code session on a website, an app, or a client project, and you have learned something worth capturing in the skills library. You cannot run `/skill` from that other session — the command will not find the skills library structure.
+
+The correct workflow is:
+
+**1. Finish your work in the other project session**
+
+Complete the task. Note what you learned — a better process step, a new guiding principle, a failure mode worth adding to the Avoid section, or enough new material for a new skill entirely.
+
+**2. Open the skills repo in Claude Code**
+
+Open a new Claude Code session in the PowerData Skills repository. This is the session where `/skill` will work.
+
+**3. Bring your learnings across as context**
+
+You do not need both sessions open at once. Summarise what changed, paste relevant notes, or describe what you discovered. For example:
+
+> "In a website hosting session I found that Azure SWA Free tier does not support custom cache-control headers per route — only a global setting. The current skill implies per-route control is possible. I want to update the Avoid section and fix step 6."
+
+**4. Run `/skill update <skill-name>`**
+
+The command reads the existing skill, takes your context, proposes targeted edits, and bumps the version. From here the normal update workflow applies.
+
+**5. Merge and update locally with Skillfish**
+
+Once the PR is merged to `main`, run:
+
+```bash
+npx skillfish add POWR-DATA/skills
+```
+
+This updates the library skills in all your local AI tools. The `/skill` command itself is not installed by Skillfish — it is only available when Claude Code is opened in the skills repo.
 
 ---
 

@@ -39,6 +39,19 @@ If `SKILL.md` exceeds 150 lines, the skill is likely too broad. Consider splitti
 
 All four files must be complete and free of placeholder text before submission. Do not submit files with `[Fill this in]`, bracketed examples, or incomplete sections.
 
+## Using `/skill` to contribute
+
+The `/skill` Claude Code command automates the process of creating, updating, validating, and reviewing skills. It must be run with Claude Code opened in this repository — it will not work from another project directory.
+
+**If you learned something in a separate Claude Code session** (e.g. while building a website or deploying an app), the workflow is:
+
+1. Finish your work in that session and note what you learned
+2. Open the skills repo in Claude Code as a separate session
+3. Bring your learnings across as context — paste notes or describe what changed
+4. Run `/skill update <skill-name>` or `/skill new` to capture the improvement
+
+The `/skill` command is not installed by Skillfish. It is only available when Claude Code is opened in this repo.
+
 ## How to submit
 
 - Submit one skill per pull request where possible.
