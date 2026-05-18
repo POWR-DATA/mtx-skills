@@ -77,8 +77,9 @@ skills/
   .gitignore
 
   docs/
-    skill-authoring-guide.md     # How to write a good skill
     usage-patterns.md            # How to use skills across AI tools
+    contributing-skills.md       # How to contribute skills using /skill
+    skill-authoring-guide.md     # How to write a good skill
     databricks-genie-code.md     # Using skills with Databricks Genie Code
     roadmap.md                   # Planned additions
 
@@ -140,6 +141,7 @@ For full installation and usage guidance across all supported tools, see the [Do
 | Document | Description |
 |---|---|
 | [docs/usage-patterns.md](docs/usage-patterns.md) | How to use skills across Claude, Cursor, Skillfish, GitHub Copilot, and other tools |
+| [docs/contributing-skills.md](docs/contributing-skills.md) | How to create and update skills using the `/skill` Claude Code command |
 | [docs/databricks-genie-code.md](docs/databricks-genie-code.md) | Installing and using skills with Databricks Genie Code |
 | [docs/skill-authoring-guide.md](docs/skill-authoring-guide.md) | How to write a well-structured skill |
 | [docs/roadmap.md](docs/roadmap.md) | Planned additions to the library |
