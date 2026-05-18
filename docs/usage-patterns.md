@@ -348,17 +348,61 @@ Complete the task. Note what you learned — a better process step, a new guidin
 
 Open a new Claude Code session in the PowerData Skills repository. This is the session where `/skill` will work.
 
-**3. Bring your learnings across as context**
+**3. Use an extraction prompt in the other session before you close it**
 
-You do not need both sessions open at once. Summarise what changed, paste relevant notes, or describe what you discovered. For example:
+Before switching sessions, ask the AI in the other session to summarise what was learned in a structured way. This makes it much easier to bring useful context across. Use one of the prompts below depending on what you want to do.
+
+---
+
+#### Extraction prompts
+
+Use these at the end of a session in ChatGPT, Copilot, another Claude session, or any other AI tool.
+
+**Creating a new skill** — use this when a whole new process or workflow emerged from the session:
+
+> Before we finish, please summarise what we worked out as if you were writing a procedure for an AI agent to follow this same process in future. Structure your answer as:
+> - **What it does** — one or two sentences describing the purpose
+> - **Who would use it** — the target user and when they would reach for this
+> - **What they provide** — the minimum inputs needed to get started
+> - **The process** — the step-by-step procedure we followed, as numbered steps
+> - **Key principles** — the most important rules and decision points we discovered
+> - **What a good result looks like** — the structure and content of a useful output
+> - **What to avoid** — mistakes, shortcuts, or assumptions that caused problems
+
+**Updating an existing skill** — use this when a session improved on an existing approach:
+
+> We've refined things during this session. Before we finish, summarise specifically what is new or different compared to a standard approach. Focus on:
+> - Any process steps that worked better than expected, and why
+> - New rules or principles that emerged — especially ones that were non-obvious
+> - Failure modes or edge cases we encountered that should be documented
+> - Anything about the output format or structure that should change
+> Keep it focused on the delta — what is genuinely new, not a full recap.
+
+**Capturing failure modes** — use this when a session uncovered what goes wrong:
+
+> Before we finish, I want to capture the failure modes we encountered for future reference. Please list:
+> - What approaches we tried that did not work, and specifically why
+> - Any assumptions we made that turned out to be wrong
+> - Edge cases that the obvious approach does not handle well
+> - Anything a practitioner following this process should explicitly avoid
+
+**Mid-session principle capture** — use this when you want to lock in a decision or rule before moving on:
+
+> Can you state the rule or principle we just worked out as a single, specific, opinionated sentence? Something a practitioner could apply directly without needing further context.
+
+---
+
+**4. Bring the output across and run the command**
+
+Paste the structured summary into your Claude Code session in the skills repo as context, then run the appropriate command. For example:
 
 > "In a website hosting session I found that Azure SWA Free tier does not support custom cache-control headers per route — only a global setting. The current skill implies per-route control is possible. I want to update the Avoid section and fix step 6."
 
-**4. Run `/skill update <skill-name>`**
+**5. Run `/skill update <skill-name>` or `/skill new`**
 
 The command reads the existing skill, takes your context, proposes targeted edits, and bumps the version. From here the normal update workflow applies.
 
-**5. Merge and update locally with Skillfish**
+**6. Merge and update locally with Skillfish**
 
 Once the PR is merged to `main`, run:
 
