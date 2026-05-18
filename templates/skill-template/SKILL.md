@@ -1,10 +1,18 @@
----
-name: skill-name
-description: One-line description of what this skill does
-author: PowerData
-version: 1.0.0
-license: MIT
----
+<!--
+  This is the blank template for a new skill. Copy this folder to skills/<category>/<skill-name>/
+  and fill in all sections before submitting. Remove this comment block and add the YAML
+  frontmatter below with real values:
+
+  ---
+  name: your-skill-name
+  description: One-line description of what this skill does
+  author: PowerData
+  version: 1.0.0
+  license: MIT
+  ---
+
+  Use /skill new in Claude Code to scaffold a skill interactively instead of filling this in manually.
+-->
 
 # [Skill Name]
 
