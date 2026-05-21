@@ -2,7 +2,7 @@
 name: flet-supabase-framework
 description: Framework for a Flet + Supabase multi-platform Python app — correct project structure, dependency config, integration patterns, and hard-won lessons from a full build cycle
 author: POWR-DATA
-version: 2.0.0
+version: 2.1.0
 license: MIT
 ---
 
@@ -124,32 +124,19 @@ exclude = [".venv", "build", ".git", ".github", "__pycache__", "*.pyc"]
 
 ### 3. Write requirements.txt
 
-All transitive dependencies pinned explicitly. After `pip install -e .`, run `pip freeze` and annotate by group:
+All transitive dependencies pinned explicitly. After `pip install -e .`, run `pip freeze` and annotate by group. Always include `flet-web` (required for Dockerfile build steps) and the constrained crypto packages:
 
 ```
 # Core framework
 flet==0.84.0
 flet-web==0.84.0   # REQUIRED — used in Dockerfile RUN steps to patch web assets
 
-# Supabase and sub-packages
-supabase==2.25.1
-supabase-auth==2.25.1
-supabase-functions==2.25.1
-storage3==2.25.1
-postgrest==2.25.1
-realtime==2.25.1
-
+# Supabase + sub-packages (supabase, supabase-auth, storage3, postgrest, realtime, ...)
 # Auth / crypto — Android arm64-v8a constrained versions
-PyJWT==2.12.1
 cryptography==43.0.1
 cffi==1.17.1
-pycparser==3.0
-
-# HTTP client stack
-httpx==0.28.1
-httpcore==1.0.9
-certifi==...
-# ... full transitive set — run pip freeze to get exact versions
+# HTTP client stack (httpx, httpcore, certifi, ...)
+# ... full transitive set from pip freeze
 ```
 
 ### 4. Write services/supabase_client.py (mobile-safe)
@@ -183,25 +170,7 @@ def get_client() -> Client:
 
 ### 5. Write services/auth.py
 
-```python
-from services.supabase_client import get_client
-
-def sign_in(email: str, password: str):
-    return get_client().auth.sign_in_with_password({"email": email, "password": password})
-
-def sign_up(email: str, password: str, **metadata):
-    return get_client().auth.sign_up({
-        "email": email,
-        "password": password,
-        "options": {"data": metadata},
-    })
-
-def sign_out():
-    get_client().auth.sign_out()
-
-def get_user():
-    return get_client().auth.get_user()
-```
+Thin wrappers over the Supabase client — `sign_in`, `sign_up`, `sign_out`, `get_user`. Each function calls `get_client()` and delegates directly to `client.auth`. No state is stored in this module.
 
 ### 6. Write main.py
 
