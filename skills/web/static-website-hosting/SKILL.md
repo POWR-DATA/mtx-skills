@@ -2,7 +2,7 @@
 name: static-website-hosting
 description: Plan and deploy a static website on Azure Static Web Apps with custom domains, DNS, IaC, and CI/CD
 author: PowerData
-version: 1.0.1
+version: 1.2.0
 license: MIT
 ---
 
@@ -49,6 +49,11 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - Use `globalHeaders` in `staticwebapp.config.json` for security headers, not a `/*` route. Route-based headers only apply to HTML responses — CSS, JS, and image requests will be served without them. `globalHeaders` applies to every response type.
 - Set `Cache-Control: public, must-revalidate, max-age=30` globally on Azure SWA Free tier. The Free tier does not support long-lived cache invalidation, so low max-age is the safe default.
 - Write a validation script that checks DNS, HTTPS, and redirect behaviour on both domains. Run it after every deployment or DNS change.
+- On a static HTML site with no templating, every shared component exists as a separate copy per page. Read each page's actual nav markup before editing — CTA text, hrefs, and aria attributes routinely differ between pages.
+- Place mobile menu dropdowns inside `<header>`, not after it. A sticky header is a containing block — a mobile nav placed outside loses `backdrop-filter` and sticky positioning.
+- When adding a hamburger menu to an existing stylesheet, audit all existing mobile media query rules for the nav. Stale rules conflict with new ones. Replace; don't just append.
+- `script-src 'self'` in the CSP silently blocks inline `<script>` tags on the live site. Inline scripts work locally because no CSP is applied during local development. All JavaScript must live in external `.js` files served from the same origin. When adding interactive behaviour to a static site with this CSP, never use inline script blocks — always write to an existing or new `.js` file.
+- After deploying JS or CSS changes, verify behaviour against the live URL using WebFetch or by instructing the user to hard refresh (Ctrl+Shift+R). JS and CSS are cached at `max-age=3600` — the user may be looking at the previous version without realising it.
 
 ## Process
 
@@ -140,6 +145,9 @@ The AI should produce:
 - Do not assume the apex A record IP is permanent — document it and verify if the site ever stops resolving at the apex
 - Do not rely on the Azure portal for reproducible deployments — all configuration should be expressible as Bicep or CLI
 - Do not add security headers to the `/*` route — they will only apply to HTML responses. Use `globalHeaders` to ensure headers are present on CSS, JS, image, and all other response types
+- Do not assume nav markup is identical across pages — inspect each page individually before editing
+- Do not place a mobile menu element after the closing `</header>` tag — it will not inherit backdrop-filter or sticky positioning
+- Do not add inline `<script>` blocks to HTML pages when the site has a `script-src 'self'` CSP — they will be silently blocked on the live site but appear to work locally, making the failure hard to diagnose
 
 ## Example usage
 

@@ -2,7 +2,7 @@
 name: website-seo-and-indexing
 description: Prepare a static website for search engine indexing and submit it to Google Search Console
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -39,6 +39,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - Submit the sitemap in GSC after verification. Use the URL Inspection tool to check individual pages after submission.
 - `lastmod` dates in `sitemap.xml` should reflect actual content changes. Do not set future dates. Priority values (0.0–1.0) are relative — the homepage is typically 1.0.
 - Avoid duplicate indexing by ensuring the non-canonical URL (apex, http) redirects to the canonical before Google crawls it. On Azure SWA, the apex → www redirect is automatic but takes 20–30 minutes to activate after domain validation.
+- GSC shows a robots.txt entry for every URL variant it has crawled. Only the canonical (HTTPS www) needs to return a valid response. A 404 on the HTTP non-www variant is harmless if the HTTPS www version shows "Fetched".
 - Audit existing canonical tags before adding new ones. The tag may already exist and be correct — if it is, the redirect and internal links are the more likely cause of any GSC duplicate signal, not a missing canonical.
 - A 301 redirect on `/index.html → /` is only half the fix for a GSC duplicate. Googlebot follows internal links before encountering redirects — if navigation or anchor links still reference `index.html`, the duplicate persists. The redirect and internal link cleanup are required together.
 - When one `.html` URL duplicate is found in GSC, check all pages for the same pattern. If `index.html` creates a duplicate on one page, it almost certainly exists across the whole site.
@@ -144,6 +145,7 @@ The AI should produce:
 - Do not treat a 301 redirect on `/index.html → /` as a complete fix — internal links pointing to `index.html` must also be updated, or Googlebot will still follow them to the duplicate URL
 - Do not stop at the first `.html` duplicate found — check all pages, as the pattern typically exists across the whole site
 - Do not assume `<title>` tags are correct — they are invisible in browser UI and brand name inconsistencies on secondary pages can persist indefinitely without a deliberate audit pass
+- Do not treat a 404 on the HTTP non-www robots.txt entry in GSC as an error — if the canonical HTTPS www version is fetched successfully, the non-canonical 404 is expected and requires no action
 
 ## Example usage
 
