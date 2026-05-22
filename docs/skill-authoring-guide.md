@@ -161,7 +161,7 @@ Each skill README should include:
 - A "When to use it" section that describes the real-world scenarios where the skill applies
 - A few example use cases using plain language
 
-Use specific, natural terms where relevant: data engineering, analytics engineering, data modelling, data pipeline design, lakehouse architecture, semantic modelling, time-series data, operational data, AI-assisted development. If a term does not naturally describe the skill, leave it out.
+Use specific, natural terms where relevant: data engineering, analytics engineering, data modelling, data pipeline design, lakehouse architecture, semantic modelling, time-series data, operational data, multi-platform app development, mobile app deployment, Android, iOS, Azure Container Apps, static website hosting, web deployment, SEO, AI-assisted development. If a term does not naturally describe the skill, leave it out.
 
 ---
 

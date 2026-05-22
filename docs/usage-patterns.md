@@ -25,7 +25,7 @@ Restart your terminal after installing before running any `npx` command.
 ### Install all Matrix Skills
 
 ```bash
-npx skillfish add POWR-DATA/skills
+npx skillfish add POWR-DATA/mtx-skills
 ```
 
 This detects which AI coding agents are installed on your machine and copies the skills into the appropriate directory for each one.
@@ -36,13 +36,13 @@ If you use Skillfish regularly, install it globally:
 
 ```bash
 npm install -g skillfish
-skillfish add POWR-DATA/skills
+skillfish add POWR-DATA/mtx-skills
 ```
 
 ### Pin to a specific version
 
 ```bash
-npx skillfish add POWR-DATA/skills@v1.0.0
+npx skillfish add POWR-DATA/mtx-skills@v1.0.0
 ```
 
 ### Team projects
@@ -52,7 +52,7 @@ Add a `skillfish.json` manifest to your project so team members can install all 
 ```json
 {
   "version": 1,
-  "skills": ["POWR-DATA/skills"]
+  "skills": ["POWR-DATA/mtx-skills"]
 }
 ```
 
@@ -62,7 +62,7 @@ Then any team member can run:
 npx skillfish install
 ```
 
-> **Note:** Matrix Skills uses a monorepo structure (multiple skills in one repo). Skillfish behaviour with monorepos should be tested on your machine. If individual skill paths are required, reference them as `POWR-DATA/skills/skills/data/dimensional-model-designer` or similar.
+> **Note:** Matrix Skills uses a monorepo structure (multiple skills in one repo). Skillfish behaviour with monorepos should be tested on your machine. If individual skill paths are required, reference them as `POWR-DATA/mtx-skills/skills/data/dimensional-model-designer` or similar.
 
 ---
 
@@ -146,7 +146,7 @@ There are two distinct ways skills integrate with Claude Code. Understanding the
 
 **Library skills** are the skills in this repository (`skills/data/`, `skills/app/`, `skills/web/`, `skills/ai/`, `skills/domain/`). They are plain Markdown files you copy into a project so Claude Code can read them as context. Claude Code treats them as instructions to follow when relevant.
 
-**Slash commands** live in `.claude/commands/` and are invoked directly in Claude Code with a `/` prefix. They are repo workflow tools — not content skills. This repo ships one: `/skill`, which creates, updates, validates, and reviews skills following the library's conventions. Slash commands are a Claude Code-specific mechanism with no cross-tool equivalent at this stage. Other AI tools (Cursor, Copilot, Windsurf) have their own analogous patterns but use different formats and invocation methods — this repo does not currently provide equivalents for those tools.
+**Slash commands** live in `.claude/commands/` and are invoked directly in Claude Code with a `/` prefix. They are repo workflow tools — not content skills. This repo ships one: `/mtx`, which creates, updates, validates, and reviews skills following the library's conventions. Slash commands are a Claude Code-specific mechanism with no cross-tool equivalent at this stage. Other AI tools (Cursor, Copilot, Windsurf) have their own analogous patterns but use different formats and invocation methods — this repo does not currently provide equivalents for those tools.
 
 If you are using skills from this library in a project, you want the library skills approach below. If you are contributing a new skill to this repo using Claude Code, see [Contributing Skills](contributing-skills.md).
 

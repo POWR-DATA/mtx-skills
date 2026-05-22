@@ -21,6 +21,7 @@ Multi-platform Python app development skills:
 - Flet + Supabase App Framework — project scaffolding and integration patterns
 - Flet Multi-Platform Build — Android, iOS, and web Docker CI/CD pipelines
 - Flet ACA Deploy — Azure Container Apps deployment with WebSocket and GHCR guidance
+- Flet Store Submission — Android keystore, signed builds, and Google Play / App Store submission
 - App Icon Asset Generation — production icon sets from an approved high-resolution logo
 
 Web skills (`skills/web/`):
@@ -31,7 +32,7 @@ Web skills (`skills/web/`):
 AI skills (`skills/ai/`):
 
 - Category established; first skills in development
-- `/skill` Claude Code slash command added — creates new skills or updates existing ones interactively, following contribution conventions
+- `/mtx` Claude Code slash command added — creates new skills or updates existing ones interactively, following contribution conventions
 
 ---
 

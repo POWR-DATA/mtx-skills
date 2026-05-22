@@ -1,8 +1,8 @@
 ﻿# Matrix Skills
 
-Reusable AI agent skills for practical data, analytics and architecture delivery.
+Reusable AI agent skills for data engineering, app development, web delivery, and beyond.
 
-Matrix Skills is a public library of structured Markdown skills designed to help AI assistants, coding agents and data professionals apply repeatable delivery methods across data engineering, analytics engineering, data modelling, lakehouse architecture and operational data use cases.
+Matrix Skills is a public library of structured Markdown skills designed to help AI assistants, coding agents, and practitioners apply repeatable delivery methods across a growing range of domains — from data engineering and lakehouse architecture to multi-platform app development, web deployment, and domain-specific workflows.
 
 These skills are not just prompts. They are lightweight delivery procedures that define when to use a skill, what inputs are required, what decisions need to be made, and what a useful output should look like.
 
@@ -10,12 +10,12 @@ These skills are not just prompts. They are lightweight delivery procedures that
 
 ## Who is this for?
 
-- Data engineers
-- Analytics engineers
-- BI developers
-- Solution and data architects
+- Data engineers and analytics engineers
+- BI developers and data architects
+- Python and mobile app developers
+- Web and cloud infrastructure practitioners
 - AI-assisted development practitioners
-- Teams wanting repeatable AI workflows for data projects
+- Teams wanting repeatable AI workflows across any delivery domain
 
 ---
 
@@ -157,7 +157,7 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidance.
 
 ## Disclaimer
 
-This repository is intentionally generic and public-safe. Skills represent generalised patterns for common data delivery tasks.
+This repository is intentionally generic and public-safe. Skills represent generalised patterns for common delivery tasks across data, app, web, and domain-specific work.
 
 Organisation-specific implementations should be created privately by extending these baseline skills with internal standards, platform constraints, naming conventions, security requirements, and governance requirements.
 

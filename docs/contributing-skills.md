@@ -6,36 +6,36 @@ If you are looking for how to use skills in your own projects, see [Usage Patter
 
 ---
 
-## The `/skill` command
+## The `/mtx` command
 
-The `/skill` command is a Claude Code slash command that automates the contributor workflow — creating new skills, updating existing ones, and checking quality before submitting a PR.
+The `/mtx` command is a Claude Code slash command that automates the contributor workflow — creating new skills, updating existing ones, and checking quality before submitting a PR.
 
 > **Claude Code only — and only within this repo.**
 >
-> `/skill` writes to `skills/`, updates the root `README.md`, and follows conventions specific to this library. It must be run with Claude Code opened in the skills repo root. It will not work from another project directory. It is not installed by Skillfish.
+> `/mtx` writes to `skills/`, updates the root `README.md`, and follows conventions specific to this library. It must be run with Claude Code opened in the skills repo root. It will not work from another project directory. It is not installed by Skillfish.
 
 ### Actions
 
-Invoke `/skill` with an action and an optional skill name or category path. Omit arguments to be prompted.
+Invoke `/mtx` with an action and an optional skill name or category path. Omit arguments to be prompted.
 
 | Action | Invocation | What it does |
 |---|---|---|
-| `new` | `/skill new` | Create a new skill from scratch. Guides you through category, purpose, and inputs, then generates all four files and updates the root README. |
-| `update` | `/skill update <skill or category>` | Edit a skill or all skills in a category. Reads current files, asks what needs changing, makes targeted edits, and bumps the version. |
-| `validate` | `/skill validate <skill or category>` | Structural check — frontmatter, required sections, file lengths, placeholder text, attribution, root README listing. Read-only. |
-| `review` | `/skill review <skill or category>` | Content quality assessment — whether principles are opinionated, process steps are actionable, examples are realistic, skill is well-scoped. Read-only. |
+| `new` | `/mtx new` | Create a new skill from scratch. Guides you through category, purpose, and inputs, then generates all four files and updates the root README. |
+| `update` | `/mtx update <skill or category>` | Edit a skill or all skills in a category. Reads current files, asks what needs changing, makes targeted edits, and bumps the version. |
+| `validate` | `/mtx validate <skill or category>` | Structural check — frontmatter, required sections, file lengths, placeholder text, attribution, root README listing. Read-only. |
+| `review` | `/mtx review <skill or category>` | Content quality assessment — whether principles are opinionated, process steps are actionable, examples are realistic, skill is well-scoped. Read-only. |
 
 **Category paths:** pass a category name to run an action across all skills in it.
 
 ```
-/skill validate web          # validates all skills under skills/web/
-/skill review data           # reviews all skills under skills/data/
-/skill update web            # lists web skills, asks which to update
+/mtx validate web          # validates all skills under skills/web/
+/mtx review data           # reviews all skills under skills/data/
+/mtx update web            # lists web skills, asks which to update
 ```
 
 `new` and `update` support up to two rounds of clarifying questions before generating anything. `validate` and `review` are read-only and make no file changes.
 
-The full procedure for each action is in [`.claude/commands/skill.md`](../.claude/commands/skill.md).
+The full procedure for each action is in [`.claude/commands/mtx.md`](../.claude/commands/mtx.md).
 
 ---
 
@@ -45,10 +45,10 @@ The following shows all four actions using a skill created from notes gathered i
 
 ---
 
-**`/skill new`** — create the skill from scratch
+**`/mtx new`** — create the skill from scratch
 
 ```
-/skill new
+/mtx new
 ```
 
 > What should this skill do, who is the target user, and which category?
@@ -85,10 +85,10 @@ yes
 
 ---
 
-**`/skill update`** — improve the skill after a follow-up session
+**`/mtx update`** — improve the skill after a follow-up session
 
 ```
-/skill update it-client-onboarding-assessment
+/mtx update it-client-onboarding-assessment
 ```
 
 > I'm looking at `it-client-onboarding-assessment` v1.0.0. What needs updating?
@@ -120,10 +120,10 @@ yes
 
 ---
 
-**`/skill validate`** — structural check before raising a PR
+**`/mtx validate`** — structural check before raising a PR
 
 ```
-/skill validate it-client-onboarding-assessment
+/mtx validate it-client-onboarding-assessment
 ```
 
 ```
@@ -163,10 +163,10 @@ Result: 14/15 passed. 1 warning — no blocking issues. Ready to submit.
 
 ---
 
-**`/skill review`** — content quality assessment
+**`/mtx review`** — content quality assessment
 
 ```
-/skill review it-client-onboarding-assessment
+/mtx review it-client-onboarding-assessment
 ```
 
 ```
@@ -197,7 +197,7 @@ overlap with existing skills.
 
 ## Cross-session workflow
 
-A common scenario: you have been working in a separate session (ChatGPT, Copilot, another Claude session) on a website, app, or client project, and you have learned something worth capturing in the skills library. You cannot run `/skill` from that other session.
+A common scenario: you have been working in a separate session (ChatGPT, Copilot, another Claude session) on a website, app, or client project, and you have learned something worth capturing in the skills library. You cannot run `/mtx` from that other session.
 
 **1. Finish your work in the other session**
 
@@ -213,14 +213,14 @@ Open a separate Claude Code session in the Matrix Skills repository.
 
 **4. Paste the summary first, then run the command**
 
-The `/skill` command checks the conversation for context before asking questions. Pasting first skips the clarifying questions and goes straight to proposing edits.
+The `/mtx` command checks the conversation for context before asking questions. Pasting first skips the clarifying questions and goes straight to proposing edits.
 
 ```
 [paste your structured summary here]
 ```
 
 ```
-/skill update static-website-hosting
+/mtx update static-website-hosting
 ```
 
 If you prefer the interactive flow, run the command first — it will ask what needs updating and you can paste then.
@@ -234,14 +234,14 @@ Once done, push your branch and open a PR. CI validates file structure and READM
 After merging to `main`:
 
 ```bash
-npx skillfish add POWR-DATA/skills
+npx skillfish add POWR-DATA/mtx-skills
 ```
 
 ---
 
 ## Extraction prompts
 
-Use these at the end of a session in ChatGPT, Copilot, another Claude session, or any other AI tool. Paste the response into your Claude Code session before running `/skill`.
+Use these at the end of a session in ChatGPT, Copilot, another Claude session, or any other AI tool. Paste the response into your Claude Code session before running `/mtx`.
 
 ---
 
