@@ -197,21 +197,23 @@ overlap with existing skills.
 
 ## Cross-session workflow
 
-A common scenario: you have been working in a separate session (ChatGPT, Copilot, another Claude session) on a website, app, or client project, and you have learned something worth capturing in the skills library. You cannot run `/mtx` from that other session.
+A common scenario: you have been working in a separate Claude session on a website, app, or client project, and you have learned something worth capturing in the skills library.
 
-**1. Finish your work in the other session**
+### Lightweight: use `/mtx capture` in the moment
 
-Note what you learned — a better process step, a new guiding principle, a failure mode, or enough new material for a new skill.
+`/mtx capture` is a global command — it works in any project session, not just the skills repo. When you discover something worth preserving, run it immediately before the context is lost.
 
-**2. Use an extraction prompt before closing the session**
+```
+/mtx capture
+```
 
-Ask the AI in the other session to summarise what was learned in a structured way. Use one of the prompts below.
+Claude infers the relevant skill from context, distils the discovery into 1–3 sentences, assigns topic tags, and appends an entry to `mtx-captures.md` in your current project root.
 
-**3. Open the skills repo in Claude Code**
+When you next run `/mtx update` in the skills repo, it automatically scans sibling project directories for `mtx-captures.md` files and surfaces any entries matching the skill you are updating. Captured entries are removed from the source file once applied.
 
-Open a separate Claude Code session in the Matrix Skills repository.
+### Structured: use an extraction prompt before closing a session
 
-**4. Paste the summary first, then run the command**
+For more substantial changes — new process steps, redesigned output format, enough material for a new skill — ask the AI to summarise what was learned before you close the session. Use one of the extraction prompts below, paste the response into a skills repo session, then run `/mtx update` or `/mtx new`.
 
 The `/mtx` command checks the conversation for context before asking questions. Pasting first skips the clarifying questions and goes straight to proposing edits.
 
@@ -223,13 +225,11 @@ The `/mtx` command checks the conversation for context before asking questions. 
 /mtx update static-website-hosting
 ```
 
-If you prefer the interactive flow, run the command first — it will ask what needs updating and you can paste then.
-
-**5. Raise a PR and merge**
+### Raise a PR and merge
 
 Once done, push your branch and open a PR. CI validates file structure and README listing automatically.
 
-**6. Update your local skills with Skillfish**
+### Update your local skills with Skillfish
 
 After merging to `main`:
 
