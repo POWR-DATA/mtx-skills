@@ -260,11 +260,28 @@ If no target was given, ask which skill or category to update.
 
 Read `SKILL.md`, `README.md`, `example-input.md`, and `example-output.md` for the identified skill. Confirm back to the user which skill you are looking at and what version it is currently on.
 
-### Step 3: Understand what needs changing
+### Step 3: Check for MTX captures
 
-Check the current conversation for context first. If the user has already pasted a structured summary, notes, or description of what changed, extract the relevant changes from that and proceed directly to Step 4 without asking questions.
+Before asking the user anything, scan for `mtx-captures.md` files in sibling directories of this repo (i.e. `../*/mtx-captures.md`). Read any that exist and extract all entries whose skill tag matches the target skill name.
 
-If the conversation contains no useful context, ask in a single message:
+If matching entries are found, present them to the user:
+
+> Found captured discoveries for `<skill-name>` in `<project>/mtx-captures.md`:
+>
+> - [entry summary]
+> - [entry summary]
+>
+> These will be used as source material. Anything to add or override?
+
+Entries marked with `~` are tentative — flag these clearly and ask the user to confirm whether they should be applied.
+
+If no captures are found, proceed to the conversation context check below.
+
+### Step 4: Understand what needs changing
+
+Check the current conversation for context first. If the user has already pasted a structured summary, notes, or description of what changed, extract the relevant changes from that and proceed directly to Step 5 without asking questions.
+
+If the conversation contains no useful context and no captures were found, ask in a single message:
 
 > What needs updating? For example:
 > - A process step that is wrong or incomplete
@@ -277,7 +294,7 @@ If the conversation contains no useful context, ask in a single message:
 
 If answers are still vague after one round, ask one focused follow-up. **Maximum two rounds of questions.**
 
-### Step 4: Confirm the proposed changes
+### Step 5: Confirm the proposed changes
 
 Before editing anything, summarise:
 
@@ -287,7 +304,7 @@ Before editing anything, summarise:
 
 Ask the user to confirm or adjust. Only proceed after confirmation.
 
-### Step 5: Make targeted edits
+### Step 6: Make targeted edits
 
 Edit only what needs changing. **Do not regenerate files from scratch.** Preserve all existing content that is still correct.
 
@@ -295,7 +312,7 @@ If changes to `SKILL.md` are significant (new sections, restructured output form
 
 Do not touch the root `README.md` unless the skill's one-line description has changed — in which case update the description in the root README table to match.
 
-### Step 6: Bump the version
+### Step 7: Bump the version
 
 Update the `version` field in `SKILL.md` frontmatter:
 
@@ -303,7 +320,11 @@ Update the `version` field in `SKILL.md` frontmatter:
 - New content (new principles, new process steps, new output sections): increment minor — `1.0.0` → `1.1.0`
 - Structural overhaul (new purpose, redesigned output format): increment major — `1.0.0` → `2.0.0`
 
-### Step 7: Report completion
+### Step 8: Clean up consumed captures
+
+If any MTX captures were used as source material in this update, remove those specific entries from their source `mtx-captures.md` file. Leave any entries that were not used (different skill tags, or entries the user chose not to apply). If no captures were consumed, skip this step.
+
+### Step 9: Report completion
 
 List every file changed and describe what was modified. Note the old and new version number.
 
