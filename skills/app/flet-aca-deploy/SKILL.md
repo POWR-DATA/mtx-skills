@@ -2,7 +2,7 @@
 name: flet-aca-deploy
 description: Deploy a Flet web app to Azure Container Apps — covers all pitfalls: container startup, WebSocket transport, GHCR auth, ACA provisioning, revision forcing, and health diagnosis
 author: POWR-DATA
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -81,15 +81,7 @@ Pin the same version as `flet` to avoid version mismatch.
 
 Browsers look for `/favicon.png` at the root. The project `assets/` folder is served at `/assets/`, so `assets/favicon.png` is never seen as the favicon. The default favicon comes from inside the `flet_web` package at `flet_web/web/favicon.png`.
 
-**Fix: overwrite it in the Dockerfile after pip install.**
-
-```dockerfile
-COPY assets/favicon.png /tmp/favicon.png
-RUN pip install --no-cache-dir -r requirements.txt && \
-    python -c "import flet_web, os, shutil; shutil.copy('/tmp/favicon.png', os.path.join(os.path.dirname(flet_web.__file__), 'web', 'favicon.png'))"
-```
-
-Or more concisely (after `COPY . .`):
+**Fix: overwrite it in the Dockerfile after `COPY . .`:**
 
 ```dockerfile
 RUN python -c "import flet_web, os, shutil; shutil.copy('assets/favicon.png', os.path.join(os.path.dirname(flet_web.__file__), 'web', 'favicon.png'))"
@@ -103,7 +95,7 @@ Do not place `favicon.png` in the project root expecting Flet to serve it — Fl
 
 The Flutter web loading animation lives at `flet_web/web/icons/loading-animation.png` (not the web root). It defaults to a Flutter logo. The CSS scale that controls its displayed size is in `flet_web/web/index.html`.
 
-**Full Dockerfile pattern** — patches favicon, PWA icons, loading animation, and splash scale in one `RUN` step:
+Patch all assets (favicon, PWA icons, loading animation, splash scale) in one `RUN` step after `COPY . .`:
 
 ```dockerfile
 RUN python -c "\

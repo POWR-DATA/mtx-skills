@@ -2,7 +2,7 @@
 name: app-icon-asset-generation
 description: Generate a consistent application icon asset set from an approved high-resolution logo, including large app assets, small UI icons, favicons, transparent PNGs, and SVG micro icons
 author: POWR-DATA
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -141,37 +141,21 @@ The AI should structure its response as follows:
 
 ## Recommended asset set
 
-Adjust based on the user's platform, but a useful default set is:
+Adjust based on the user's platform. Default set:
 
-### Large/detail assets
-
-- `logo_2048.png` — transparent PNG, splash or high-resolution master
-- `logo_1024.png` — transparent PNG, app icon/store base
-- `logo_512.png` — transparent PNG, general app use
-- `logo_512.svg` — SVG version if suitable
-- `logo_192.png` — Android/web launcher size
-- `logo_120.png` — login hero or compact UI branding
-
-### Micro assets
-
-- `microicon.svg` — scalable simplified icon
-- `microicon_32.png` — small UI preview/export
-- `microicon_28.png` — AppBar or toolbar icon
-- `favicon.png` — browser favicon candidate
-- `favicon.ico` — optional browser-specific export
-
-## Size guidance
-
-| Size | Use | Notes |
+| File | Size | Use |
 |---|---|---|
-| 2048x2048 | Splash, high-resolution master | Good for large displays and future export |
-| 1024x1024 | App/store icon base | Common master size for app icon workflows |
-| 512x512 | General logo asset | Useful for web/app previews |
-| 192x192 | Android/PWA launcher | Common launcher/web manifest size |
-| 120x120 | Login hero or compact brand mark | Often better than 96 for modern high-DPI UI |
-| 32x32 | Favicon/small UI | Good practical browser and toolbar test size |
-| 28x28 | Micro UI/AppBar | Primary micro-icon target |
-| 16x16 | Tiny favicon | Usually requires ultra-simplification |
+| `logo_2048.png` | 2048×2048 | Transparent PNG — splash screen, high-res master |
+| `logo_1024.png` | 1024×1024 | Transparent PNG — app icon / store base |
+| `logo_512.png` | 512×512 | Transparent PNG — general app use, PWA |
+| `logo_512.svg` | — | SVG version if suitable |
+| `logo_192.png` | 192×192 | Android / PWA launcher |
+| `logo_120.png` | 120×120 | Login hero or compact UI branding |
+| `microicon.svg` | — | Scalable simplified icon |
+| `microicon_32.png` | 32×32 | Small UI preview / favicon test |
+| `microicon_28.png` | 28×28 | AppBar or toolbar icon |
+| `favicon.png` | 32×32 | Browser favicon candidate |
+| `favicon.ico` | — | Optional browser-specific export |
 
 ## Quality checklist
 
@@ -203,29 +187,6 @@ Adjust based on the user's platform, but a useful default set is:
 - Using pure black or arbitrary background colours unless the user requested fixed-background variants
 - Continuing to iterate from a failed simplified icon when the user wants the source logo used as the basis
 - Using excessive glow that causes the icon to blur at small sizes
-
-## Implementation notes for AI agents
-
-When using Python to create PNG exports:
-
-- Use `PIL.Image.open(...).convert("RGBA")`
-- Use high-quality resizing such as `Image.LANCZOS`
-- Save output files individually
-- Confirm dimensions after export
-- Check transparency by inspecting alpha values in corner pixels
-
-When creating SVGs:
-
-- If producing a true vector SVG, use clean path geometry
-- If tracing from a PNG, smooth the contours and provide a PNG preview
-- If embedding a PNG inside SVG, state clearly that it is a raster image wrapped in SVG
-- Always provide the `.svg` file as a downloadable asset
-
-When creating micro icons:
-
-- Generate preview PNGs at 28x28 and 32x32
-- Review recognisability at actual size, not only at 512px
-- Simplify until the icon reads clearly
 
 ## Example usage
 

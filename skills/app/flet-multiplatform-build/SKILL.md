@@ -2,7 +2,7 @@
 name: flet-multiplatform-build
 description: Build Android, iOS, and web Docker artifacts for a Flet app — covers Android silent packaging failures, GHCR/ACA deploy patterns, web asset quality, and local dev gotchas
 author: POWR-DATA
-version: 2.0.0
+version: 2.2.0
 license: MIT
 ---
 
@@ -275,55 +275,78 @@ Always uninstall first — debug builds from different CI runs have different si
 
 ### iOS
 
-9. iOS builds require a macOS runner. Write `.github/workflows/build-ios.yml`:
-   ```yaml
-   name: Build iOS
-   on:
-     workflow_dispatch:
-   jobs:
-     build-ios:
-       runs-on: macos-latest
-       steps:
-         - uses: actions/checkout@v4
-         - uses: actions/setup-python@v5
-           with:
-             python-version: "3.12"
-         - uses: subosito/flutter-action@v2
-           with:
-             channel: stable
-             cache: true
-         - name: Install Python dependencies
-           run: pip install -r requirements.txt
-         - name: Build iOS (unsigned)
-           run: flet build ipa --verbose
-         - uses: actions/upload-artifact@v4
-           with:
-             name: ios-ipa
-             path: build/ipa/
-             retention-days: 7
-   ```
-   This produces an unsigned IPA for local testing only. Signed distribution builds require Apple Developer Program enrollment ($99/year, annual — no monthly option). Xcode only runs on macOS — Windows cannot build iOS apps directly.
+9. **Require a paid Apple Developer Program account ($99 USD/year).** Flet's Python runtime on iOS requires proper Apple code signing entitlements to initialise on a physical device. Without a paid certificate, the app launches to a permanent black screen with no crash logs — Flutter loads but Python never starts. This is a platform security enforcement, not an app code issue. Enrol at developer.apple.com/programs/enroll.
 
-### Signing (before store submission)
-
-10. Android signing:
-    ```bash
-    keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000
-    base64 -i upload-keystore.jks | pbcopy   # macOS — paste into GitHub Secret
+10. **Set `app.bundle_id` in `pyproject.toml` before building** — the build will fail without it. All app metadata must be in a single `[tool.flet.app]` section. Do not mix dotted keys under `[tool.flet]` with a separate `[tool.flet.app]` section — TOML will reject it as a duplicate declaration:
+    ```toml
+    [tool.flet.app]
+    name = "YourApp"
+    bundle_id = "com.yourname.yourapp"
+    version = "1.0.0"
+    build_number = 1
+    icon = "assets/appicon_1254.png"
+    splash = "assets/logo_2048.png"
+    exclude = [".venv", "build", ".git", ".github", "__pycache__", "*.pyc"]
     ```
-    Required secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `ANDROID_STORE_PASSWORD`
 
-11. iOS signing secrets (requires Apple Developer Program):
-    - `APPLE_CERTIFICATE_BASE64`
-    - `APPLE_CERTIFICATE_PASSWORD`
-    - `APPLE_PROVISIONING_PROFILE_BASE64`
-    - `APP_STORE_CONNECT_API_KEY_ID`
-    - `APP_STORE_CONNECT_ISSUER_ID`
-    - `APP_STORE_CONNECT_API_KEY_BASE64`
+11. Write `.github/workflows/build-ios.yml` with pip cache, xcarchive packaging, and ad-hoc signing:
+    ```yaml
+    name: Build iOS
+    on:
+      workflow_dispatch:
+    jobs:
+      build-ios:
+        runs-on: macos-latest
+        steps:
+          - uses: actions/checkout@v4
+          - uses: actions/setup-python@v5
+            with:
+              python-version: "3.12"
+          - uses: subosito/flutter-action@v2
+            with:
+              channel: stable
+              cache: true
+          - uses: actions/cache@v4
+            with:
+              path: ~/.cache/pip
+              key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+              restore-keys: ${{ runner.os }}-pip-
+          - run: pip install -r requirements.txt
+          - name: Build iOS (unsigned)
+            run: flet build ipa --verbose
+          - name: Package IPA from xcarchive
+            run: |
+              XCARCHIVE=$(find build/ipa -name "*.xcarchive" | head -1)
+              APP=$(find "$XCARCHIVE/Products/Applications" -name "*.app" | head -1)
+              codesign --force --deep --sign - "$APP"
+              mkdir -p /tmp/ipa-stage/Payload
+              cp -r "$APP" /tmp/ipa-stage/Payload/
+              cd /tmp/ipa-stage
+              zip -r app.ipa Payload
+              cp app.ipa "$GITHUB_WORKSPACE/build/ipa/app.ipa"
+          - uses: actions/upload-artifact@v4
+            with:
+              name: ios-ipa
+              path: build/ipa/app.ipa
+              retention-days: 7
+    ```
+    **Why the packaging step:** `flet build ipa` without signing credentials produces an `.xcarchive`, not a ready-to-install `.ipa`. The packaging step extracts the `.app`, ad-hoc signs it, wraps it in the required `Payload/` structure, and zips it to `.ipa`. Upload the specific `.ipa` path (not the whole `build/ipa/` directory) to exclude the xcarchive from the artifact.
 
-12. Before store submission, fill in `pyproject.toml [tool.flet]`:
-    - `app.name`, `app.bundle_id`, `app.version`, `app.build_number`
-    - Update platform-specific URL constants in the app (Play Store / App Store review URL)
+12. **Python packaging confirmation:** "Packaged Python app ✅" appearing in the build log after ~30–40 seconds confirms Python dependencies were bundled successfully for iOS. This is the expected timing for iOS (different from Android's 3–8 minute rule).
+
+13. **Diagnosing a black screen on device:**
+    - Check device: Settings → Privacy & Security → Analytics & Improvements → Analytics Data for any file with the app name. No file = not crashing, Python runtime not starting = signing issue.
+    - Check app switcher preview — if also black, Flutter rendered nothing at all.
+    - Both indicators pointing to black = signing entitlements issue, not app code. Fix: proper Apple Developer certificate.
+
+---
+
+## GitHub Actions free tier limits
+
+- **Artifact storage: 500 MB total** (free tier). Large build artifacts (IPA ~80 MB, APK ~50 MB) fill this quickly. Delete old workflow runs regularly via the GitHub Actions UI or `gh run delete <id>`. When storage is full, artifact upload steps fail — this does not mean the build failed.
+- **macOS runners cost 10× minutes.** A 15-minute iOS build consumes 150 of your 2,000 free minutes/month. Ubuntu (Android, web) is 1×.
+- **Public repos have unlimited Actions minutes.** If iOS build quotas are a concern, making the repo public is the simplest fix — all secrets remain protected in GitHub Secrets regardless of repo visibility.
+- **Workaround when artifact storage is full:** Output base64-encoded files to the workflow log (see keystore generation pattern above) and copy directly from the log. Only use for one-time setup files, not production artifacts.
 
 ---
 
@@ -331,7 +354,7 @@ Always uninstall first — debug builds from different CI runs have different si
 
 | Tier | Command | Time | Use for |
 |------|---------|------|---------|
-| Desktop | `flet run main.py` | Instant | All logic, Supabase, navigation, UI |
+| Desktop | `flet run main.py` | Instant | All logic, Supabase, navigation, UI — 90% of dev |
 | Web local | `flet run --web --port 8550 main.py` → `http://localhost:8550/` | Seconds | Web rendering, before every push |
 | Android (CI) | push → `bash install-apk.sh` | ~12 min | Mobile-specific behaviour, official artifact |
 | Android (local) | `flet build apk` + `adb install` | ~5 min | Frequent mobile testing (requires Flutter locally) |
@@ -350,6 +373,7 @@ Always uninstall first — debug builds from different CI runs have different si
 - [ ] Dockerfile RUN step patches flet_web assets: favicon, PWA icons, loading-animation, CSS scale
 - [ ] AAB build and upload steps gated with `if: github.event_name == 'workflow_dispatch'`
 - [ ] Pip cache step added to Android workflow before `pip install`
+- [ ] Supabase URL/key embedded as code defaults in `supabase_client.py`
 - [ ] App icon is transparent PNG — 1024×1024px; splash screen 2048×2048px (separate files)
 - [ ] All `ft.Image` controls have `filter_quality=ft.FilterQuality.HIGH`
 - [ ] AppBar icon uses a purpose-built small source (≤48px); login/splash images use large source (≥512px)
@@ -384,6 +408,10 @@ Always uninstall first — debug builds from different CI runs have different si
 - `ft.alignment.top_center` — does not exist in Flet 0.84; use `View.horizontal_alignment`
 - `expand=True` with nested containers and `ft.Alignment` for centering in web views — unreliable
 - Navigating to `http://0.0.0.0:PORT/` in browser on Windows — use `localhost:PORT`
+- Attempting to run Flet iOS apps via AltStore / free Apple ID certificate — Python runtime won't initialise; paid developer account required
+- Uploading `build/ipa/` directory as artifact — includes the xcarchive; specify the `.ipa` file path directly
+- Mixing `app.*` dotted keys under `[tool.flet]` with a `[tool.flet.app]` section — TOML duplicate declaration error; use one `[tool.flet.app]` section only
+- Changing app code to fix a black screen on iOS — if there are no crash logs and the app switcher is also black, it is a signing issue not a code issue
 
 ---
 
