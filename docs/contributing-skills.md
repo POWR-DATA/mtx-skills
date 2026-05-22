@@ -1,6 +1,6 @@
-# Contributing Skills
+﻿# Contributing Skills
 
-This guide is for contributors who want to create, update, or improve skills in the PowerData Skills library using Claude Code.
+This guide is for contributors who want to create, update, or improve skills in the Matrix Skills library using Claude Code.
 
 If you are looking for how to use skills in your own projects, see [Usage Patterns](usage-patterns.md).
 
@@ -209,7 +209,7 @@ Ask the AI in the other session to summarise what was learned in a structured wa
 
 **3. Open the skills repo in Claude Code**
 
-Open a separate Claude Code session in the PowerData Skills repository.
+Open a separate Claude Code session in the Matrix Skills repository.
 
 **4. Paste the summary first, then run the command**
 

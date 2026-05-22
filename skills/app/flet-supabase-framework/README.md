@@ -1,4 +1,4 @@
-# Flet + Supabase App Framework
+﻿# Flet + Supabase App Framework
 
 Scaffold a new Python cross-platform app using Flet and Supabase from the start — with the correct project structure, dependency configuration, and integration patterns that prevent the class of build failures that only appear on device if set up incorrectly.
 
@@ -38,7 +38,7 @@ This is the starting point for a Flet app. Once the framework is in place and ru
 
 | Item | Details |
 |---|---|
-| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Source library | [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) |
 | Maintained by | [PowerData](https://powrdata.com.au) |
 | More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
 | Licence | MIT |

@@ -1,4 +1,4 @@
-# App Icon Asset Generation
+﻿# App Icon Asset Generation
 
 Generate a complete, production-ready icon asset set for a multi-platform application from an approved high-resolution source logo.
 
@@ -29,7 +29,7 @@ Android, iOS, Flet, Flutter, web (PWA), desktop.
 
 | Item | Details |
 |---|---|
-| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Source library | [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) |
 | Maintained by | [PowerData](https://powrdata.com.au) |
 | More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
 | Licence | MIT |

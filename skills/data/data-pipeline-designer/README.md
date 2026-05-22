@@ -1,4 +1,4 @@
-# Data Pipeline Designer
+﻿# Data Pipeline Designer
 
 Design a high-level data pipeline for source-to-target data flows.
 
@@ -39,7 +39,7 @@ Copy the content of `SKILL.md` into your AI tool as an instruction or system pro
 
 | Item | Details |
 |---|---|
-| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Source library | [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) |
 | Maintained by | [PowerData](https://powrdata.com.au) |
 | More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
 | Licence | MIT |

@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   This is the blank template for a new skill. Copy this folder to skills/<category>/<skill-name>/,
   rename this file to SKILL.md, and fill in all sections before submitting.
   Remove this comment block and add the YAML frontmatter below with real values:
@@ -73,4 +73,4 @@ The AI should structure its response as follows:
 
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

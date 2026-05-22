@@ -1,4 +1,4 @@
----
+﻿---
 name: static-website-hosting
 description: Plan and deploy a static website on Azure Static Web Apps with custom domains, DNS, IaC, and CI/CD
 author: PowerData
@@ -155,4 +155,4 @@ The AI should produce:
 
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

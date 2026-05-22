@@ -1,4 +1,4 @@
----
+﻿---
 name: dimensional-model-designer
 description: Design a star schema or dimensional model for BI and analytics reporting
 author: PowerData
@@ -103,4 +103,4 @@ Provide as many of the following as available. Partial inputs are acceptable —
 
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

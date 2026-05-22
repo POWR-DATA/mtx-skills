@@ -1,4 +1,4 @@
-# Flet ACA Deploy
+﻿# Flet ACA Deploy
 
 Deploy a Flet web app to Azure Container Apps — covering every pitfall from container startup to WebSocket transport to CI/CD revision management.
 
@@ -35,7 +35,7 @@ Deploy a Flet web app to Azure Container Apps — covering every pitfall from co
 
 | Item | Details |
 |---|---|
-| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Source library | [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) |
 | Maintained by | [PowerData](https://powrdata.com.au) |
 | More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
 | Licence | MIT |

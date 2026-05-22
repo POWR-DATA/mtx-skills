@@ -1,8 +1,8 @@
-# PowerData Skills
+﻿# Matrix Skills
 
 Reusable AI agent skills for practical data, analytics and architecture delivery.
 
-PowerData Skills is a public library of structured Markdown skills designed to help AI assistants, coding agents and data professionals apply repeatable delivery methods across data engineering, analytics engineering, data modelling, lakehouse architecture and operational data use cases.
+Matrix Skills is a public library of structured Markdown skills designed to help AI assistants, coding agents and data professionals apply repeatable delivery methods across data engineering, analytics engineering, data modelling, lakehouse architecture and operational data use cases.
 
 These skills are not just prompts. They are lightweight delivery procedures that define when to use a skill, what inputs are required, what decisions need to be made, and what a useful output should look like.
 
@@ -116,7 +116,7 @@ This works with Claude Code, Cursor, Windsurf, GitHub Copilot, Gemini CLI, and 3
 
 ```
 I have a set of reusable skills here:
-https://github.com/POWR-DATA/skills
+https://github.com/POWR-DATA/mtx-skills
 
 Please read the skills, summarise what is available, and use them
 automatically when relevant in this conversation. Confirm once loaded.
@@ -165,7 +165,7 @@ Organisation-specific implementations should be created privately by extending t
 
 ## Maintained by
 
-PowerData Skills is maintained by [PowerData](https://powrdata.com.au).
+Matrix Skills is maintained by [PowerData](https://powrdata.com.au).
 
 For more context about the skills library, visit the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills).
 

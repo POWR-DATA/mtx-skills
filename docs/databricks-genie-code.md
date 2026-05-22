@@ -1,4 +1,4 @@
-# Using these skills with Databricks Genie Code
+﻿# Using these skills with Databricks Genie Code
 
 This guide explains how to install skills from this repository into Databricks Genie Code so they are available during agent sessions.
 
@@ -65,10 +65,10 @@ User-level skills are available only to your Databricks user account. This is th
 Clone the repository to your local machine or to a Databricks Repo:
 
 ```bash
-git clone https://github.com/POWR-DATA/skills.git
+git clone https://github.com/POWR-DATA/mtx-skills.git
 ```
 
-Or, if working directly inside a Databricks workspace, add `https://github.com/POWR-DATA/skills` as a Git-backed Repo under **Workspace → Repos**.
+Or, if working directly inside a Databricks workspace, add `https://github.com/POWR-DATA/mtx-skills` as a Git-backed Repo under **Workspace → Repos**.
 
 **Step 2 — Create the skills directory**
 
@@ -147,11 +147,11 @@ Replace the `target_root` in the Step 3 script above and run the same copy loop.
 
 Paste the following prompt into a Genie Code Agent Mode session. The agent will clone the repository, find every skill, copy it into your user skills folder, validate each skill, and report the result.
 
-Before pasting, replace `https://github.com/POWR-DATA/skills` with a different repository URL if you are installing from a fork or private copy. For workspace-level installation, replace the target path with `/Workspace/.assistant/skills`.
+Before pasting, replace `https://github.com/POWR-DATA/mtx-skills` with a different repository URL if you are installing from a fork or private copy. For workspace-level installation, replace the target path with `/Workspace/.assistant/skills`.
 
 ```
 Install AI skills from this GitHub repository into my Genie Code user skills folder:
-https://github.com/POWR-DATA/skills
+https://github.com/POWR-DATA/mtx-skills
 
 Follow these steps exactly using Python. Do not use dbutils.fs, workspace CLI commands, or Databricks REST API calls — use only subprocess and shutil.
 
@@ -162,7 +162,7 @@ Follow these steps exactly using Python. Do not use dbutils.fs, workspace CLI co
 
 2. Clone the repository to a temporary directory:
    - If /tmp/powr-skills-install already exists, delete it with shutil.rmtree before cloning.
-   - Clone using: subprocess.run(["git", "clone", "--depth", "1", "https://github.com/POWR-DATA/skills", "/tmp/powr-skills-install"], check=True)
+   - Clone using: subprocess.run(["git", "clone", "--depth", "1", "https://github.com/POWR-DATA/mtx-skills", "/tmp/powr-skills-install"], check=True)
 
 3. Find every skill folder:
    - Walk /tmp/powr-skills-install recursively.

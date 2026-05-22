@@ -1,4 +1,4 @@
-# Skill Authoring Guide
+﻿# Skill Authoring Guide
 
 This guide explains how to write a high-quality skill for this library.
 
@@ -125,7 +125,7 @@ Each `SKILL.md` file should remain focused on the skill itself. Do not add heavy
 ```
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
 ```
 
 Each skill `README.md` can include a slightly more structured footer at the bottom:
@@ -137,7 +137,7 @@ Each skill `README.md` can include a slightly more structured footer at the bott
 
 | Item | Details |
 |---|---|
-| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Source library | [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) |
 | Maintained by | [PowerData](https://powrdata.com.au) |
 | More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
 | Licence | MIT |

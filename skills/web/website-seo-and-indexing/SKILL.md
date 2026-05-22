@@ -1,4 +1,4 @@
----
+﻿---
 name: website-seo-and-indexing
 description: Prepare a static website for search engine indexing and submit it to Google Search Console
 author: PowerData
@@ -153,4 +153,4 @@ The AI should produce:
 
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

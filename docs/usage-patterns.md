@@ -1,4 +1,4 @@
-# Usage Patterns
+﻿# Usage Patterns
 
 This page describes how to use skills from this library across common AI tools.
 
@@ -22,7 +22,7 @@ brew install node
 
 Restart your terminal after installing before running any `npx` command.
 
-### Install all PowerData skills
+### Install all Matrix Skills
 
 ```bash
 npx skillfish add POWR-DATA/skills
@@ -62,7 +62,7 @@ Then any team member can run:
 npx skillfish install
 ```
 
-> **Note:** PowerData Skills uses a monorepo structure (multiple skills in one repo). Skillfish behaviour with monorepos should be tested on your machine. If individual skill paths are required, reference them as `POWR-DATA/skills/skills/data/dimensional-model-designer` or similar.
+> **Note:** Matrix Skills uses a monorepo structure (multiple skills in one repo). Skillfish behaviour with monorepos should be tested on your machine. If individual skill paths are required, reference them as `POWR-DATA/skills/skills/data/dimensional-model-designer` or similar.
 
 ---
 
@@ -80,7 +80,7 @@ Paste this into a new Claude.ai conversation:
 
 ```
 I have a set of reusable skills here:
-https://github.com/POWR-DATA/skills
+https://github.com/POWR-DATA/mtx-skills
 
 Please:
 1. Read the skills in the repo
@@ -158,7 +158,7 @@ Claude Code works best with skills stored locally in your project. The recommend
 
 ```bash
 # Clone the skills repo
-git clone https://github.com/POWR-DATA/skills.git
+git clone https://github.com/POWR-DATA/mtx-skills.git
 
 # In your project, create the skills folder
 mkdir -p .claude/skills

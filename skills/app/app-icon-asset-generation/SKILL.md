@@ -1,4 +1,4 @@
----
+﻿---
 name: app-icon-asset-generation
 description: Generate a consistent application icon asset set from an approved high-resolution logo, including large app assets, small UI icons, favicons, transparent PNGs, and SVG micro icons
 author: POWR-DATA
@@ -194,4 +194,4 @@ Adjust based on the user's platform. Default set:
 
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

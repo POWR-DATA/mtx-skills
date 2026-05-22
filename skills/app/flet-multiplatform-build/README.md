@@ -1,4 +1,4 @@
-# Flet Multi-Platform Build
+﻿# Flet Multi-Platform Build
 
 Configure the complete build pipeline for a Flet Python app targeting Android APK/AAB, iOS IPA, and web (Docker server mode), with GitHub Actions CI/CD — and explicit guidance on the silent failure modes that cause builds to pass CI but crash on device.
 
@@ -35,7 +35,7 @@ Configure the complete build pipeline for a Flet Python app targeting Android AP
 
 | Item | Details |
 |---|---|
-| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Source library | [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) |
 | Maintained by | [PowerData](https://powrdata.com.au) |
 | More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
 | Licence | MIT |

@@ -1,4 +1,4 @@
----
+﻿---
 name: flet-aca-deploy
 description: Deploy a Flet web app to Azure Container Apps — covers all pitfalls: container startup, WebSocket transport, GHCR auth, ACA provisioning, revision forcing, and health diagnosis
 author: POWR-DATA
@@ -364,4 +364,4 @@ echo "$SP_JSON" | "$GH" secret set AZURE_CREDENTIALS --repo "$REPO"
 
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

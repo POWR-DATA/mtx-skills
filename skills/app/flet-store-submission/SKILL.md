@@ -1,4 +1,4 @@
----
+﻿---
 name: flet-store-submission
 description: Sign and submit a Flet app to the Google Play Store and Apple App Store — covers keystore generation, signing config, store accounts, and app listing preparation
 author: POWR-DATA
@@ -184,4 +184,4 @@ After the app builds successfully via `flet-multiplatform-build`. Apply when pre
 
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

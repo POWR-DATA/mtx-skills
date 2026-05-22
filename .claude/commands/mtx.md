@@ -1,24 +1,24 @@
-# Skill
+﻿# Skill
 
 $ARGUMENTS
 
-You are helping the user work with a skill in the PowerData Skills library.
+You are helping the user work with a skill in the Matrix Skills library.
 
 ---
 
 ## Before you start — verify repo context
 
-Before doing anything else, confirm you are running inside the PowerData Skills repository by checking that a `skills/` directory exists at the project root and that `README.md` contains the skill category tables.
+Before doing anything else, confirm you are running inside the Matrix Skills repository by checking that a `skills/` directory exists at the project root and that `README.md` contains the skill category tables.
 
 If those are not present, stop immediately and tell the user:
 
-> This command must be run from within the PowerData Skills repository. It writes to `skills/`, updates the root `README.md`, and follows conventions specific to this library — it will not work from another project directory.
+> This command must be run from within the Matrix Skills repository. It writes to `skills/`, updates the root `README.md`, and follows conventions specific to this library — it will not work from another project directory.
 >
 > **Correct workflow when learning from another Claude session:**
 > 1. Finish your work in the other project session (website, app, etc.)
-> 2. Open the PowerData Skills repo in Claude Code as a separate session
+> 2. Open the Matrix Skills repo in Claude Code as a separate session
 > 3. Bring your learnings across as context — paste notes, describe what changed, or summarise what you discovered
-> 4. Run `/skill update <skill-name>` or `/skill new` here
+> 4. Run `/mtx update <skill-name>` or `/mtx new` here
 
 Do not proceed until the repo context is confirmed.
 
@@ -51,6 +51,31 @@ If action is empty or unclear, ask in a single message:
   > - **review \<skill-name or category\>** — content quality assessment (e.g. `review data`)
 
 Do not start any workflow until the action is confirmed.
+
+---
+
+## Example content — use generic placeholders, never real values
+
+All example files (`example-input.md`, `example-output.md`) and any code snippets in `SKILL.md` must use generic placeholders in place of anything specific to a real deployment, person, or project. The skills library is public — no identifying information should appear in any file.
+
+**Always replace with a placeholder:**
+- Usernames and account handles (e.g. `stevenpower83` → `<your-username>`)
+- Real repository names (e.g. `App_Test` → `<your-repo>`)
+- Real app names tied to an app under development (use a fictional name like `GardenTrack` or `TrackMyPlants` instead)
+- Real Supabase project refs (e.g. `https://xyzabc.supabase.co` → `https://<your-project-ref>.supabase.co`)
+- Real Azure resource names, ACA environment IDs, or deployment URLs (e.g. `myapp.mangofield-818b0a7d.australiaeast.azurecontainerapps.io` → `<your-app>.<env-id>.australiaeast.azurecontainerapps.io`)
+- Azure subscription IDs, tenant IDs, client IDs
+- Email addresses
+- Any domain, URL, or identifier tied to a real private project
+
+**Acceptable in examples:**
+- Fictional app names that do not match a real app being developed (e.g. `GardenTrack`, `TrackMyPlants`, `myapp`)
+- Generic org names (e.g. `myorg`)
+- Public company domains when documenting that company's own publicly-visible site (e.g. `powrdata.com.au`)
+- Platform and region names that are not identifying (e.g. `australiaeast`, `ghcr.io`, `australiaeast.azurecontainerapps.io`)
+- `<placeholder>` syntax for values the user must supply
+
+This rule applies when creating new skills and when updating existing ones — scan all example and code content before finalising any file.
 
 ---
 
@@ -133,7 +158,7 @@ End with:
 ```
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
 ```
 
 Write in Australian/British English (modelling, standardisation, prioritisation, organisation).
@@ -176,7 +201,7 @@ Brief instructions for loading the skill into an AI tool.
 
 | Item | Details |
 |---|---|
-| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Source library | [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) |
 | Maintained by | [PowerData](https://powrdata.com.au) |
 | More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
 | Licence | MIT |
@@ -222,9 +247,9 @@ List every file created and every file modified. Remind the user to:
 
 ### Step 1: Identify the skill
 
-If the target is a specific skill name (e.g. `/skill update static-website-hosting`), use that directly.
+If the target is a specific skill name (e.g. `/mtx update static-website-hosting`), use that directly.
 
-If the target is a category (e.g. `/skill update web`), read `skills/<category>/` to list all skills present, then ask:
+If the target is a category (e.g. `/mtx update web`), read `skills/<category>/` to list all skills present, then ask:
 
 > Found these skills in `web/`: static-website-hosting, website-seo-and-indexing
 > Which would you like to update, or update all in sequence?
@@ -290,7 +315,7 @@ Structural and mechanical check. Read-only — no file changes.
 
 ### Step 1: Identify the skill
 
-If the target is a specific skill name (e.g. `/skill validate static-website-hosting`), validate that skill. If the target is a category (e.g. `/skill validate web`), read `skills/<category>/` to find all skills and run validation on each in sequence, presenting a combined report. If no target was given, ask which skill or category to validate.
+If the target is a specific skill name (e.g. `/mtx validate static-website-hosting`), validate that skill. If the target is a category (e.g. `/mtx validate web`), read `skills/<category>/` to find all skills and run validation on each in sequence, presenting a combined report. If no target was given, ask which skill or category to validate.
 
 ### Step 2: Read all files
 
@@ -311,6 +336,7 @@ Check each item and mark as pass (✓) or fail (✗):
 - Length within 80–150 lines (flag actual line count if outside)
 - Attribution footer present at the end of the file
 - No placeholder text remaining (`[Fill this in]`, bracketed examples, lorem ipsum)
+- No real usernames, account handles, repository names, deployment URLs, subscription IDs, or project-specific identifiers (see Example content rules above)
 
 **`README.md`**
 - Length within 40–60 lines (flag actual line count if outside)
@@ -321,11 +347,13 @@ Check each item and mark as pass (✓) or fail (✗):
 **`example-input.md`**
 - File exists and has content
 - Length within 15–40 lines (flag if outside)
-- No placeholder text
+- No placeholder text remaining (`[Fill this in]`, etc.)
+- No real usernames, repo names, deployment URLs, or project-specific identifiers
 
 **`example-output.md`**
 - File exists and has content
-- No placeholder text
+- No placeholder text remaining
+- No real usernames, repo names, deployment URLs, or project-specific identifiers
 
 **Repository**
 - Skill path listed in root `README.md`
@@ -334,7 +362,7 @@ Check each item and mark as pass (✓) or fail (✗):
 
 Present the checklist with ✓ or ✗ for each item. For any failures, quote the specific text or line that is the issue. Conclude with a summary: how many checks passed, how many failed, and whether the skill is ready to submit.
 
-No file changes. If failures need fixing, the user can follow up with `/skill update`.
+No file changes. If failures need fixing, the user can follow up with `/mtx update`.
 
 ---
 
@@ -344,7 +372,7 @@ Qualitative content review. Read-only — no file changes.
 
 ### Step 1: Identify the skill
 
-If the target is a specific skill name (e.g. `/skill review static-website-hosting`), review that skill. If the target is a category (e.g. `/skill review web`), read `skills/<category>/` to find all skills and run the review on each in sequence, presenting a combined report. If no target was given, ask which skill or category to review.
+If the target is a specific skill name (e.g. `/mtx review static-website-hosting`), review that skill. If the target is a category (e.g. `/mtx review web`), read `skills/<category>/` to find all skills and run the review on each in sequence, presenting a combined report. If no target was given, ask which skill or category to review.
 
 ### Step 2: Read all files
 
@@ -404,4 +432,4 @@ Present findings in this structure:
 3. **Suggested improvements** — specific, actionable items with the section they apply to
 4. **Scope assessment** — is the skill well-scoped, too broad, or overlapping with another skill?
 
-No file changes. If the user wants to apply suggestions, follow up with `/skill update`.
+No file changes. If the user wants to apply suggestions, follow up with `/mtx update`.

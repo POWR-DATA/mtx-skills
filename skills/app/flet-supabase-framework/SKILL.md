@@ -1,4 +1,4 @@
----
+﻿---
 name: flet-supabase-framework
 description: Framework for a Flet + Supabase multi-platform Python app — correct project structure, dependency config, integration patterns, and hard-won lessons from a full build cycle
 author: POWR-DATA
@@ -337,4 +337,4 @@ Use the fastest tier that answers your question — never push to trigger a CI b
 
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._

@@ -1,4 +1,4 @@
-# Flet Store Submission
+﻿# Flet Store Submission
 
 Sign and submit a Flet app to the Google Play Store and Apple App Store — covers keystore generation, signing config, store accounts, and app listing preparation
 
@@ -39,7 +39,7 @@ Load `SKILL.md` into Claude Code or any Claude session. Use alongside `flet-mult
 
 | Item | Details |
 |---|---|
-| Source library | [PowerData Skills](https://github.com/POWR-DATA/skills) |
+| Source library | [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) |
 | Maintained by | [PowerData](https://powrdata.com.au) |
 | More context | [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills) |
 | Licence | MIT |

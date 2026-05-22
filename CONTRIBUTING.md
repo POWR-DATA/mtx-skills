@@ -1,4 +1,4 @@
-# Contributing to PowerData Skills
+﻿# Contributing to Matrix Skills
 
 Thank you for considering a contribution to this library.
 

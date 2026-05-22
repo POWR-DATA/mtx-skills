@@ -1,4 +1,4 @@
----
+﻿---
 name: flet-multiplatform-build
 description: Build Android, iOS, and web Docker artifacts for a Flet app — covers Android silent packaging failures, GHCR/ACA deploy patterns, web asset quality, and local dev gotchas
 author: POWR-DATA
@@ -428,4 +428,4 @@ If the app installs but crashes on first screen with `ModuleNotFoundError`:
 
 ---
 
-_Source: This skill is sourced from the [PowerData Skills](https://github.com/POWR-DATA/skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
+_Source: This skill is sourced from the [Matrix Skills](https://github.com/POWR-DATA/mtx-skills) library. Learn more at the [AI Agent Skills Library](https://powrdata.com.au/ai-agent-skills)._
