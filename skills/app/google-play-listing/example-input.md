@@ -1,15 +1,14 @@
-# Example Input — Flet Store Submission
+# Example Input — Google Play Listing
 
-The app (TrackMyPlants) builds successfully in CI — APK and IPA artifacts are uploading to GitHub Actions. I want to submit it to both Google Play and the App Store.
+The app (TrackMyPlants) builds successfully in CI — signed AAB artifacts are produced on manual trigger. I want to submit it to Google Play.
 
 Current state:
-- `flet build apk` works; the APK installs and runs on a physical Android device
-- `flet build ipa` produces an xcarchive; the IPA sideloads via AltStore but crashes on launch
-- `pyproject.toml` has `name = "TrackMyPlants"` and `bundle_id = "com.powrdata.trackmyplants"` in `[tool.flet.app]`
-- No signing keys set up yet
-- No Google Play or Apple Developer account yet
-- We are an Australian company (PTY LTD), so we need organisation accounts on both platforms
+- Signed AAB builds via CI on `workflow_dispatch` and uploads as a GitHub Actions artifact
+- App package name: `com.myorg.trackmyplants`
+- No Google Play Developer account yet — we are an Australian company (PTY LTD), publishing under the company name
+- No keystore set up yet — AAB is currently unsigned
 - Privacy policy is live at `https://www.example.com/privacy`
-- We have a rough app description but haven't formatted it for store listings yet
+- App description drafted but not formatted for store listing yet
+- The app requires login to access all functionality
 
-What do I need to do to get this submitted to both stores?
+What do I need to do to get this submitted to Google Play and available for internal testers?

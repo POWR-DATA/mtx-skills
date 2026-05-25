@@ -41,21 +41,21 @@ All four files must be complete and free of placeholder text before submission. 
 
 ## Using `/mtx` to contribute
 
-The `/mtx` Claude Code command automates the process of capturing discoveries, creating skills, updating existing ones, and checking quality. It is a global command installed at `~/.claude/commands/mtx.md` — available in any project, not just this repo.
+The `/mtx` Claude Code command automates the contributor workflow — capturing discoveries from any project session, and updating or validating skills in the library. It is a global command installed at `~/.claude/commands/mtx.md` — available in any project, not just this repo.
 
-**Capturing discoveries in any session:**
+**The standard contribution path:**
 
-Run `/mtx capture` in any Claude Code session to record a discovery into `mtx-captures.md` in that project's root. The command reads the session history to find what is new since the last capture, distils it, and appends a structured entry. No need to switch projects mid-session.
+1. Work on a project in any Claude Code session
+2. Run `/mtx capture` to record discoveries into `mtx-captures.md` in that project's root
+3. Open the skills repo and run `/mtx update <path>` — it reads the captures file, groups entries by skill, updates matching skills, and creates new skills for entries that don't match anything existing
 
-**Syncing captures into skills:**
-
-Open the skills repo in Claude Code and run `/mtx update <path>` with the path to a project that has a `mtx-captures.md` file. The command reads the file, groups entries by skill, updates matching skills, proposes new skills for unmatched entries, and handles the entry lifecycle automatically.
+New skills enter the library through this capture-centric path. Skills built from real project experience are more reliable than skills written speculatively from scratch.
 
 **Direct skill editing:**
 
-Run `/mtx update <skill-name>` or `/mtx new` to create or edit a skill directly. Useful when you have context in the current session or want to make a targeted change.
+Run `/mtx update <skill-name>` to edit a specific skill when you have relevant context in the current session or want to make a targeted improvement.
 
-The `new`, `update`, `validate`, and `review` actions require the skills repo — `/mtx` checks for this and stops with a clear message otherwise. `/mtx` is not installed by Skillfish; see [Contributing Skills](docs/contributing-skills.md) for setup instructions.
+The `update`, `validate`, and `review` actions require the skills repo — `/mtx` checks for this and stops with a clear message otherwise. `/mtx` is not installed by Skillfish; see [Contributing Skills](docs/contributing-skills.md) for setup instructions.
 
 ## How to submit
 

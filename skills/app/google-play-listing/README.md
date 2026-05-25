@@ -1,24 +1,24 @@
-﻿# Flet Store Submission
+# Google Play Listing
 
-Sign and submit a Flet app to the Google Play Store and Apple App Store — covers keystore generation, signing config, store accounts, and app listing preparation
+Sign and publish an Android app (AAB) to the Google Play Store — covers keystore generation, Play Console setup, store listing content, App Content declarations, and CI automation
 
 ## What this skill does
 
-Guides the complete app store submission process for a Flet Python app — from generating the Android upload keystore through to a live store listing. It covers code signing for both platforms, store account setup requirements, and how to prepare app listing content efficiently.
+Guides the Android signing and Google Play Store publication process for any Android app that produces an APK or AAB, regardless of the build framework used. It covers keystore generation, signed build workflow configuration, Play Console account setup, store listing completion, App Content declarations, Internal Testing, and CI automation for AAB uploads.
 
 ## When to use it
 
 - Setting up Android signing for the first time before a Play Store release
-- Preparing an iOS build for App Store or TestFlight distribution
-- Creating Google Play or Apple Developer accounts for a new organisation
-- Drafting app store listing content (description, screenshots, keywords)
+- Completing Play Console store listing and App Content declarations
+- Setting up Internal Testing and sharing opt-in links with testers
+- Automating AAB uploads from CI to a Play Console track
 
 ## Example use cases
 
-- First-time Play Store submission for a Flet app with a signed AAB
-- Setting up Apple Developer Program enrollment for an organisation and submitting via TestFlight
+- First-time Google Play submission for an Android app with a signed AAB
 - Generating an Android upload keystore in CI when Java isn't installed locally
-- Preparing store listing content while waiting for developer account approval
+- Completing all App Content declarations (privacy policy, IARC ratings, data safety) before promoting a release
+- Automating AAB uploads from GitHub Actions to the internal testing track
 
 ## Files in this folder
 
@@ -31,7 +31,7 @@ Guides the complete app store submission process for a Flet Python app — from 
 
 ## How to use
 
-Load `SKILL.md` into Claude Code or any Claude session. Use alongside `flet-multiplatform-build` (which covers building the APK/AAB/IPA) and `flet-aca-deploy` (which covers web deployment).
+Load `SKILL.md` into Claude Code or any Claude session. Use alongside the build skill for your framework (e.g. `flet-multiplatform-build` for Flet apps) which covers producing the signed AAB that this skill then submits.
 
 ---
 

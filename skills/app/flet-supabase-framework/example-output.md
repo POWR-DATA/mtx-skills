@@ -137,26 +137,27 @@ def add_plant(name: str, species: str, watering_interval_days: int) -> dict:
 
 ## views/home.py
 
+Screen views are `ft.Column` subclasses — not `ft.View` subclasses. Expose `self.appbar` so `navigate()` in main can assign it to the persistent view's appbar.
+
 ```python
 import flet as ft
 from services.plants import get_plants
 
-class HomeView(ft.View):
-    def __init__(self, page: ft.Page):
+class HomeView(ft.Column):
+    def __init__(self, navigate):
+        self._navigate = navigate
         self._plant_list = ft.Column([])
         self._status = ft.Text("")
-        super().__init__(
-            route="/home",
-            controls=[
-                ft.AppBar(title=ft.Text("GardenTrack")),
-                self._status,
-                self._plant_list,
-                ft.FloatingActionButton(
+        self.appbar = ft.AppBar(
+            title=ft.Text("GardenTrack"),
+            actions=[
+                ft.IconButton(
                     icon=ft.Icons.ADD,
-                    on_click=lambda _: page.go("/add"),
+                    on_click=lambda _: self._navigate("/add"),
                 ),
             ],
         )
+        super().__init__(controls=[self._status, self._plant_list])
 
     def did_mount(self):
         self.page.run_thread(self._load_plants)
@@ -180,6 +181,8 @@ class HomeView(ft.View):
 
 ## main.py
 
+Uses a single persistent `ft.View` with controls swapped via a synchronous `navigate(route)` callback. Only passes web params when `FLET_HOST` is set — passing them unconditionally crashes Android before `main(page)` is called.
+
 ```python
 import flet as ft
 from views.login import LoginView
@@ -190,29 +193,30 @@ def main(page: ft.Page):
     page.title = "GardenTrack"
     page.theme_mode = ft.ThemeMode.DARK
 
-    def route_change(e):
-        page.views.clear()
-        if page.route == "/home":
-            page.views.append(HomeView(page))
-        elif page.route == "/add":
-            page.views.append(AddPlantView(page))
+    main_view = ft.View(route="/", controls=[])
+    page.views.append(main_view)
+
+    def navigate(route: str):
+        if route == "/home":
+            content = HomeView(navigate=navigate)
+        elif route == "/add":
+            content = AddPlantView(navigate=navigate)
         else:
-            page.views.append(LoginView(page))
+            content = LoginView(navigate=navigate)
+        main_view.controls = [content]
+        main_view.appbar = content.appbar
         page.update()
 
-    def view_pop(e):
-        page.views.pop()
-        page.go(page.views[-1].route)
-
-    page.on_route_change = route_change
-    page.on_view_pop = view_pop
-    route_change(None)
+    navigate("/")
 
 if __name__ == "__main__":
     import os
-    host = os.environ.get("FLET_HOST", "localhost")
-    ft.run(main, host=host, port=8550, view=ft.AppView.WEB_BROWSER,
-           web_renderer=ft.WebRenderer.CANVAS_KIT)
+    host = os.environ.get("FLET_HOST")
+    if host:
+        ft.run(main, host=host, port=8550, view=ft.AppView.WEB_BROWSER,
+               web_renderer=ft.WebRenderer.CANVAS_KIT)
+    else:
+        ft.run(main)
 ```
 
 ---
@@ -249,10 +253,12 @@ create policy "Users can delete own plants"
 
 ## Notes
 
-- All Supabase calls are in background functions passed to `page.run_thread()` — never block the main thread
+- Screen views are `ft.Column` subclasses with `self.appbar` exposed — not `ft.View` subclasses
+- Navigation uses a single persistent `ft.View` with controls swapped via synchronous `navigate(route)` callback — not view-per-route
+- All Supabase calls are in background functions passed to `page.run_thread()` — raw `threading.Thread` can silently drop `page.update()` on some platforms
 - `page.update()` is called at the end of every background thread function
 - Data loading happens in `did_mount()`, not `__init__()` — the view must be mounted before `page.update()` is valid
-- The Supabase client is a module-level singleton — re-creating it on every call drops the auth session
+- The Supabase client is a lazy singleton — `get_client()` is called on demand, not at module import time
 
 ---
 

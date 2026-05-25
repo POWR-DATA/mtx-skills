@@ -1,15 +1,10 @@
-# Example Output — Flet Store Submission
+# Example Output — Google Play Listing
 
 ## Signing setup summary
 
-**Android:**
 - Keystore alias: `upload`
 - Required GitHub Secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `ANDROID_STORE_PASSWORD`
-- Workflow change: add decode + signing env vars to `build-android.yml`
-
-**iOS:**
-- The AltStore crash is expected — Flet's Python runtime requires Apple Developer entitlements. AltStore cannot provide these. Use TestFlight once the Apple Developer account is active.
-- Required GitHub Secrets (after enrollment): `APPLE_CERTIFICATE_BASE64`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_PROVISIONING_PROFILE_BASE64`, `APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_BASE64`
+- Workflow change: add keystore decode and signing env vars to the AAB build step
 
 ---
 
@@ -29,107 +24,106 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Generate keystore
+      - name: Generate and encode keystore
         run: |
-          keytool -genkey -v \
-            -keystore upload-keystore.jks \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -alias upload \
-            -dname "CN=POWRDATA PTY LTD, O=POWRDATA PTY LTD, L=Sydney, ST=NSW, C=AU" \
+          keytool -genkey -v -keystore release.keystore \
+            -alias upload -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass "${{ secrets.ANDROID_STORE_PASSWORD }}" \
-            -keypass "${{ secrets.ANDROID_KEY_PASSWORD }}"
-      - name: Output base64-encoded keystore
-        run: |
-          echo "==== COPY EVERYTHING BETWEEN THE MARKERS ===="
-          base64 -w 0 upload-keystore.jks
-          echo "==== END OF KEYSTORE ===="
+            -keypass "${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            -dname "CN=<AppName>, OU=Mobile, O=<OrgName>, L=<City>, S=<State>, C=AU"
+          echo "==== COPY THIS ===="
+          base64 -w 0 release.keystore
+          echo "==== END ===="
 ```
 
-Run via `workflow_dispatch`. Copy the base64 output → add as `ANDROID_KEYSTORE_BASE64` secret. **Delete this workflow file immediately after use.** Store base64, passwords, and alias in your password manager — this keystore cannot be recovered.
+Run via `workflow_dispatch`. Copy the base64 output → add as `ANDROID_KEYSTORE_BASE64` secret. Add `ANDROID_KEY_ALIAS` with value `upload`. **Delete this workflow file immediately after use.** Store all four secret values in a password manager — this keystore cannot be recovered if lost.
 
 ---
 
-## Step 2 — Updated build-android.yml (signed build)
+## Step 2 — Updated AAB build step (signed)
+
+Add to the existing `workflow_dispatch`-gated AAB build:
 
 ```yaml
 - name: Decode keystore
-  run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > upload-keystore.jks
+  run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
 
-- name: Build signed APK
-  run: flet build apk --verbose
-  env:
-    ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/upload-keystore.jks
-    ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-    ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-    ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-
-- name: Build signed AAB (manual trigger only)
+- name: Build signed AAB
   if: github.event_name == 'workflow_dispatch'
-  run: flet build aab --verbose
+  run: <your-build-command> appbundle
   env:
-    ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/upload-keystore.jks
+    ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/release.keystore
     ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
     ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
     ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 ```
 
-Add `ANDROID_KEY_ALIAS` secret with value `upload`.
-
 ---
 
-## Store account checklist
+## Play Console checklist
 
-### Google Play ($25 USD one-off)
+### Account setup ($25 USD one-off)
 
 - [ ] Create account at play.google.com/console
-- [ ] Register as Organisation — requires D-U-N-S number and company email domain
-- [ ] Verify D-U-N-S at dnb.com (free lookup) — allow 2–3 business days for Google verification
-- [ ] Trigger `Build Android` workflow via `workflow_dispatch` to produce signed AAB
-- [ ] Upload AAB (not APK) to Google Play Console
+- [ ] Register as Organisation — no D-U-N-S number required (Google does not require it, unlike Apple)
+- [ ] Use your trading name exactly as it should appear to customers in the "developer name" field
+- [ ] Trigger the signed AAB build via `workflow_dispatch`
+- [ ] Upload signed AAB to Play Console → Internal testing
 
-### Apple Developer Program ($99 USD/year)
+### Store listing
 
-- [ ] Enrol at developer.apple.com/programs/enroll as Organisation
-- [ ] Obtain D-U-N-S number (free lookup at developer.apple.com)
-- [ ] Apple verifies director authority via ASIC — allow 2–5 business days
-- [ ] Once enrolled: add iOS signing secrets to GitHub
-- [ ] Build and distribute via TestFlight first to confirm the app runs on device
-- [ ] Submit to App Store review after TestFlight confirms success
+- [ ] **App name** (50 chars max): `TrackMyPlants`
+- [ ] **Short description** (80 chars max): `Track your plants, never miss a watering.`
+- [ ] **Full description** (4,000 chars max): drafted below
+- [ ] **App icon**: 512×512 PNG, max 1 MB
+- [ ] **Feature graphic**: 1024×500 PNG or JPEG — required even if not being promoted
+- [ ] **Screenshots**: minimum 2 phone screenshots
 
----
+**Full description draft:**
 
-## App listing draft — TrackMyPlants
+```
+Track your plants, never miss a watering. TrackMyPlants logs your collection
+and reminds you when each plant needs attention.
 
-### Google Play description
-
-**Hook (visible before "more"):**
-> Track your plants, never miss a watering. TrackMyPlants logs your collection and reminds you when each plant needs attention.
-
-**Full description:**
 - Log your entire plant collection with species, watering schedule, and last-watered date
 - Get reminders when plants are due for watering
-- Works on Android and web — data syncs automatically via your account
+- Works on Android — data syncs automatically via your account
 - No ads, no tracking
+```
 
-### App Store keywords (100 chars max)
-`plants,garden,watering,plant tracker,houseplants,gardening,reminder,care`
+### App Content declarations
 
-### Screenshots
-Run the app in Chrome DevTools → set device to iPhone 14 Pro Max (390×844 viewport) → capture key screens → resize to 1290×2796px using Snagit or similar. Minimum 3 screenshots required.
+- [ ] **Privacy policy**: `https://www.example.com/privacy` (public URL confirmed live)
+- [ ] **Ads**: No ads
+- [ ] **App access**: Restricted — provide reviewer credentials (see below)
+- [ ] **Content ratings**: complete IARC questionnaire — category: Lifestyle, no violence/sexual content/controlled substances
+- [ ] **Target audience**: 18+
+- [ ] **Data safety**: Email address (required, account management), Name (optional), User IDs (required). Shared with third parties: None. Encrypted in transit: Yes. Include data deletion URL.
 
-Required screens: login, plant list, plant detail, add plant form.
+### Reviewer credentials
+
+Create a shared mailbox `app_reviewer@yourdomain.com` and a dedicated app account using that email. Enter credentials in **App access → Restricted access → Manage instructions**.
+
+### Internal Testing
+
+- [ ] Go to **Testing → Internal testing**, create a release, upload the signed AAB
+- [ ] Under **Testers** tab, add tester email addresses (must be Google accounts)
+- [ ] Copy the opt-in URL and share with testers — they must open it on their Android device
+- [ ] Promote release — goes live to testers immediately, no review process
 
 ---
 
-## Submission checklist
+## CI automation config
 
-- [ ] Keystore stored in password manager (base64, store password, key password, alias)
-- [ ] Generate-keystore workflow deleted from repo
-- [ ] AAB builds successfully with signing env vars
-- [ ] Google Play account active and verified
-- [ ] Apple Developer account active and verified
-- [ ] TestFlight install confirmed working on physical iOS device
-- [ ] Privacy policy URL live: `https://www.example.com/privacy`
-- [ ] Screenshots at 1290×2796px prepared for App Store
-- [ ] Age rating questionnaire completed on both platforms
-- [ ] App listing content drafted and ready to paste in
+```yaml
+- name: Upload to Google Play
+  uses: r0adkll/upload-google-play@v1
+  with:
+    serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+    packageName: com.myorg.trackmyplants
+    releaseFiles: build/<your-app>.aab
+    track: internal
+    status: completed
+```
+
+Setup: Play Console → **Setup → API access** → create service account with "Release manager" role → download JSON → add as `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret → grant service account access in Play Console under Users and permissions.
