@@ -8,40 +8,51 @@ If you are looking for how to use skills in your own projects, see [Usage Patter
 
 ## The `/mtx` command
 
-The `/mtx` command is a Claude Code slash command that automates the contributor workflow — creating new skills, updating existing ones, and checking quality before submitting a PR.
+The `/mtx` command is a global Claude Code slash command that automates the contributor workflow — capturing discoveries, creating new skills, updating existing ones, and checking quality before submitting a PR.
 
-> **Claude Code only — and only within this repo.**
+> **Global command — available in every Claude Code session.**
 >
-> `/mtx` writes to `skills/`, updates the root `README.md`, and follows conventions specific to this library. It must be run with Claude Code opened in the skills repo root. It will not work from another project directory. It is not installed by Skillfish.
+> `/mtx` is installed at `~/.claude/commands/mtx.md` on your machine. It is available in any project. The `capture` and `capture reset` actions work anywhere. The `new`, `update`, `validate`, and `review` actions require the skills repo — `/mtx` checks for this automatically and stops with a clear message if you are in the wrong project. `/mtx` is not installed by Skillfish; it must be set up manually (see below).
 
 ### Actions
 
-Invoke `/mtx` with an action and an optional skill name or category path. Omit arguments to be prompted.
+Invoke `/mtx` with an action and an optional target. Omit arguments to be prompted.
 
 | Action | Invocation | What it does |
 |---|---|---|
-| `new` | `/mtx new` | Create a new skill from scratch. Guides you through category, purpose, and inputs, then generates all four files and updates the root README. |
-| `update` | `/mtx update <skill or category>` | Edit a skill or all skills in a category. Reads current files, asks what needs changing, makes targeted edits, and bumps the version. |
-| `validate` | `/mtx validate <skill or category>` | Structural check — frontmatter, required sections, file lengths, placeholder text, attribution, root README listing. Read-only. |
-| `review` | `/mtx review <skill or category>` | Content quality assessment — whether principles are opinionated, process steps are actionable, examples are realistic, skill is well-scoped. Read-only. |
+| `capture` | `/mtx capture` | Record a discovery from the current session into `mtx-captures.md`. Works in any project. Reads session history since the last capture run to find what is new. |
+| `capture reset` | `/mtx capture reset` | Archive `mtx-captures.md` and start fresh. |
+| `new` | `/mtx new` | Create a new skill from scratch. Guides you through category, purpose, and inputs, then generates all four files and updates the root README. _(skills repo only)_ |
+| `update` | `/mtx update <path>` | Sync all skills from a captures file — reads `mtx-captures.md` from the given project path, groups entries by skill, updates matching skills, proposes new skills for unmatched entries, and applies drift-based name review. _(skills repo only)_ |
+| `update` | `/mtx update <skill or category>` | Edit a specific skill or all skills in a category. _(skills repo only)_ |
+| `validate` | `/mtx validate <skill or category>` | Structural check — frontmatter, required sections, file lengths, placeholder text, attribution, root README listing. Read-only. _(skills repo only)_ |
+| `review` | `/mtx review <skill or category>` | Content quality assessment — whether principles are opinionated, process steps are actionable, examples are realistic, skill is well-scoped. Read-only. _(skills repo only)_ |
 
 **Category paths:** pass a category name to run an action across all skills in it.
 
 ```
-/mtx validate web          # validates all skills under skills/web/
-/mtx review data           # reviews all skills under skills/data/
-/mtx update web            # lists web skills, asks which to update
+/mtx validate web              # validates all skills under skills/web/
+/mtx review data               # reviews all skills under skills/data/
+/mtx update ../App_Test        # syncs all skills from App_Test/mtx-captures.md
+/mtx update web                # lists web skills, asks which to update
 ```
 
-`new` and `update` support up to two rounds of clarifying questions before generating anything. `validate` and `review` are read-only and make no file changes.
+### Setting up the global command
 
-The full procedure for each action is in [`.claude/commands/mtx.md`](../.claude/commands/mtx.md).
+Copy the command file to your global Claude Code commands directory:
+
+```
+~/.claude/commands/mtx.md       # macOS / Linux
+C:\Users\<you>\.claude\commands\mtx.md   # Windows
+```
+
+Download the file from the [Matrix Skills repository](https://github.com/POWR-DATA/mtx-skills) and place it there. Once installed, `/mtx` is available in every Claude Code session on your machine.
 
 ---
 
 ## Example session
 
-The following shows all four actions using a skill created from notes gathered in an external AI session. The skill is an IT managed service provider onboarding assessment.
+The following shows the four repo-scoped actions using a skill created from notes gathered in an external AI session. The skill is an IT managed service provider onboarding assessment. See the Cross-session workflow section below for how `/mtx capture` fits into the process before these steps.
 
 ---
 

@@ -41,16 +41,21 @@ All four files must be complete and free of placeholder text before submission. 
 
 ## Using `/mtx` to contribute
 
-The `/mtx` Claude Code command automates the process of creating, updating, validating, and reviewing skills. It must be run with Claude Code opened in this repository — it will not work from another project directory.
+The `/mtx` Claude Code command automates the process of capturing discoveries, creating skills, updating existing ones, and checking quality. It is a global command installed at `~/.claude/commands/mtx.md` — available in any project, not just this repo.
 
-**If you learned something in a separate Claude Code session** (e.g. while building a website or deploying an app), the workflow is:
+**Capturing discoveries in any session:**
 
-1. Finish your work in that session and note what you learned
-2. Open the skills repo in Claude Code as a separate session
-3. Bring your learnings across as context — paste notes or describe what changed
-4. Run `/mtx update <skill-name>` or `/mtx new` to capture the improvement
+Run `/mtx capture` in any Claude Code session to record a discovery into `mtx-captures.md` in that project's root. The command reads the session history to find what is new since the last capture, distils it, and appends a structured entry. No need to switch projects mid-session.
 
-The `/mtx` command is not installed by Skillfish. It is only available when Claude Code is opened in this repo.
+**Syncing captures into skills:**
+
+Open the skills repo in Claude Code and run `/mtx update <path>` with the path to a project that has a `mtx-captures.md` file. The command reads the file, groups entries by skill, updates matching skills, proposes new skills for unmatched entries, and handles the entry lifecycle automatically.
+
+**Direct skill editing:**
+
+Run `/mtx update <skill-name>` or `/mtx new` to create or edit a skill directly. Useful when you have context in the current session or want to make a targeted change.
+
+The `new`, `update`, `validate`, and `review` actions require the skills repo — `/mtx` checks for this and stops with a clear message otherwise. `/mtx` is not installed by Skillfish; see [Contributing Skills](docs/contributing-skills.md) for setup instructions.
 
 ## How to submit
 
