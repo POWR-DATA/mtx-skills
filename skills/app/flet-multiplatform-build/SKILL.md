@@ -2,7 +2,7 @@
 name: flet-multiplatform-build
 description: Build Android, iOS, and web Docker artifacts for a Flet app — covers Android silent packaging failures, GHCR/ACA deploy patterns, web asset quality, and local dev gotchas
 author: POWR-DATA
-version: 2.2.0
+version: 2.3.0
 license: MIT
 ---
 
@@ -37,7 +37,10 @@ After the app framework is in place and running locally with `flet run main.py` 
 - **OneDrive locks the arm64-v8a directory on Windows.** When the project lives inside a OneDrive-synced folder, OneDrive holds a lock on `build/site-packages/arm64-v8a/` during sync. Serious_python cannot delete this directory before running pip, so it silently exits with an empty APK. Fix: pause OneDrive → delete `build/site-packages/arm64-v8a/` → delete `build/.hash/package` → run `flet build apk -vv`.
 - **WASM builds fail with pydantic-core (and any Rust-based package).** `flet build web` uses Pyodide/WebAssembly. `pydantic-core` is written in Rust and has no Emscripten wheel. Always use Docker server mode for apps that depend on supabase-py.
 - **Android arm64-v8a wheel versions are constrained by pypi.flet.dev.** Confirmed working: `cryptography==43.0.1`, `cffi==1.17.1`. Do not upgrade without checking `pypi.flet.dev` for the target version's arm64-v8a wheel.
+- **`yarl==1.11.1` is the only yarl version with an Android ARM64 wheel.** `multidict` and `propcache` have no Android wheels at all — exclude them from `requirements.txt` entirely. supabase-py works at runtime without them despite version metadata claiming otherwise.
+- **Do not run `pip install -r requirements.txt` on the CI host for Android APK/AAB builds.** serious_python bundles Python packages directly from `pyproject.toml` during `flet build` — host pip installs are unused and cause version conflict errors (e.g. a yarl pin conflicting with supabase-functions constraints). Only install the flet CLI on the host: `pip install flet==<version>`.
 - **Accept Android SDK licenses in CI before running flet build.** Without explicit acceptance, Flutter's NDK installation step may hang or error.
+- **GitHub free tier artifact storage (500 MB) fills quickly with repeated APK/AAB builds.** Add `continue-on-error: true` to artifact upload steps and use `gh release create` to publish binaries as GitHub Releases instead — Release assets do not count against the Actions artifact storage quota and remain permanently downloadable.
 
 ### Docker / Web image build
 
@@ -97,13 +100,16 @@ After the app framework is in place and running locally with `flet run main.py` 
 
 1. Confirm why WASM is not an option: any app using `supabase-py` depends on `pydantic-core` (Rust). Pyodide cannot load Rust-compiled native extensions.
 
-2. Write `main.py` with the `FLET_HOST` env var pattern:
+2. Write `main.py` with the `FLET_HOST` env var pattern. Only pass `view=ft.AppView.WEB_BROWSER` when `FLET_HOST` is set — passing it unconditionally causes serious_python on Android to crash before `main(page)` is ever called (the splash screen appears briefly then the screen goes black with no error output):
    ```python
    if __name__ == "__main__":
        import os
-       host = os.environ.get("FLET_HOST", "localhost")
-       ft.run(main, host=host, port=8550, view=ft.AppView.WEB_BROWSER,
-              web_renderer=ft.WebRenderer.CANVAS_KIT)
+       host = os.environ.get("FLET_HOST")
+       if host:
+           ft.run(main, host=host, port=8550, view=ft.AppView.WEB_BROWSER,
+                  web_renderer=ft.WebRenderer.CANVAS_KIT)
+       else:
+           ft.run(main)
    ```
 
 3. Write `Dockerfile` — patches all flet_web assets in a single RUN step:
@@ -219,12 +225,8 @@ After the app framework is in place and running locally with `flet run main.py` 
              cache: true
          - name: Accept Android SDK licenses
            run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-         - uses: actions/cache@v4
-           with:
-             path: ~/.cache/pip
-             key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-             restore-keys: ${{ runner.os }}-pip-
-         - run: pip install -r requirements.txt
+         - name: Install flet CLI
+           run: pip install flet==<version>   # only the CLI — serious_python bundles deps from pyproject.toml
          - name: Build APK
            run: flet build apk --verbose
          - name: Build AAB (manual trigger only)
@@ -368,7 +370,8 @@ Always uninstall first — debug builds from different CI runs have different si
 
 - [ ] `docker/setup-buildx-action@v3` step added before `docker/login-action`
 - [ ] Dockerfile CMD uses `python main.py`, not `flet run --web main.py`
-- [ ] `ft.run()` used (not deprecated `ft.app()`); `FLET_HOST` env var controls bind address
+- [ ] `ft.run()` used (not deprecated `ft.app()`); `FLET_HOST` env var guards web params so Android is not affected
+- [ ] Android CI workflow installs only `flet==<version>` on host — not `pip install -r requirements.txt`
 - [ ] `flet-web==<version>` in `requirements.txt` (same version as `flet`)
 - [ ] Dockerfile RUN step patches flet_web assets: favicon, PWA icons, loading-animation, CSS scale
 - [ ] AAB build and upload steps gated with `if: github.event_name == 'workflow_dispatch'`
@@ -387,6 +390,9 @@ Always uninstall first — debug builds from different CI runs have different si
 
 ## Avoid
 
+- Passing `view=ft.AppView.WEB_BROWSER` unconditionally in `ft.run()` — crashes serious_python on Android before `main(page)` is called; guard with `FLET_HOST` env var check
+- Running `pip install -r requirements.txt` on the CI host for Android builds — host pip installs are unused by serious_python and cause version conflict errors; only install the flet CLI
+- Including `multidict` or `propcache` in `requirements.txt` for Android — no Android wheels exist; exclude them (supabase-py works without them at runtime)
 - `flet run --web` as Dockerfile CMD — `flet_desktop` unavailable in slim images; container crashes immediately
 - `ft.app()` — deprecated since Flet 0.80; use `ft.run()`
 - `web_renderer="html"` — removed in Flutter 3+; raises `ValueError`; use `ft.WebRenderer.CANVAS_KIT`

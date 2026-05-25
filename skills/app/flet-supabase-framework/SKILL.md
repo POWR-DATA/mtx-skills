@@ -2,7 +2,7 @@
 name: flet-supabase-framework
 description: Framework for a Flet + Supabase multi-platform Python app — correct project structure, dependency config, integration patterns, and hard-won lessons from a full build cycle
 author: POWR-DATA
-version: 2.1.0
+version: 2.2.0
 license: MIT
 ---
 
@@ -30,14 +30,14 @@ When a developer wants to build a Python app that targets Android, iOS, and web 
 
 - **pyproject.toml ≠ requirements.txt for Android builds.** Flet's Android packager (serious_python) reads `[project] dependencies` in `pyproject.toml` — your direct app dependencies only — and resolves transitive deps for Android arm64-v8a from Flet's custom wheel index (`pypi.flet.dev`). `requirements.txt` serves the host dev environment. Never put transitive deps in pyproject.toml.
 - **Exclude your dev environment from the Android bundle.** Always add `exclude = [".venv", "build", ".git", ".github", "__pycache__", "*.pyc"]` under `[tool.flet.app]`. Without this, serious_python may bundle Windows packages from the local venv into the APK instead of cross-compiled arm64-v8a packages.
-- **Use `page.run_thread()` not raw threads.** Flet's `page.run_thread(fn)` is the correct way to run background work from a View. Raw `threading.Thread` does not reliably trigger UI repaints on Windows desktop.
+- **Use `page.run_thread()` not raw threads.** `page.run_thread(fn)` routes the thread through Flet's event loop, ensuring `page.update()` calls from background threads reach Flutter. With raw `threading.Thread`, calls to `page.update()` can silently drop on some targets — the update appears to succeed but the UI does not repaint.
 - **Supabase client is a singleton.** Create the client once and return the cached instance from a module-level variable. Re-creating it on every request drops the auth session.
 - **Auth state lives in the Supabase client, not in page state.** After sign-in, the session is held by the client object. Navigate by route change; never store user info on `page`.
 - **Never block the main thread.** All Supabase API calls go in background threads via `page.run_thread()`. Call `page.update()` at the end of every background function to flush UI changes.
 - **`did_mount` is the entry point for data loading.** Call `page.run_thread()` from `did_mount()`, not `__init__()`. The view must be mounted before any `page.update()` call is valid.
 - **Pin cryptography and cffi to Android-compatible versions.** Only specific versions of these packages have pre-built Android arm64-v8a wheels on `pypi.flet.dev`. Use `cryptography==43.0.1` and `cffi==1.17.1`. Do not upgrade without first verifying wheel availability on the Flet custom index.
 - **Do not put LLM API keys in the client app.** Route LLM calls (Gemini, OpenAI, Anthropic, etc.) through Supabase Edge Functions. The app only holds the Supabase anon key, which is safe to expose — it is protected by Row Level Security, not by secrecy.
-- **`.env` does not exist at runtime on mobile.** `load_dotenv()` reads from disk — on Android and iOS there is no `.env` file in the app bundle. Always embed Supabase URL and anon key as code-level defaults so the app works on device, while still allowing `.env` to override for local dev.
+- **`.env` does not exist at runtime on mobile.** `load_dotenv()` reads from disk — on Android and iOS there is no `.env` file in the app bundle. Always embed Supabase URL and anon key as code-level defaults so the app works on device, while still allowing `.env` to override for local dev. Use a lazy `get_client()` singleton — not a module-level `create_client()` call — to avoid import-time network activity that can crash on mobile before the runtime is fully ready.
 - **Use a single transparent PNG for all icon placements.** A transparent PNG (RGBA mode, alpha=0 in background areas) blends against any background automatically. Creating separate icon variants per background colour requires the background RGB to match exactly — even a 1-point difference shows as a rectangular border.
 - **Script all infrastructure — never click through the portal.** Keep an `infra/setup-azure.sh` (or equivalent) in the repo that provisions everything from scratch. Apply the same discipline to Supabase: table creation and RLS policies belong in SQL migration files, not just dashboard clicks.
 
@@ -174,6 +174,10 @@ Thin wrappers over the Supabase client — `sign_in`, `sign_up`, `sign_out`, `ge
 
 ### 6. Write main.py
 
+Use a single persistent `ft.View` and swap its controls via a `navigate(route)` callback. On Android, using only `page.controls` (no `page.views`) renders nothing — Flutter's Navigator requires at least one View. View-per-route navigation (multiple entries in `page.views`) also causes issues on Android; the single-view swap pattern is reliable across all platforms.
+
+`page.go()` in Flet 0.84 is async, but event handler methods are synchronous — pass a synchronous `navigate(route)` callback as a constructor argument to each view instead:
+
 ```python
 import flet as ft
 from views.login import LoginView
@@ -183,46 +187,45 @@ def main(page: ft.Page):
     page.title = "Your App"
     page.theme_mode = ft.ThemeMode.DARK
 
-    def route_change(e):
-        page.views.clear()
-        if page.route == "/home":
-            page.views.append(HomeView(page))
-        # add elif branches for each route
+    main_view = ft.View(route="/", controls=[])
+    page.views.append(main_view)
+
+    def navigate(route: str):
+        if route == "/home":
+            content = HomeView(navigate=navigate)
         else:
-            page.views.append(LoginView(page))
+            content = LoginView(navigate=navigate)
+        main_view.controls = [content]
+        main_view.appbar = content.appbar
         page.update()
 
-    def view_pop(e):
-        page.views.pop()
-        page.go(page.views[-1].route)
-
-    page.on_route_change = route_change
-    page.on_view_pop = view_pop
-    route_change(None)
+    navigate("/")
 
 if __name__ == "__main__":
     import os
-    host = os.environ.get("FLET_HOST", "localhost")
-    ft.run(main, host=host, port=8550, view=ft.AppView.WEB_BROWSER,
-           web_renderer=ft.WebRenderer.CANVAS_KIT)
+    host = os.environ.get("FLET_HOST")
+    if host:
+        ft.run(main, host=host, port=8550, view=ft.AppView.WEB_BROWSER,
+               web_renderer=ft.WebRenderer.CANVAS_KIT)
+    else:
+        ft.run(main)
 ```
 
-### 7. Write each screen as a ft.View subclass
+### 7. Write each screen as a ft.Column subclass
 
-Build all controls in `__init__`, load remote data in `did_mount` via `page.run_thread()`:
+Design screen views as `ft.Column` subclasses, not `ft.View` subclasses. Expose `self.appbar` as an instance attribute so `navigate()` in main can assign it to `main_view.appbar`. Override `did_mount()` to trigger background data loading — this hook fires after the widget is attached to the page, ensuring `self.page` is available:
 
 ```python
 import flet as ft
 from services.supabase_client import get_client
 from services.auth import get_user
 
-class HomeView(ft.View):
-    def __init__(self, page: ft.Page):
+class HomeView(ft.Column):
+    def __init__(self, navigate):
+        self._navigate = navigate
         self._status = ft.Text("")
-        super().__init__(
-            route="/home",
-            controls=[self._status],
-        )
+        self.appbar = ft.AppBar(title=ft.Text("Home"))
+        super().__init__(controls=[self._status])
 
     def did_mount(self):
         self.page.run_thread(self._load_data)
@@ -300,9 +303,12 @@ Use the fastest tier that answers your question — never push to trigger a CI b
 - [ ] `cryptography==43.0.1` and `cffi==1.17.1` (or explicitly verified newer versions)
 - [ ] `supabase_client.py` has embedded defaults for URL and anon key — not relying solely on `.env`
 - [ ] Supabase client is a module-level singleton — one instance, cached in `_client`
-- [ ] All Supabase calls are in background functions passed to `page.run_thread()`
+- [ ] All Supabase calls are in background functions passed to `page.run_thread()` — not raw `threading.Thread`
 - [ ] `page.update()` is called at the end of every background thread function
 - [ ] Data loading happens in `did_mount()`, not `__init__()`
+- [ ] Navigation uses a single persistent `ft.View` with controls swapped via `navigate(route)` callback — not view-per-route or `page.controls`-only
+- [ ] Screen views are `ft.Column` subclasses with `self.appbar` exposed — not `ft.View` subclasses
+- [ ] `navigate(route)` is a synchronous callback — not `await page.go(route)` from synchronous handlers
 - [ ] `.env` is in `.gitignore`; `.env.example` is committed with placeholder values
 - [ ] No LLM API keys in the client app — routed via Edge Functions
 - [ ] App icon is a transparent PNG — 1024×1024px, no coloured background
@@ -317,12 +323,17 @@ Use the fastest tier that answers your question — never push to trigger a CI b
 
 - Putting transitive dependencies in `pyproject.toml` — direct deps only; transitive deps here break Android arm64-v8a pip resolution
 - Upgrading `cryptography` or `cffi` without first verifying the target version has an arm64-v8a wheel on `pypi.flet.dev`
-- Using `threading.Thread(target=fn).start()` directly — use `page.run_thread(fn)`
+- Using `threading.Thread(target=fn).start()` directly — `page.update()` from a raw thread can silently drop on some targets; use `page.run_thread(fn)`
 - Calling `page.update()` from `__init__` — the view is not yet mounted; defer to `did_mount`
 - Storing user session data on the `page` object — the Supabase auth client holds the session
 - Putting LLM API keys in the mobile app — always route AI calls server-side through Supabase Edge Functions
 - Committing `.env` — always gitignore it and ship `.env.example` instead
 - Relying on `.env` for runtime config on mobile — the file is not bundled; embed defaults in code
+- Using a module-level `create_client()` call — triggers import-time network activity that can crash on mobile before the runtime is fully ready; use a lazy `get_client()` singleton
+- Using view-per-route navigation (multiple entries in `page.views`) — causes issues on Android; use a single persistent `ft.View` with controls swapped via `navigate(route)` callback
+- Using only `page.controls` (no `page.views`) — renders nothing on Android; Flutter's Navigator requires at least one `ft.View` in `page.views`
+- Using `await page.go(route)` in synchronous event handlers — `page.go()` is async in Flet 0.84 but handlers are sync; pass a synchronous `navigate(route)` callback to each view instead
+- Writing screen views as `ft.View` subclasses — use `ft.Column` subclasses with an `appbar` instance attribute so `navigate()` in main can assign it to the persistent view's appbar
 - Creating separate icon files per background colour — use transparent PNG instead
 - Clicking through Azure portal or Supabase dashboard for setup steps — script everything in `infra/`
 - Using `fit=ft.ImageFit.CONTAIN` in Flet 0.84.0 — the attribute doesn't exist in this version

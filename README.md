@@ -50,7 +50,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Flet + Supabase App Framework](skills/app/flet-supabase-framework/) | Scaffold a Flet + Supabase multi-platform Python app with correct project structure and integration patterns |
 | [Flet Multi-Platform Build](skills/app/flet-multiplatform-build/) | Configure Android, iOS, and web Docker build pipelines for a Flet app with CI/CD |
 | [Flet ACA Deploy](skills/app/flet-aca-deploy/) | Deploy a Flet web app to Azure Container Apps |
-| [Flet Store Submission](skills/app/flet-store-submission/) | Sign and submit a Flet app to the Google Play Store and Apple App Store |
+| [Google Play Listing](skills/app/google-play-listing/) | Sign and publish an Android app (AAB) to the Google Play Store — covers keystore generation, Play Console setup, store listing content, and CI automation |
 | [App Icon Asset Generation](skills/app/app-icon-asset-generation/) | Generate a consistent application icon asset set from an approved high-resolution logo |
 
 ### Web skills
