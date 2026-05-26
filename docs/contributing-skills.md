@@ -38,14 +38,21 @@ Invoke `/mtx` with an action and an optional target. Omit arguments to be prompt
 
 ### Setting up the global command
 
-Copy the command file to your global Claude Code commands directory:
+The command file is versioned in this repo at `commands/mtx.md`. Copy it to your global Claude Code commands directory:
 
-```
-~/.claude/commands/mtx.md       # macOS / Linux
-C:\Users\<you>\.claude\commands\mtx.md   # Windows
+**macOS/Linux:**
+```bash
+mkdir -p ~/.claude/commands
+cp commands/mtx.md ~/.claude/commands/mtx.md
 ```
 
-Download the file from the [Matrix Skills repository](https://github.com/POWR-DATA/mtx-skills) and place it there. Once installed, `/mtx` is available in every Claude Code session on your machine.
+**Windows:**
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\commands"
+Copy-Item commands\mtx.md "$env:USERPROFILE\.claude\commands\mtx.md"
+```
+
+Once installed, `/mtx` is available in every Claude Code session on your machine. To update it, repeat the copy after pulling the latest version of this repo.
 
 ---
 
