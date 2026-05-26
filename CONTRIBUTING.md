@@ -43,6 +43,24 @@ All four files must be complete and free of placeholder text before submission. 
 
 The `/mtx` Claude Code command automates the contributor workflow — capturing discoveries from any project session, and updating or validating skills in the library. It is a global command installed at `~/.claude/commands/mtx.md` — available in any project, not just this repo.
 
+### Installing `/mtx`
+
+The command file is versioned in this repo at [`commands/mtx.md`](commands/mtx.md). To install it:
+
+**macOS/Linux:**
+```bash
+mkdir -p ~/.claude/commands
+cp commands/mtx.md ~/.claude/commands/mtx.md
+```
+
+**Windows:**
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\commands"
+Copy-Item commands\mtx.md "$env:USERPROFILE\.claude\commands\mtx.md"
+```
+
+After copying, `/mtx` is available in any Claude Code session on your machine. To update it, repeat the copy after pulling the latest version of this repo.
+
 **The standard contribution path:**
 
 1. Work on a project in any Claude Code session

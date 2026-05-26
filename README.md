@@ -52,6 +52,9 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Flet ACA Deploy](skills/app/flet-aca-deploy/) | Deploy a Flet web app to Azure Container Apps |
 | [Google Play Listing](skills/app/google-play-listing/) | Sign and publish an Android app (AAB) to the Google Play Store — covers keystore generation, Play Console setup, store listing content, and CI automation |
 | [App Icon Asset Generation](skills/app/app-icon-asset-generation/) | Generate a consistent application icon asset set from an approved high-resolution logo |
+| [Expo React Native App](skills/app/expo-react-native-app/) | Build cross-platform React Native apps with Expo — correct setup patterns, cross-platform gotchas, and hard-won lessons from native and web targets |
+| [Supabase Edge Functions](skills/app/supabase-edge-functions/) | Write, deploy, and debug Supabase Edge Functions — Deno import constraints, CLI auth, LLM provider integration, and cache invalidation patterns |
+| [EAS Build and Submit](skills/app/eas-build-submit/) | Build and submit Expo apps to Google Play using EAS — service account credential setup, eas.json configuration, and the EAS CLI submission workflow |
 
 ### Web skills
 
