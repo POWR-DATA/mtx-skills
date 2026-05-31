@@ -2,7 +2,7 @@
 name: flet-supabase-framework
 description: Framework for a Flet + Supabase multi-platform Python app — correct project structure, dependency config, integration patterns, and hard-won lessons from a full build cycle
 author: POWR-DATA
-version: 2.3.0
+version: 2.4.0
 license: MIT
 ---
 
@@ -58,228 +58,30 @@ When a developer wants to build a Python app that targets Android, iOS, and web 
 
 ## Process
 
-### 1. Create the project directory structure
+Generate every project file from the templates in [`reference.md`](reference.md) — it holds the load-bearing code for each step below.
 
-```
-your-app/
-  main.py
-  pyproject.toml
-  requirements.txt
-  .env                  <- gitignored, holds real keys
-  .env.example          <- committed, holds placeholder keys
-  .gitignore
-  Dockerfile            <- for web deployment (see flet-multiplatform-build)
-  services/
-    __init__.py
-    supabase_client.py
-    auth.py
-    [domain].py         <- one service module per data domain
-  views/
-    login.py
-    home.py
-    support.py          <- or other screens
-  assets/
-    icon.png            <- 1024x1024px transparent PNG (app icon + UI)
-    splash.png          <- 2048x2048px (separate file, mobile startup splash)
-  infra/
-    setup-azure.sh      <- or setup-cloud.sh for your chosen host
-  .github/
-    workflows/
-      build-web.yml
-      build-android.yml
-      build-ios.yml
-```
+1. **Create the directory structure** — see *Project structure* in `reference.md`.
+2. **Write `pyproject.toml`** — direct dependencies only (no transitive deps); add `[tool.flet.app] exclude` to keep the dev venv out of the Android bundle. See *pyproject.toml*.
+3. **Write `requirements.txt`** — the full transitive tree from `pip freeze`, including `flet-web` and the pinned `cryptography`/`cffi` versions. See *requirements.txt*.
+4. **Write `services/supabase_client.py`** — a lazy `get_client()` singleton with embedded URL/key defaults so the app works on device without `.env`. See *Supabase client*.
+5. **Write `services/auth.py`** — thin `sign_in`/`sign_up`/`sign_out`/`get_user` wrappers over `get_client()`; store no state here. See *Auth service*.
+6. **Write `main.py`** — one persistent `ft.View`, controls swapped via a synchronous `navigate(route)` callback (not `page.controls`-only, not view-per-route). See *main.py and navigation*.
+7. **Write each screen as an `ft.Column` subclass** — expose `self.appbar`; load data in `did_mount()` via `page.run_thread()`, ending every background function with `page.update()`. See *Screen view*.
+8. **Write `.env.example` (committed) and `.env` (gitignored)** — see *Environment files*.
+9. **Add `.gitignore` entries** — `.env`, `.venv/`, `build/`, `__pycache__/`, `*.pyc`, `*.apk`, `*.aab`, `*.ipa`.
+10. **Create the Supabase `profiles` table** with RLS policies — see *Supabase profiles table*.
+11. **Verify** — run `flet run main.py` locally; sign in, navigate, confirm data loads before attempting any mobile build.
 
-### 2. Write pyproject.toml
+---
 
-Direct dependencies only — no transitive deps, no pinned sub-packages:
+## Output format
 
-```toml
-[project]
-name = "your-app-name"
-version = "1.0.0"
-description = "Short app description"
-requires-python = ">=3.11"
-dependencies = [
-    "flet==0.84.0",
-    "supabase==2.25.1",
-    "httpx==0.28.1",
-    "python-dotenv==1.2.2",
-    "tzdata==2026.2",
-]
+The skill produces a complete, runnable project. Present the result as:
 
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
-
-[tool.flet]
-app.icon = "assets/icon.png"
-app.splash = "assets/splash.png"
-# Uncomment and fill in before first app store build:
-# app.name = "Your App"
-# app.bundle_id = "com.yourorg.yourapp"
-# app.version = "1.0.0"
-# app.build_number = 1
-
-[tool.flet.app]
-exclude = [".venv", "build", ".git", ".github", "__pycache__", "*.pyc"]
-```
-
-### 3. Write requirements.txt
-
-All transitive dependencies pinned explicitly. After `pip install -e .`, run `pip freeze` and annotate by group. Always include `flet-web` (required for Dockerfile build steps) and the constrained crypto packages:
-
-```
-# Core framework
-flet==0.84.0
-flet-web==0.84.0   # REQUIRED — used in Dockerfile RUN steps to patch web assets
-
-# Supabase + sub-packages (supabase, supabase-auth, storage3, postgrest, realtime, ...)
-# Auth / crypto — Android arm64-v8a constrained versions
-cryptography==43.0.1
-cffi==1.17.1
-# HTTP client stack (httpx, httpcore, certifi, ...)
-# ... full transitive set from pip freeze
-```
-
-### 4. Write services/supabase_client.py (mobile-safe)
-
-```python
-import os
-from dotenv import load_dotenv
-from supabase import create_client, Client
-
-load_dotenv()
-
-# .env overrides these defaults (local dev). On mobile .env doesn't exist — defaults are used.
-_DEFAULT_URL = "https://your-ref.supabase.co"
-_DEFAULT_KEY = "sb_publishable_your-anon-key"
-
-SUPABASE_URL: str = os.environ.get("SUPABASE_URL") or _DEFAULT_URL
-SUPABASE_KEY: str = (
-    os.environ.get("SUPABASE_ANON_KEY")
-    or os.environ.get("SUPABASE_KEY")
-    or _DEFAULT_KEY
-)
-
-_client: Client | None = None
-
-def get_client() -> Client:
-    global _client
-    if _client is None:
-        _client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    return _client
-```
-
-### 5. Write services/auth.py
-
-Thin wrappers over the Supabase client — `sign_in`, `sign_up`, `sign_out`, `get_user`. Each function calls `get_client()` and delegates directly to `client.auth`. No state is stored in this module.
-
-### 6. Write main.py
-
-Use a single persistent `ft.View` and swap its controls via a `navigate(route)` callback. On Android, using only `page.controls` (no `page.views`) renders nothing — Flutter's Navigator requires at least one View. View-per-route navigation (multiple entries in `page.views`) also causes issues on Android; the single-view swap pattern is reliable across all platforms.
-
-`page.go()` in Flet 0.84 is async, but event handler methods are synchronous — pass a synchronous `navigate(route)` callback as a constructor argument to each view instead:
-
-```python
-import flet as ft
-from views.login import LoginView
-from views.home import HomeView
-
-def main(page: ft.Page):
-    page.title = "Your App"
-    page.theme_mode = ft.ThemeMode.DARK
-
-    main_view = ft.View(route="/", controls=[])
-    page.views.append(main_view)
-
-    def navigate(route: str):
-        if route == "/home":
-            content = HomeView(navigate=navigate)
-        else:
-            content = LoginView(navigate=navigate)
-        main_view.controls = [content]
-        main_view.appbar = content.appbar
-        page.update()
-
-    navigate("/")
-
-if __name__ == "__main__":
-    import os
-    host = os.environ.get("FLET_HOST")
-    if host:
-        ft.run(main, host=host, port=8550, view=ft.AppView.WEB_BROWSER,
-               web_renderer=ft.WebRenderer.CANVAS_KIT)
-    else:
-        ft.run(main)
-```
-
-### 7. Write each screen as a ft.Column subclass
-
-Design screen views as `ft.Column` subclasses, not `ft.View` subclasses. Expose `self.appbar` as an instance attribute so `navigate()` in main can assign it to `main_view.appbar`. Override `did_mount()` to trigger background data loading — this hook fires after the widget is attached to the page, ensuring `self.page` is available:
-
-```python
-import flet as ft
-from services.supabase_client import get_client
-from services.auth import get_user
-
-class HomeView(ft.Column):
-    def __init__(self, navigate):
-        self._navigate = navigate
-        self._status = ft.Text("")
-        self.appbar = ft.AppBar(title=ft.Text("Home"))
-        super().__init__(controls=[self._status])
-
-    def did_mount(self):
-        self.page.run_thread(self._load_data)
-
-    def _load_data(self):
-        try:
-            client = get_client()
-            user_id = get_user().user.id
-            result = (
-                client.table("your_table")
-                .select("*")
-                .eq("id", user_id)
-                .execute()
-            )
-            self._status.value = str(result.data)
-        except Exception as ex:
-            self._status.value = str(ex)
-        self.page.update()  # always call at the end of every background thread
-```
-
-### 8. Write .env.example (committed) and .env (gitignored)
-
-```
-SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_ANON_KEY=your-anon-key-here
-```
-
-### 9. Add .gitignore entries
-
-`.env`, `.venv/`, `build/`, `__pycache__/`, `*.pyc`, `*.apk`, `*.aab`, `*.ipa`, `*.DS_Store`
-
-### 10. Create the Supabase profiles table
-
-```sql
-create table public.profiles (
-  id uuid references auth.users on delete cascade primary key,
-  full_name text,
-  created_at timestamptz default now()
-);
-alter table public.profiles enable row level security;
-create policy "Users can read own profile"
-  on public.profiles for select using (auth.uid() = id);
-create policy "Users can update own profile"
-  on public.profiles for update using (auth.uid() = id);
-```
-
-Add app-specific columns as needed. Insert a profile row on sign-up via a Supabase trigger or from the sign-up service call.
-
-### 11. Verify the framework
-
-Run `flet run main.py` locally. Sign in, navigate between screens, confirm data loads. Do not proceed to mobile builds until this works.
+1. **Project structure** — the directory tree created
+2. **Generated files** — each file from the Process in order (`pyproject.toml`, `requirements.txt`, `services/`, `main.py`, views, `.env.example`, `.gitignore`), drawn from the templates in `reference.md`
+3. **Supabase setup** — the `profiles` table SQL and RLS policies
+4. **Verification result** — confirmation that `flet run main.py` runs locally, sign-in works, and navigation and data loading succeed
 
 ---
 

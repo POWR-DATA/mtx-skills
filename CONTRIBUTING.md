@@ -26,7 +26,7 @@ A good skill should:
 
 ## File length and format
 
-Each skill folder contains four files. Keep each file focused and purposeful:
+A skill folder contains four core files, plus an optional `reference.md`:
 
 | File | Target length | Purpose |
 |---|---|---|
@@ -34,10 +34,43 @@ Each skill folder contains four files. Keep each file focused and purposeful:
 | `README.md` | 40–60 lines | Human-facing summary for GitHub browsing and discovery |
 | `example-input.md` | 15–40 lines | Realistic input example — not a template or placeholder |
 | `example-output.md` | Proportional to output | Demonstrates the full output format defined in `SKILL.md` |
+| `reference.md` *(optional)* | Not line-capped | Load-on-demand templates/excerpts kept out of `SKILL.md` |
 
-If `SKILL.md` exceeds 150 lines, the skill is likely too broad. Consider splitting it into two focused skills.
+### The `SKILL.md` length standard
 
-All four files must be complete and free of placeholder text before submission. Do not submit files with `[Fill this in]`, bracketed examples, or incomplete sections.
+`SKILL.md` is the **always-loaded instruction core** — it competes for the agent's attention with the user's actual task, so it must stay lean. The length standard applies to `SKILL.md` only:
+
+| Range | Meaning | Action |
+|---|---|---|
+| ≤ 150 lines | Healthy | None |
+| 150–200 | Review zone | Tighten, or move bulky material into `reference.md` |
+| > 200 | Action zone | **Must** reference or split before merge (see below) |
+
+This is a guideline, not a CI gate — but it is the bar reviewers hold skills to.
+
+### Reference vs split
+
+When a `SKILL.md` reaches the action zone, decide between two fixes:
+
+| | **Reference** | **Split** |
+|---|---|---|
+| What it is | One skill, one job — bulky *material* moves to `reference.md` in the same folder | Two skills — the file is doing *more than one job* |
+| Do it when | Long because of **material** (code, config, tables) | Long because of **multiple jobs** (distinct triggers/lifecycle moments) |
+| The test | "Is this still one skill that happens to carry appendices?" | "Would someone ever want one of these jobs *without* the other?" → yes = split |
+
+**Rule of thumb:** long because of material → reference; long because of multiple jobs → split.
+
+### `reference.md` excerpts must be minimal and illustrative
+
+`reference.md` is *not* line-capped, but it is **not a code dump**. Excerpts show the load-bearing parts only:
+
+- Include only the lines that demonstrate the pattern or the gotcha.
+- Elide boilerplate, imports, and repetition with `# ...`.
+- Replace project-specific values with placeholders (`<your-project-ref>`).
+- Test: "Could a competent developer reconstruct the rest from this?" If yes, cut more.
+- If any single excerpt exceeds ~40 lines, question whether every line is load-bearing.
+
+All core files must be complete and free of placeholder text before submission. Do not submit files with `[Fill this in]`, bracketed examples, or incomplete sections.
 
 ## Using `/mtx` to contribute
 
