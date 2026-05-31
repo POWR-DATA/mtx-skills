@@ -97,9 +97,9 @@ This procedure is called internally by the Update Skill workflow when a `[new-sk
 
 The skill name, category, and source entries are determined by the Update workflow's plan step before this procedure begins. Start directly at file generation.
 
-### Generate all four skill files
+### Generate the skill files
 
-Create all four files in full. **No placeholders, no `[Fill this in]`, no bracketed examples left in place.**
+Create the four core files in full — `SKILL.md`, `README.md`, `example-input.md`, `example-output.md` — plus a `reference.md` if `SKILL.md` would otherwise exceed the length standard (see below). **No placeholders, no `[Fill this in]`, no bracketed examples left in place.**
 
 #### `SKILL.md`
 
@@ -407,7 +407,7 @@ Check each item and mark as pass (✓) or fail (✗):
 
 **`SKILL.md` structure**
 - All required sections present: Purpose, When to use, Inputs expected, Guiding principles, Process, Output format, Quality checklist, Avoid, Example usage
-- Length within 80–150 lines (flag actual line count if outside)
+- Length zone: ≤150 healthy; 150–200 flag as review zone; **>200 is a fail** — must be referenced or split (see CONTRIBUTING.md)
 - Attribution footer present at the end of the file
 - No placeholder text remaining (`[Fill this in]`, bracketed examples, lorem ipsum)
 - No real usernames, account handles, repository names, deployment URLs, subscription IDs, or project-specific identifiers (see Example content rules above)
@@ -428,6 +428,11 @@ Check each item and mark as pass (✓) or fail (✗):
 - File exists and has content
 - No placeholder text remaining
 - No real usernames, repo names, deployment URLs, or project-specific identifiers
+
+**`reference.md`** *(only if present — it is optional)*
+- Listed in the skill's README files table
+- Not line-capped, but excerpts are minimal and illustrative — load-bearing lines only, boilerplate elided, no full code dumps
+- No placeholder-as-incomplete (`[Fill this in]`) and no real usernames, repo names, deployment URLs, or project-specific identifiers
 
 **Repository**
 - Skill path listed in root `README.md`
