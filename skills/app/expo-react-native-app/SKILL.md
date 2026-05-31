@@ -2,7 +2,7 @@
 name: expo-react-native-app
 description: Build cross-platform React Native apps with Expo — correct setup patterns, cross-platform gotchas, and hard-won lessons from native and web targets
 author: PowerData
-version: 1.0.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -32,6 +32,13 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - **Proxy all external API calls — never branch by platform for CORS.** External REST API calls that work on native are silently blocked by CORS on Expo web. The fix is a proxy (e.g. a Supabase Edge Function) so both native and web use the same code path. A web-only fetch branch doubles the maintenance surface and will diverge.
 - **Emoji ignores colour styling in TextInput rows.** Emoji characters inside `TextInput` rows are invisible on dark backgrounds because emoji rendering ignores the `color` style prop. Use a short text label (`SHOW`/`HIDE`) with an explicit `color` instead. Merge the label button into a shared bordered container using `flexDirection: 'row'` to avoid an unwanted internal dividing line.
 - **Test on both native and web targets before considering a screen complete.** Behaviour differences between native and web (CORS, emoji rendering, font loading) only surface when the target is exercised — do not rely on native-only testing.
+- **Expo Go is no longer available for SDK 56+ — use EAS development builds.** Expo Go was removed from the App Store for SDK 56 (confirmed May 2026). The correct local testing approach for iOS is an EAS development build with `expo-dev-client`, including when developing on Windows against a physical device.
+- **The iOS `icon` field in `app.config.js` must point to a real PNG.** The Expo default template may leave a placeholder (e.g. `./assets/expo.icon`) that is not a valid image. Replace it with a real PNG path (e.g. `./assets/images/icon.png`) before building, or the iOS build fails.
+- **Use a `Modal`-based dropdown when a list sits inside nested ScrollViews on Android.** A `ScrollView` inside an absolutely-positioned `View` that is itself inside a parent `ScrollView` cannot receive scroll touches — the parent clips touch events regardless of `nestedScrollEnabled`. The reliable fix: `measureInWindow` on the trigger ref to get screen coordinates, then render the list in a `Modal` positioned at those coordinates, placing it entirely outside the ScrollView hierarchy.
+- **iOS `Modal` components ignore the app-level orientation lock.** Expo's `orientation: 'portrait'` config does not propagate to modals. Each `Modal` must explicitly declare `supportedOrientations={['portrait']}` or it rotates when the device is held sideways or in Stage Manager on iPad.
+- **On Windows, the Android emulator lives at `C:\Users\<username>\Android\sdk\emulator\emulator.exe`** — not `%LOCALAPPDATA%\Android\Sdk\emulator`. Multiple `expo start` invocations accumulate Metro instances across ports 8081, 8083, 8085…; kill all processes on ports 8081–8090 before starting a new Metro instance, then run `adb reverse tcp:8081 tcp:8081` so the emulator can reach Metro on the host.
+- **Expo/React Native and Flet/Flutter are entirely separate stacks — no patterns transfer between them.** Expo uses TypeScript → React Native → native platform UI (UIKit on iOS, Jetpack Compose on Android). Flet uses Python → Flutter (Dart) → canvas-based rendering. No runtime is shared; packages, debugging approaches, and build tooling are completely different.
+- **Choose Expo over Flet for production mobile unless Python familiarity is the only constraint.** Expo's hot reload dev cycle, EAS build/signing/OTA tooling, native push notification support, and ecosystem size substantially outweigh Flet's sole advantage of Python. If the team is comfortable with TypeScript, choose Expo.
 
 ## Process
 
@@ -55,6 +62,10 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - [ ] All external API calls routed through a proxy — no `Platform.OS` branching for fetch
 - [ ] Interactive TextInput components use text labels, not emoji, for dark-theme compatibility
 - [ ] Web target tested with `npx expo start --web`
+- [ ] iOS `icon` in `app.config.js` points to a real PNG, not a template placeholder
+- [ ] iOS testing uses an EAS development build (`expo-dev-client`), not Expo Go, on SDK 56+
+- [ ] Portrait-locked iOS modals declare `supportedOrientations={['portrait']}`
+- [ ] Nested-ScrollView dropdowns on Android use a `Modal` rather than an inner ScrollView
 
 ## Avoid
 
@@ -63,6 +74,11 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - Adding a web-only fetch branch for CORS — use a proxy that works on both targets
 - Using emoji in TextInput interactive elements — emoji ignores `color` and disappears on dark backgrounds
 - Testing only on the native simulator — web-specific failures (CORS, font loading) only surface in the browser target
+- Applying Flet/Flutter patterns, packages, or mental models to Expo development — they are entirely separate stacks with no shared runtime
+- Relying on Expo Go for SDK 56+ iOS testing — it is no longer available; use an EAS development build with `expo-dev-client`
+- Leaving the Expo template's placeholder icon path in `app.config.js` — point the iOS `icon` field at a real PNG before building
+- Nesting a scrollable list inside an absolutely-positioned `View` within a parent `ScrollView` on Android — touch events are clipped; render the list in a `Modal` instead
+- Omitting `supportedOrientations={['portrait']}` on iOS modals when the app is portrait-locked — modals rotate independently of the app config
 
 ## Example usage
 

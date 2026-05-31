@@ -2,7 +2,7 @@
 name: supabase-edge-functions
 description: Write, deploy, and debug Supabase Edge Functions — Deno import constraints, CLI auth, LLM provider integration, and cache invalidation patterns
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -32,6 +32,8 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 - **`supabase login` hangs in non-interactive terminals — use `SUPABASE_ACCESS_TOKEN` instead.** In PowerShell and CI environments, `supabase login` blocks waiting for user input. Set `SUPABASE_ACCESS_TOKEN` as an environment variable before running `supabase functions deploy` to authenticate without interaction.
 - **Check LLM model names and quota settings when calls return 404 or `limit: 0`.** `gemini-1.5-flash` is deprecated on the v1beta REST API and returns 404. Use `gemini-2.0-flash` or `gemini-flash-lite-latest`. A quota error with `limit: 0` indicates the Google Cloud project has no free tier enabled — this is usually an org policy restriction, not exhausted quota.
 - **Client-side caches will serve bad data even after the edge function is fixed — delete the bad row.** When an edge function writes incorrect data to a database cache table, the client will keep reading the bad row because stale checks typically only trigger when no row exists for the expected key. Delete the affected row directly in the Supabase SQL Editor to force a fresh fetch.
+- **New-format Supabase PATs (`sbp_v0_…`) are rejected by older CLI versions.** PATs issued in 2026 start with `sbp_v0_`, and the Supabase CLI (v2.101.0) rejects them with "Invalid access token format". There is no CLI workaround — set Edge Function secrets directly via the Supabase dashboard (Edge Functions → function → Secrets) instead.
+- **On Windows, `supabase login` stores credentials in Windows Credential Manager, not `~/.supabase/credentials`.** The token is saved under `LegacyGeneric:target=Supabase CLI:supabase` and can conflict with the `SUPABASE_ACCESS_TOKEN` environment variable or carry restricted permissions for management API operations. Remove it with `cmdkey /delete:"Supabase CLI:supabase"` if it causes auth conflicts.
 
 ## Process
 
@@ -55,6 +57,8 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 - [ ] Error handling reads `error.context.clone().json()` on `FunctionsHttpError`
 - [ ] LLM model name verified against current provider API (not deprecated `gemini-1.5-flash`)
 - [ ] Any bad cached rows deleted directly before verifying the fix
+- [ ] New-format `sbp_v0_` PATs set via the dashboard if the CLI rejects them
+- [ ] On Windows, no stale `supabase login` token in Credential Manager conflicting with `SUPABASE_ACCESS_TOKEN`
 
 ## Avoid
 
@@ -63,6 +67,8 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 - Running `supabase login` in PowerShell or CI — it hangs waiting for input; use `SUPABASE_ACCESS_TOKEN`
 - Using deprecated Gemini model names (`gemini-1.5-flash`) — they return 404 on the v1beta API
 - Assuming a quota error with `limit: 0` means exhausted quota — it usually means the GCP project has no free tier enabled
+- Fighting the CLI to accept a new-format `sbp_v0_` PAT — older CLI versions reject it; set secrets via the Supabase dashboard instead
+- Overlooking Windows Credential Manager when `supabase login` auth misbehaves on Windows — the stored token can conflict with `SUPABASE_ACCESS_TOKEN`; clear it with `cmdkey /delete`
 
 ## Example usage
 

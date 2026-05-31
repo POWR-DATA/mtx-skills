@@ -219,9 +219,17 @@ Use when the target is a path to a project directory or `mtx-captures.md` file. 
 
 #### Step 1: Read the captures file
 
-Resolve the path to `mtx-captures.md`. If a directory was given, look for `mtx-captures.md` inside it. Read the full file. Ignore `[capture-log]` entries.
+Resolve the path:
 
-Group all remaining entries by skill tag.
+- **If a file path to `mtx-captures.md` was given** → read that single file.
+- **If a directory was given** → search it **recursively** for *all* `mtx-captures.md` files beneath it (e.g. one per project subfolder), not just one directly inside the given directory. On Windows use the PowerShell tool (`Get-ChildItem <path> -Filter mtx-captures.md -Recurse`); on macOS/Linux use the Bash tool (`find <path> -name mtx-captures.md`).
+  - **Multiple found** → list them, tell the user which projects have pending captures, and process them **all** in this run. Treat every file's entries as one combined pool grouped by skill tag.
+  - **One found** → proceed with it.
+  - **None found** → tell the user no captures files exist under that path and stop.
+
+Read the full content of every captures file found. Ignore `[capture-log]` entries.
+
+Group all remaining entries by skill tag across all files. Track which file each entry came from so the entry lifecycle in Step 4 writes deletions and re-tags back to the correct source file.
 
 #### Step 2: Assess each group
 

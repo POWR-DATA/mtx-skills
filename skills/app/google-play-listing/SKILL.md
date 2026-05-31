@@ -2,7 +2,7 @@
 name: google-play-listing
 description: Sign and publish an Android app (AAB) to the Google Play Store — covers keystore generation, Play Console setup, store listing content, App Content declarations, and CI automation
 author: POWR-DATA
-version: 1.1.0
+version: 1.3.0
 aliases: [flet-store-submission]
 license: MIT
 ---
@@ -37,6 +37,13 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
 - **Data deletion URL is required if any account data is collected.** Play Store requires a deletion request URL or in-app deletion option when users have accounts.
 - **Use dedicated reviewer credentials, not a real user account.** Create a shared mailbox (e.g. `app_reviewer@yourdomain.com`) and a dedicated app account using that email for Google's review team.
 - **GitHub free tier artifact storage fills quickly with APK/AAB builds.** Use `gh release create` to publish binaries as GitHub Releases instead — Release assets do not count against the Actions artifact storage quota.
+- **When migrating frameworks, match the bundle ID exactly and prepare testers for a full reinstall.** Replacing one build framework (e.g. Flet) with another (e.g. Expo) in an existing Play Store listing requires the new app's bundle ID to match the original exactly. The signing key will differ between frameworks — existing device installs require a full uninstall before the new build can be installed. The Play Store listing itself is unaffected.
+- **Resetting the upload key triggers a mandatory ~2 day server-enforced wait.** After requesting an upload key reset, the new key is not valid until the waiting period passes. There is no workaround — both manual AAB uploads and automated CI deploys fail until the window closes. Plan key rotations around this delay.
+- **A draft release with no AAB shows −100% device support — this is an artefact, not a regression.** The figure comes from comparing an empty draft against the previous release. Discard the empty draft and return once a valid AAB is attached.
+- **Chrome DevTools device emulation produces store-ready screenshots without a physical device.** Set a custom device using CSS pixel dimensions (not physical pixels) and a DPR that multiplies up to the required output resolution, then Ctrl+Shift+P → "Capture screenshot" exports at full physical resolution. Setting the viewport to physical pixels at DPR 1 renders content tiny — CSS pixels × DPR = physical output is the rule.
+- **Promoting Internal Testing → Production reuses the tested bundle — no re-upload.** The "Create production release" page pre-populates with the tested bundle. Countries/regions are configured at the track level (Production → Countries/regions), not per release — the release page errors if no countries are set at track level.
+- **The `r0adkll/upload-google-play` action requires a `whatsNewDirectory`.** Point it at a directory containing release-notes files (e.g. `whatsnew/whatsnew-en-AU`). If the directory does not exist, the deploy job fails — create it with at least one locale file before the first deploy.
+- **The 512×512 store-listing icon must be a flat square with no pre-applied rounded corners.** Google applies its own shaping; baked-in rounded corners produce a visible double-rounding gap. Export a flat square version for the store listing — the adaptive icon layers (foreground/background) are separate and handled differently.
 
 ## Process
 
@@ -163,6 +170,11 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
 - Providing a privacy policy as a file upload or email address — Play Console requires a public URL
 - Skipping the Feature graphic — Play Console requires it even if the app is not being promoted
 - Setting `ANDROID_STORE_PASSWORD` and `ANDROID_KEY_PASSWORD` to different values — PKCS12 format uses one password for both; mismatches cause hard-to-diagnose signing failures
+- Expecting testers to update over the air when the signing key has changed (e.g. after a framework migration) — a changed signing key requires a full uninstall on the device before the new build can be installed
+- Resetting the upload key right before a release — the ~2 day server-enforced validation wait blocks all uploads until it passes
+- Panicking at a −100% device support figure on an empty draft release — it is an artefact of comparing against zero devices; attach a valid AAB
+- Configuring an `r0adkll/upload-google-play` deploy without a `whatsNewDirectory` and locale file — the job fails
+- Uploading a store-listing icon with baked-in rounded corners — Google double-rounds it; use a flat square 512×512
 
 ## Example usage
 

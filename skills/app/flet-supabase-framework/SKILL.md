@@ -2,7 +2,7 @@
 name: flet-supabase-framework
 description: Framework for a Flet + Supabase multi-platform Python app — correct project structure, dependency config, integration patterns, and hard-won lessons from a full build cycle
 author: POWR-DATA
-version: 2.2.0
+version: 2.3.0
 license: MIT
 ---
 
@@ -40,6 +40,9 @@ When a developer wants to build a Python app that targets Android, iOS, and web 
 - **`.env` does not exist at runtime on mobile.** `load_dotenv()` reads from disk — on Android and iOS there is no `.env` file in the app bundle. Always embed Supabase URL and anon key as code-level defaults so the app works on device, while still allowing `.env` to override for local dev. Use a lazy `get_client()` singleton — not a module-level `create_client()` call — to avoid import-time network activity that can crash on mobile before the runtime is fully ready.
 - **Use a single transparent PNG for all icon placements.** A transparent PNG (RGBA mode, alpha=0 in background areas) blends against any background automatically. Creating separate icon variants per background colour requires the background RGB to match exactly — even a 1-point difference shows as a rectangular border.
 - **Script all infrastructure — never click through the portal.** Keep an `infra/setup-azure.sh` (or equivalent) in the repo that provisions everything from scratch. Apply the same discipline to Supabase: table creation and RLS policies belong in SQL migration files, not just dashboard clicks.
+- **Never reuse a single `ft.AppBar` instance — use a factory method.** Flet cannot reattach the same `ft.AppBar` object to a View after it has been detached. Reusing `self._appbar` causes `'AppBar' object has no attribute 'appbar'` on the second toggle. Fix: use a factory method (`_make_appbar()`) that returns a fresh `ft.AppBar` instance each time it is needed.
+- **Pass a `set_appbar(appbar)` callback for dynamic AppBar changes within a view.** To show or hide an AppBar dynamically within a screen (e.g. toggling between sign-in and sign-up modes), pass a `set_appbar` callback from the `navigate` closure in `main.py` into the view constructor. Never access `page.views[0].appbar` directly — indexing into `page.views` is unreliable on Flet desktop.
+- **Always assign `self._navigate = navigate` in `__init__` if any method in that view calls navigate.** Omitting this assignment causes `AttributeError: '<ViewName>' object has no attribute '_navigate'` at runtime when the handler fires — the error does not surface at construction time.
 
 ---
 
@@ -316,6 +319,8 @@ Use the fastest tier that answers your question — never push to trigger a CI b
 - [ ] Infrastructure setup is scripted in `infra/` — not portal-click-only
 - [ ] Supabase schema is in SQL migration files, not just dashboard clicks
 - [ ] App runs locally with `flet run main.py` before any mobile build is attempted
+- [ ] `self._navigate = navigate` is assigned in `__init__` for every view that calls navigate in any of its methods
+- [ ] Views that need to change the AppBar dynamically receive a `set_appbar` callback — not direct access to `page.views`
 
 ---
 
@@ -339,6 +344,9 @@ Use the fastest tier that answers your question — never push to trigger a CI b
 - Using `fit=ft.ImageFit.CONTAIN` in Flet 0.84.0 — the attribute doesn't exist in this version
 - Using `ft.app()` — deprecated since Flet 0.80; use `ft.run()`
 - Pushing to `main` just to test a change — use desktop or web local tier first
+- Reusing the same `ft.AppBar` instance across multiple show/hide cycles — use a factory method that returns a fresh instance each time
+- Accessing `page.views[0].appbar` directly to change the AppBar dynamically — indexing into `page.views` is unreliable on Flet desktop; pass a `set_appbar` callback from the navigate closure instead
+- Omitting `self._navigate = navigate` in a view's `__init__` when any method in that class calls navigate — the `AttributeError` only surfaces at runtime when the handler fires, not at construction time
 
 ---
 
