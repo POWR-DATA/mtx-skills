@@ -2,7 +2,7 @@
 name: website-seo-and-indexing
 description: Prepare a static website for search engine indexing and submit it to Google Search Console
 author: PowerData
-version: 1.2.0
+version: 1.3.0
 license: MIT
 ---
 
@@ -43,8 +43,11 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - Audit existing canonical tags before adding new ones. The tag may already exist and be correct — if it is, the redirect and internal links are the more likely cause of any GSC duplicate signal, not a missing canonical.
 - A 301 redirect on `/index.html → /` is only half the fix for a GSC duplicate. Googlebot follows internal links before encountering redirects — if navigation or anchor links still reference `index.html`, the duplicate persists. The redirect and internal link cleanup are required together.
 - When one `.html` URL duplicate is found in GSC, check all pages for the same pattern. If `index.html` creates a duplicate on one page, it almost certainly exists across the whole site.
-- OG image must use a solid background. Transparent PNGs appear invisible or broken on social share cards — platforms render cards on varying backgrounds. This failure only surfaces when a URL is actually shared, not during local testing.
+- OG image must use a solid background and be exactly 1200×630px and under 600KB. Transparent PNGs appear invisible or broken on social share cards — platforms render cards on varying backgrounds. WhatsApp in particular rejects oversized or transparent images. This failure only surfaces when a URL is actually shared, not during local testing.
 - `width` and `height` attributes on `<img>` elements serve aspect ratio reservation for CLS prevention, not display sizing. The browser uses them to pre-allocate space before the image loads. The ratio matters; exact pixel values do not need to match CSS dimensions.
+- "Discovered – currently not indexed" in Search Console is not a technical error — it means Google knows the page exists but has not yet crawled it. The fix is URL Inspection → Request Indexing, not Validate Fix. Validate Fix is only for confirmed code changes that resolved a prior error.
+- The Google Indexing API requires OAuth Desktop app credentials, not a service account, when the Search Console property is a Domain property — Domain properties reject service account emails with "email not found". Either create a URL-prefix property (`https://www.<domain>/`) alongside the Domain property and add the service account as Owner there, or use OAuth with the Google account that owns the property.
+- The OAuth flow for the Indexing API saves access and refresh tokens to `token.json` after first browser login; subsequent runs refresh silently. Both `oauth-client.json` and `token.json` must be gitignored — they grant write access to your Search Console property.
 
 ## Process
 
@@ -130,8 +133,10 @@ The AI should produce:
 - [ ] URL Inspection confirms Google can render the homepage
 - [ ] Apex and http URLs redirect to the canonical (www, https) before indexing
 - [ ] Internal links do not reference `.html` URLs where redirects exist for those paths
-- [ ] OG image uses a solid background — no transparency
+- [ ] OG image uses a solid background — no transparency, exactly 1200×630px, under 600KB
 - [ ] All `<title>` tags are unique and use the correct brand name, including secondary pages
+- [ ] "Discovered – currently not indexed" pages actioned via URL Inspection → Request Indexing, not Validate Fix
+- [ ] If using the Indexing API: OAuth credentials (not service account) used for Domain properties; `oauth-client.json` and `token.json` gitignored
 
 ## Avoid
 
@@ -146,6 +151,9 @@ The AI should produce:
 - Do not stop at the first `.html` duplicate found — check all pages, as the pattern typically exists across the whole site
 - Do not assume `<title>` tags are correct — they are invisible in browser UI and brand name inconsistencies on secondary pages can persist indefinitely without a deliberate audit pass
 - Do not treat a 404 on the HTTP non-www robots.txt entry in GSC as an error — if the canonical HTTPS www version is fetched successfully, the non-canonical 404 is expected and requires no action
+- Do not click Validate Fix for a "Discovered – currently not indexed" page — that status is not an error; use URL Inspection → Request Indexing instead
+- Do not use a service account with the Indexing API against a Domain property — it will be rejected with "email not found"; use OAuth Desktop credentials or a separate URL-prefix property
+- Do not commit `oauth-client.json` or `token.json` — they grant write access to your Search Console property
 
 ## Example usage
 

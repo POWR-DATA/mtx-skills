@@ -54,7 +54,9 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [App Icon Asset Generation](skills/app/app-icon-asset-generation/) | Generate a consistent application icon asset set from an approved high-resolution logo |
 | [Expo React Native App](skills/app/expo-react-native-app/) | Build cross-platform React Native apps with Expo — correct setup patterns, cross-platform gotchas, and hard-won lessons from native and web targets |
 | [Supabase Edge Functions](skills/app/supabase-edge-functions/) | Write, deploy, and debug Supabase Edge Functions — Deno import constraints, CLI auth, LLM provider integration, and cache invalidation patterns |
-| [EAS Build and Submit](skills/app/eas-build-submit/) | Build and submit Expo apps to Google Play using EAS — service account credential setup, eas.json configuration, and the EAS CLI submission workflow |
+| [EAS Build and Submit](skills/app/eas-build-submit/) | Build and submit Expo apps to Google Play and the App Store using EAS — credential setup, eas.json configuration, CI/CD integration, and the EAS CLI submission workflow |
+| [App Store Listing](skills/app/app-store-listing/) | Prepare and submit an iOS app to the App Store — App Store Connect setup, screenshot dimensions, App Privacy, TestFlight, review submission, and ASC API key |
+| [Expo iOS Deployment](skills/app/expo-ios-deployment/) | Produce an EAS iOS development build for testing on registered devices — expo-dev-client setup, credential generation, device registration, and eas.json iOS config |
 
 ### Web skills
 
