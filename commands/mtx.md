@@ -103,7 +103,9 @@ Create all four files in full. **No placeholders, no `[Fill this in]`, no bracke
 
 #### `SKILL.md`
 
-**Target length: 80–150 lines.** If it needs more, the skill is likely too broad.
+**Target length: 80–150 lines** (always-loaded instruction core). 150–200 is the review zone; over 200 you **must** reference or split before finishing — long because of *material* (code, config) → move it to `reference.md`; long because of *multiple jobs* → split into separate skills. See CONTRIBUTING.md for the full standard.
+
+If a `reference.md` is warranted, keep its excerpts minimal and illustrative — load-bearing lines only, boilerplate elided with `# ...`, placeholders for project-specific values, and add a `reference.md` row to the skill's README files table.
 
 Required YAML frontmatter:
 
@@ -494,6 +496,7 @@ Evaluate each section against these criteria:
 **Scope**
 - Is this skill trying to do too much? Would it be stronger as two focused skills?
 - Does it overlap meaningfully with an existing skill in the library?
+- **Length zone** — count `SKILL.md` lines. ≤150 is healthy; 150–200 is the review zone (suggest tightening or moving bulky material to `reference.md`); over 200 is the action zone — flag that it **must** be referenced or split. Apply the reference-vs-split test: long because of *material* (code, config, tables) → recommend moving it to `reference.md` (one skill, load-on-demand); long because of *multiple jobs* (distinct triggers/lifecycle moments someone would invoke separately) → recommend splitting into separate skills. If a `reference.md` exists, check its excerpts are minimal and illustrative (load-bearing lines only, boilerplate elided, no full dumps).
 - Is this skill under-developed? Check both: fewer than 5 guiding principles, and fewer than 50 lines of content (excluding frontmatter and attribution footer). If both are true, assess whether it shares significant subject matter with an existing skill. If it does, flag it as a merge candidate — name the candidate skill and phrase it as an observation, not a recommendation: _"This skill is thin and shares territory with `<skill-name>` — worth monitoring. If it does not grow after two or three update cycles, consider merging."_ If the skill is thin but genuinely standalone (no meaningful overlap with anything in the library), note the thinness only and suggest more captures are needed.
 
 ### Step 5: Report
@@ -603,6 +606,19 @@ Tentative entry:
 ## [skill-name] YYYY-MM-DD
 #tag1 #tag2
 ~ Entry text here — verify before applying to skill.
+```
+
+**Reference attachment (optional, use sparingly).** The 3-sentence limit governs the distilled *rule*. When the session produced a concrete *artefact* whose exact form is the value — and re-synthesising it at update time would risk losing what actually worked (e.g. a working YAML block, a tricky config) — attach it after the entry text with a `[reference: <anchor>]` marker and a fenced code block. The prose still obeys the 3-sentence limit; the attachment is exempt because it is artefact, not instruction. At update time the prose routes to `SKILL.md` and the attachment routes to the skill's `reference.md` under that anchor. Keep the attachment minimal and illustrative — load-bearing lines only, boilerplate elided with `# ...`, placeholders for project-specific values. Default to no attachment; most discoveries are rules, not artefacts.
+
+```markdown
+## [skill-name] YYYY-MM-DD
+#tag1 #tag2
+Three-sentence rule the artefact embodies.
+
+[reference: <anchor>]
+​```yaml
+# minimal load-bearing excerpt
+​```
 ```
 
 ### Step 7: Enforce the rolling window

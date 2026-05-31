@@ -7,6 +7,7 @@ Scaffold a new Python cross-platform app using Flet and Supabase from the start 
 | File | Purpose |
 |---|---|
 | `SKILL.md` | The skill definition |
+| `reference.md` | Code templates for each Process step (loaded on demand) |
 | `README.md` | This file |
 | `example-input.md` | Example input for this skill |
 | `example-output.md` | Example output produced by this skill |
