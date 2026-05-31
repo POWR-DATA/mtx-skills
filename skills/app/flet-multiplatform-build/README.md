@@ -7,6 +7,7 @@ Configure the complete build pipeline for a Flet Python app targeting Android AP
 | File | Purpose |
 |---|---|
 | `SKILL.md` | The skill definition |
+| `reference.md` | Build templates (Dockerfile, workflows, scripts) loaded on demand |
 | `README.md` | This file |
 | `example-input.md` | Example input for this skill |
 | `example-output.md` | Example output produced by this skill |

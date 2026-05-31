@@ -7,6 +7,7 @@ Deploy a Flet web app to Azure Container Apps — covering every pitfall from co
 | File | Purpose |
 |---|---|
 | `SKILL.md` | The skill definition |
+| `reference.md` | Azure/CI commands and templates loaded on demand |
 | `README.md` | This file |
 | `example-input.md` | Example input for this skill |
 | `example-output.md` | Example output produced by this skill |
