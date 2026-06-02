@@ -74,6 +74,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Dimensional Model Designer](skills/data/dimensional-model-designer/) | Design star schema and dimensional models for BI and reporting |
 | [Medallion Architecture Designer](skills/data/medallion-architecture-designer/) | Design bronze/silver/gold lakehouse data layers |
 | [Data Pipeline Designer](skills/data/data-pipeline-designer/) | Design high-level data pipelines for source-to-target data flows |
+| [Geospatial Source Database](skills/data/geospatial-source-database/) | Work with geospatial data sources (PostGIS, SQL Server, Natural Earth) and handle data-specific quirks |
 
 ### App skills
 
@@ -96,6 +97,12 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 |---|---|
 | [Static Website Hosting](skills/web/static-website-hosting/) | Deploy static websites using GitHub Pages, Netlify, or Vercel |
 | [Website SEO and Indexing](skills/web/website-seo-and-indexing/) | Optimise website structure and content for search engine indexing |
+
+### Infrastructure skills
+
+| Skill | Description |
+|---|---|
+| [Docker Compose Database Lab](skills/infra/docker-compose-database-lab/) | Set up local Docker Compose database environments with correct volume mounts, configuration, and network access |
 
 ### Domain-specific skills
 
@@ -130,6 +137,7 @@ mtx-skills/
 │   ├── data/
 │   ├── app/
 │   ├── web/
+│   ├── infra/
 │   ├── domain/
 │   └── ai/
 └── .github/ (CI and PR templates)
