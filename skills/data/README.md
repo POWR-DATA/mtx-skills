@@ -12,6 +12,7 @@ These skills cover the most frequently needed patterns in data engineering and a
 | [Dimensional Model Designer](dimensional-model-designer/) | Design a star schema or dimensional model for BI and reporting | Medallion Architecture Designer or Data Pipeline Designer |
 | [Medallion Architecture Designer](medallion-architecture-designer/) | Design bronze/silver/gold lakehouse data layers | Data Pipeline Designer |
 | [Data Pipeline Designer](data-pipeline-designer/) | Design a high-level source-to-target data pipeline | — |
+| [Geospatial Source Database](geospatial-source-database/) | Work with geospatial data sources (PostGIS, SQL Server, Natural Earth) and handle data-specific quirks | — |
 
 ## Suggested delivery sequence
 

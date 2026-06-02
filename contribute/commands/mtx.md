@@ -27,7 +27,7 @@ Parse `$ARGUMENTS` into two parts: **action** and **target**.
 
 For `validate` and `review`, the target is always a skill name or category path.
 
-**Category paths** map as follows: `web` → `skills/web/`, `data` → `skills/data/`, `app` → `skills/app/`, `ai` → `skills/ai/`, `domain` → `skills/domain/`. List all skill subdirectories found under the path and apply the workflow to each.
+**Category paths** map as follows: `web` → `skills/web/`, `data` → `skills/data/`, `app` → `skills/app/`, `ai` → `skills/ai/`, `domain` → `skills/domain/`, `infra` → `skills/infra/`. List all skill subdirectories found under the path and apply the workflow to each.
 
 If action is empty or unclear, ask in a single message:
 
@@ -253,17 +253,36 @@ Name review is especially important for `new-skill` candidates — the tag name 
 - Matches an existing skill → will update it
 - Tagged `new-skill: <suggested-name>` or no match found → will propose creating a new skill
 
+**Category fit** (for new skills only) — assess whether the proposed skill fits an existing category or requires a new one:
+
+- **Existing category is a clear fit** (e.g., a data design skill belongs in `data/`, a multi-platform app skill belongs in `app/`) → note the category, proceed
+- **Skill could fit multiple categories** (e.g., infrastructure setup used by both data and app developers) → present the options:
+
+  > **docker-compose-database-lab** could fit:
+  > - **app/** — developers building apps need local databases
+  > - **data/** — data engineers use Docker Compose for local infrastructure
+  > - **infra/** (new) — encapsulate infrastructure and DevOps skills separately
+  >
+  > Which category, or create new? (Rationale: _infrastructure skills are operationally distinct from design skills in data/ and building skills in app/._)
+
+- **No existing category is appropriate** → propose a new category with a short rationale:
+
+  > **devops-ci-cd** (new category) — Docker Compose setup, CI/CD pipelines, container orchestration. _Why new: these are operational skills, distinct from application building (app/), design (data/), or domain-specific work (domain/)._
+
+Present the category decision as part of the plan in Step 3. Do not create skill files until the user confirms category placement.
+
 #### Step 3: Present the plan
 
 Present a single consolidated plan before touching anything:
 
 > **Skills to update:** flet-multiplatform-build (4 entries), flet-supabase-framework (3 entries)
 > **New skills to create:** google-play-listing (6 entries — renamed from `app-store-listing`, scope narrowed to Google Play)
+> **Categories:** google-play-listing → `app/` (fits existing app delivery skills)
 > **Name suggestions:** none
 >
 > Proceed with all, or adjust?
 
-If the user adjusts (e.g. skips a skill, changes a name), update the plan and confirm before proceeding.
+If the user adjusts (e.g. skips a skill, changes a name, disputes a category placement), update the plan and confirm before proceeding. **Do not create any files or run commits until the user has explicitly approved the plan including category decisions.**
 
 #### Step 4: Execute in sequence
 
