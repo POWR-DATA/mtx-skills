@@ -27,7 +27,7 @@ Parse `$ARGUMENTS` into two parts: **action** and **target**.
 
 For `validate` and `review`, the target is always a skill name or category path.
 
-**Category paths** map as follows: `web` → `skills/web/`, `data` → `skills/data/`, `app` → `skills/app/`, `ai` → `skills/ai/`, `domain` → `skills/domain/`. List all skill subdirectories found under the path and apply the workflow to each.
+**Category paths** map as follows: `web` → `skills/web/`, `data` → `skills/data/`, `app` → `skills/app/`, `ai` → `skills/ai/`, `domain` → `skills/domain/`, `infra` → `skills/infra/`. List all skill subdirectories found under the path and apply the workflow to each.
 
 If action is empty or unclear, ask in a single message:
 

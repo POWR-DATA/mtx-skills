@@ -100,9 +100,9 @@ All core files must be complete and free of placeholder text before submission. 
 
 - Submit one skill per pull request where possible.
 - Include `SKILL.md` and `README.md` in every skill. Include `example-input.md` and `example-output.md` where a worked example adds meaningful value — skip them if the skill is self-explanatory or the output cannot be usefully represented in Markdown.
-- Place data skills under `skills/data/`, app skills under `skills/app/`, website skills under `skills/web/`, AI skills under `skills/ai/`, and domain-specific skills under `skills/domain/`.
+- Place data skills under `skills/data/`, app skills under `skills/app/`, website skills under `skills/web/`, infrastructure skills under `skills/infra/`, AI skills under `skills/ai/`, and domain-specific skills under `skills/domain/`.
 - Follow the folder naming convention: lowercase, hyphen-separated.
-- Include YAML frontmatter at the top of `SKILL.md` (required for Skillfish compatibility — see the [skill template](templates/skill-template/SKILL.md) for the correct format).
+- Include YAML frontmatter at the top of `SKILL.md` (required for Skillfish compatibility — see the [skill template](templates/skill-template/SKILL.template.md) for the correct format).
 - Write a short description in your pull request explaining the skill, the target user, and the intended use case.
 
 > **Note:** Skill contributions go under `skills/`. The `commands/` directory contains Claude Code slash commands — repo workflow tools, not library skills. Do not add library skills there.
