@@ -26,4 +26,4 @@ Time-Series Use Case Assessment (domain)
 
 Create a folder directly under `skills/domain/` named after the skill (lowercase, hyphen-separated). Add a `SKILL.md` and `README.md` following the standard structure.
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for submission guidance.
+See [CONTRIBUTING.md](../../contribute/CONTRIBUTING.md) for submission guidance.

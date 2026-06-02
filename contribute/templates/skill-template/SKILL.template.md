@@ -11,7 +11,7 @@
   license: MIT
   ---
 
-  Use /skill new in Claude Code to scaffold a skill interactively instead of filling this in manually.
+  Use /mtx capture in any project to record discoveries, then /mtx update <skill-name> from the skills repo to scaffold or update a skill instead of filling this in manually.
 -->
 
 # [Skill Name]

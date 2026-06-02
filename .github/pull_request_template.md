@@ -11,7 +11,7 @@ Briefly describe the skill or change being added.
 ## Checklist
 
 - [ ] Follows the standard skill structure (`SKILL.md`, `README.md`, `example-input.md`, `example-output.md`)
-- [ ] Placed in the correct folder (`skills/data/` or `skills/domain/<domain>/`)
+- [ ] Placed in the correct folder (`skills/data/`, `skills/app/`, `skills/web/`, `skills/domain/`, or `skills/ai/`)
 - [ ] Folder name is lowercase and hyphen-separated
 - [ ] Includes at least one realistic worked example
 - [ ] Examples use generic, public-safe content (no company names, internal systems, or sensitive data)

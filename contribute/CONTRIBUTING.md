@@ -1,6 +1,28 @@
-﻿# Contributing to Matrix Skills
+# Contributing to Matrix Skills
 
 Thank you for considering a contribution to this library.
+
+## Quick start
+
+To set up the contributor environment, run the install script **once** from the repo root:
+
+**macOS/Linux:**
+```bash
+./contribute/install.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+.\contribute\install.ps1
+```
+
+This installs the `/mtx` command globally. The full workflows are below.
+
+> **Important — Claude Code only.** The `/mtx` command is installed into `~/.claude/commands/` and only runs in **Claude Code** (Anthropic's CLI or VS Code extension). It will **not** work in GitHub Copilot CLI, Cursor, or other agent tools — even when they're using a Claude model. In those harnesses, typing `/mtx capture` is treated as plain text and the model will improvise a summary instead of running the capture workflow (no `mtx-captures.md` is created).
+>
+> If you're working in a non–Claude Code environment and need to capture a session's discoveries before the context is lost, ask the agent to read `contribute/commands/mtx.md` from this repo and follow the **Capture workflow** using the current conversation as source material (skip the JSONL session-history lookup step). Then continue in Claude Code for the update workflow.
+
+---
 
 ## Principles
 
@@ -72,41 +94,7 @@ When a `SKILL.md` reaches the action zone, decide between two fixes:
 
 All core files must be complete and free of placeholder text before submission. Do not submit files with `[Fill this in]`, bracketed examples, or incomplete sections.
 
-## Using `/mtx` to contribute
-
-The `/mtx` Claude Code command automates the contributor workflow — capturing discoveries from any project session, and updating or validating skills in the library. It is a global command installed at `~/.claude/commands/mtx.md` — available in any project, not just this repo.
-
-### Installing `/mtx`
-
-The command file is versioned in this repo at [`commands/mtx.md`](commands/mtx.md). To install it:
-
-**macOS/Linux:**
-```bash
-mkdir -p ~/.claude/commands
-cp commands/mtx.md ~/.claude/commands/mtx.md
-```
-
-**Windows:**
-```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\commands"
-Copy-Item commands\mtx.md "$env:USERPROFILE\.claude\commands\mtx.md"
-```
-
-After copying, `/mtx` is available in any Claude Code session on your machine. To update it, repeat the copy after pulling the latest version of this repo.
-
-**The standard contribution path:**
-
-1. Work on a project in any Claude Code session
-2. Run `/mtx capture` to record discoveries into `mtx-captures.md` in that project's root
-3. Open the skills repo and run `/mtx update <path>` — it reads the captures file, groups entries by skill, updates matching skills, and creates new skills for entries that don't match anything existing
-
-New skills enter the library through this capture-centric path. Skills built from real project experience are more reliable than skills written speculatively from scratch.
-
-**Direct skill editing:**
-
-Run `/mtx update <skill-name>` to edit a specific skill when you have relevant context in the current session or want to make a targeted improvement.
-
-The `update`, `validate`, and `review` actions require the skills repo — `/mtx` checks for this and stops with a clear message otherwise. `/mtx` is not installed by Skillfish; see [Contributing Skills](docs/contributing-skills.md) for setup instructions.
+---
 
 ## How to submit
 
@@ -117,7 +105,7 @@ The `update`, `validate`, and `review` actions require the skills repo — `/mtx
 - Include YAML frontmatter at the top of `SKILL.md` (required for Skillfish compatibility — see the [skill template](templates/skill-template/SKILL.md) for the correct format).
 - Write a short description in your pull request explaining the skill, the target user, and the intended use case.
 
-> **Note:** Skill contributions go under `skills/`. The `.claude/commands/` directory contains Claude Code slash commands — repo workflow tools, not library skills. Do not add library skills there.
+> **Note:** Skill contributions go under `skills/`. The `commands/` directory contains Claude Code slash commands — repo workflow tools, not library skills. Do not add library skills there.
 
 ## Style
 
@@ -125,3 +113,14 @@ The `update`, `validate`, and `review` actions require the skills repo — `/mtx
 - Keep headings concise.
 - Avoid excessive marketing language.
 - Write in plain, professional English.
+
+---
+
+## Full contributor workflows
+
+See [Contributing Skills Guide](../docs/contributors/contributing-skills.md) for detailed workflows using the `/mtx` command:
+
+- **`/mtx capture`** — Record discoveries from any project session into `mtx-captures.md`
+- **`/mtx update`** — Create new skills or update existing ones from captures
+- **`/mtx validate`** — Structural checks before submitting a PR
+- **`/mtx review`** — Content quality assessment
