@@ -2,7 +2,9 @@
 
 This guide is for contributors who want to create, update, or improve skills in the Matrix Skills library using Claude Code.
 
-If you are looking for how to use skills in your own projects, see [Usage Patterns](usage-patterns.md).
+**Are you a user looking to load skills into your projects?** See [Usage Patterns](../users/usage-patterns.md) and use [Skillfish](https://github.com/POWR-DATA/skillfish) to install: `npx skillfish add POWR-DATA/mtx-skills`.
+
+**Are you a contributor developing skills?** Continue reading.
 
 ---
 
@@ -36,23 +38,25 @@ Invoke `/mtx` with an action and an optional target. Omit arguments to be prompt
 /mtx update web                # lists web skills, asks which to update
 ```
 
-### Setting up the global command
+### Setting up the `/mtx` command (for contributors)
 
-The command file is versioned in this repo at `commands/mtx.md`. Copy it to your global Claude Code commands directory:
+This install is **for developing and contributing skills**, not for using them. Users install skills via Skillfish.
+
+After cloning the repo, run the install script **once** from the repo root:
 
 **macOS/Linux:**
 ```bash
-mkdir -p ~/.claude/commands
-cp commands/mtx.md ~/.claude/commands/mtx.md
+./contribute/install.sh
 ```
 
-**Windows:**
+**Windows (PowerShell):**
 ```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\commands"
-Copy-Item commands\mtx.md "$env:USERPROFILE\.claude\commands\mtx.md"
+.\contribute\install.ps1
 ```
 
-Once installed, `/mtx` is available in every Claude Code session on your machine. To update it, repeat the copy after pulling the latest version of this repo.
+The script creates `~/.claude/commands/mtx.md` as a symlink (or copy if symlinks are unavailable). Once installed, `/mtx` is available in every Claude Code session on your machine — used for capturing discoveries and managing skills during development.
+
+**Keeping it updated:** If you use a symlink, `git pull` automatically updates the command. If the script fell back to a copy, re-run the install script after pulling updates.
 
 ---
 

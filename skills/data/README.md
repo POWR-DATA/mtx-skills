@@ -28,4 +28,4 @@ Not every use case needs every skill. A simple reporting request may go straight
 
 ## Adding a new data skill
 
-Use the [skill template](../../templates/skill-template/) as your starting point. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for submission guidance.
+Use the [skill template](../../contribute/templates/skill-template/) as your starting point. See [CONTRIBUTING.md](../../contribute/CONTRIBUTING.md) for submission guidance.

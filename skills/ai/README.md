@@ -6,6 +6,6 @@ These skills cover the delivery lifecycle for AI-powered systems: agent design, 
 
 ## Adding a new AI skill
 
-Use the [skill template](../../templates/skill-template/) as your starting point. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for submission guidance.
+Use the [skill template](../../contribute/templates/skill-template/) as your starting point. See [CONTRIBUTING.md](../../contribute/CONTRIBUTING.md) for submission guidance.
 
-Claude Code users can run `/skill new` to scaffold a new skill, or `/skill update <skill-name>` to edit an existing one.
+Claude Code users can run `/mtx capture` in any project to record discoveries, then `/mtx update <skill-name>` from the skills repo to apply them.

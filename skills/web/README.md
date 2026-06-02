@@ -22,4 +22,4 @@ Apply Static Website Hosting first to get the site live and accessible via HTTPS
 
 ## Adding a new web skill
 
-Use the [skill template](../../templates/skill-template/) as your starting point. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for submission guidance.
+Use the [skill template](../../contribute/templates/skill-template/) as your starting point. See [CONTRIBUTING.md](../../contribute/CONTRIBUTING.md) for submission guidance.

@@ -46,7 +46,7 @@ The frontmatter is required for [Skillfish](https://github.com/knoxgraeme/skillf
 
 Use the [skill template](../templates/skill-template/SKILL.md) as your starting point.
 
-**Length:** `SKILL.md` is the always-loaded instruction core — keep it lean. ≤150 lines is healthy, 150–200 is a review zone, and over 200 you must either move bulky material (code, config, long tables) into an optional `reference.md` in the same folder, or split the skill if it is doing more than one job. `reference.md` is loaded on demand and is not line-capped, but its excerpts must be minimal and illustrative — load-bearing lines only. See [CONTRIBUTING.md](../CONTRIBUTING.md#file-length-and-format) for the full standard.
+**Length:** `SKILL.md` is the always-loaded instruction core — keep it lean. ≤150 lines is healthy, 150–200 is a review zone, and over 200 you must either move bulky material (code, config, long tables) into an optional `reference.md` in the same folder, or split the skill if it is doing more than one job. `reference.md` is loaded on demand and is not line-capped, but its excerpts must be minimal and illustrative — load-bearing lines only. See [CONTRIBUTING.md](../../contribute/CONTRIBUTING.md#file-length-and-format) for the full standard.
 
 ---
 

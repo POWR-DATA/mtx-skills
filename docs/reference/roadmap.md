@@ -65,4 +65,4 @@ Domain-specific skill packs:
 
 ## Contributions
 
-Contributions that advance any roadmap item are welcome. See [CONTRIBUTING.md](../CONTRIBUTING.md) for the full process, including how to use the `/mtx` command.
+Contributions that advance any roadmap item are welcome. See [CONTRIBUTING.md](../../contribute/CONTRIBUTING.md) for the full process, including how to use the `/mtx` command.

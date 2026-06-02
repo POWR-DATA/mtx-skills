@@ -36,7 +36,7 @@ Copy the content of `SKILL.md` into your AI tool as an instruction or system pro
 
 ---
 
-*To create a new skill using this template, see the [skill authoring guide](../../docs/skill-authoring-guide.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md).*
+*To create a new skill using this template, see the [skill authoring guide](../../../docs/contributors/skill-authoring-guide.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md).*
 
 ---
 
