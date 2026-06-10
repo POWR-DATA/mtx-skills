@@ -103,6 +103,8 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | Skill | Description |
 |---|---|
 | [Docker Compose Database Lab](skills/infra/docker-compose-database-lab/) | Set up local Docker Compose database environments with correct volume mounts, configuration, and network access |
+| [GitHub Org Repository Setup](skills/infra/github-org-repository-setup/) | Set up a new GitHub repository in an organisation with correct access, security, and baseline branch protection |
+| [Git Secret Remediation](skills/infra/git-secret-remediation/) | Remove committed secrets from Git history safely and verify remediations across local and remote repositories |
 
 ### Domain-specific skills
 

@@ -9,6 +9,8 @@ These skills cover the operational patterns developers need: setting up local en
 | Skill | Description |
 |---|---|
 | [Docker Compose Database Lab](docker-compose-database-lab/) | Set up local Docker Compose database environments with correct volume mounts, configuration, and network access |
+| [GitHub Org Repository Setup](github-org-repository-setup/) | Set up a new GitHub repository in an organisation with correct access, security, and baseline branch protection |
+| [Git Secret Remediation](git-secret-remediation/) | Remove committed secrets from Git history safely and verify remediations across local and remote repositories |
 
 ## Adding a new infrastructure skill
 

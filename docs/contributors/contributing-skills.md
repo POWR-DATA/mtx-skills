@@ -141,7 +141,7 @@ Validating: network-diagram-generator (v1.0.0)
 Frontmatter        ✓ all fields present and valid
 SKILL.md structure ✓ all 9 sections present, 112 lines (within 80–150)
 README.md          ✓ 48 lines (within 40–60)
-example-input.md   ✓ 22 lines (within 15–40)
+example-input.md   ✓ 22 lines (within 5–40)
 example-output.md  ✓ proportional to output complexity
 Repository         ✓ listed in root README.md
 
