@@ -54,7 +54,7 @@ A skill folder contains four core files, plus an optional `reference.md`:
 |---|---|---|
 | `SKILL.md` | 80–150 lines | The skill definition — procedure, output format, and principles |
 | `README.md` | 40–60 lines | Human-facing summary for GitHub browsing and discovery |
-| `example-input.md` | 15–40 lines | Realistic input example — not a template or placeholder |
+| `example-input.md` | 5–40 lines | Realistic input example — not a template or placeholder |
 | `example-output.md` | Proportional to output | Demonstrates the full output format defined in `SKILL.md` |
 | `reference.md` *(optional)* | Not line-capped | Load-on-demand templates/excerpts kept out of `SKILL.md` |
 

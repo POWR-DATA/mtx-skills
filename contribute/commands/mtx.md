@@ -191,7 +191,7 @@ Brief instructions for loading the skill into an AI tool.
 
 #### `example-input.md`
 
-**Target length: 15–40 lines.** Realistic and specific — not a template or placeholder.
+**Target length: 5–40 lines.** Realistic and specific — not a template or placeholder.
 
 #### `example-output.md`
 
@@ -439,7 +439,7 @@ Check each item and mark as pass (✓) or fail (✗):
 
 **`example-input.md`**
 - File exists and has content
-- Length within 15–40 lines (flag if outside)
+- Length within 5–40 lines (flag if outside)
 - No placeholder text remaining (`[Fill this in]`, etc.)
 - No real usernames, repo names, deployment URLs, or project-specific identifiers
 

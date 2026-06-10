@@ -2,7 +2,7 @@
 name: geospatial-source-database
 description: Work with geospatial data sources (PostGIS, SQL Server, Natural Earth) and handle data-specific quirks
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -34,6 +34,8 @@ Navigate the quirks and gotchas when working with geospatial data sources — Po
 - **Geometry validation is data-dependent.** SQL Server's WideWorldImporters contains invalid geometries; validate with `.MakeValid()` before any spatial operations. PostGIS `geography` casts emit NOTICEs for coordinate coercion; suppress with `SET client_min_messages = warning`.
 - **Tool parsers are not always accurate.** DBeaver flags valid SQL Server CLR geography methods (`.STDistance()`, `geography::Point`) as errors; these are parser limitations, not execution failures. The queries run correctly despite the warnings.
 - **SQL Server reserved keywords require bracket-escaping.** `[current_user]` is a keyword and must be escaped; `CROSS JOIN` replaces `ON 1=1` which SQL Server does not accept.
+- **`sqlcmd` defaults changed in v18.** SQL Server 2025 container images ship `sqlcmd` v18 with encryption required by default. For local self-signed cert workflows, use `-C` (trust server certificate); `-No` now fails with SSL certificate errors.
+- **Driver return types differ across spatial stacks.** `pyodbc` cannot fetch SQL Server `geometry/geography` columns directly (`ODBC SQL type -151`); use `CAST(... AS varbinary(max))`, `.STAsText()`, or `.STAsBinary()`. `psycopg2` returns PostGIS geometry as HEXEWKB text and returns `memoryview` for `ST_AsBinary()`/`ST_AsEWKB()`; convert with `bytes(val)`.
 
 ## Process
 
@@ -42,14 +44,16 @@ Navigate the quirks and gotchas when working with geospatial data sources — Po
 3. **Suppress expected warnings.** Set `client_min_messages` in PostgreSQL, or accept DBeaver warnings in SQL Server if you've verified the query logic is correct.
 4. **Handle tool parser false positives.** In DBeaver, if a valid spatial method is flagged as an error, run the query anyway — parser limitations don't affect execution.
 5. **Test with a small sample first.** Before loading large datasets, query a representative sample to verify coverage and data quality.
-6. **Document data-specific rules.** Note which tables are US-only, which geometries need validation, which operations are safe without validation.
+6. **Select safe client retrieval patterns.** For SQL Server via `pyodbc`, avoid direct `geometry/geography` fetches and return WKB/WKT instead. For PostGIS via `psycopg2`, convert `memoryview` from `ST_AsBinary()`/`ST_AsEWKB()` to bytes.
+7. **Document data-specific rules.** Note which tables are US-only, which geometries need validation, which operations are safe without validation.
+8. **Set local TLS expectations for SQL Server clients.** In local containers with self-signed certificates, prefer `sqlcmd -C` and document that choice explicitly in scripts.
 
 ## Output format
 
 1. **Data coverage summary** — which geographies are actually present in the dataset, any caveats
 2. **Validation requirements per table** — which tables need `.MakeValid()`, which are already clean
 3. **Query patterns for the source** — e.g., how to safely cast to geography, how to suppress warnings
-4. **Sample queries** — demonstrating safe operations with validation or suppression applied
+4. **Sample queries** — demonstrating safe operations with validation, suppression, and client-compatible result formats
 5. **Tool-specific notes** — e.g., DBeaver warnings to ignore, Azure Data Studio quirks
 
 ## Quality checklist
@@ -59,6 +63,8 @@ Navigate the quirks and gotchas when working with geospatial data sources — Po
 - [ ] Expected warnings (client_min_messages, DBeaver flags) have been identified and documented
 - [ ] SQL reserved keywords are bracket-escaped in SQL Server
 - [ ] Example queries include both valid and invalid geometry handling
+- [ ] SQL Server automation scripts use `sqlcmd -C` for local self-signed certificate workflows
+- [ ] Python client examples avoid direct `geometry/geography` fetches through `pyodbc` and convert PostGIS binary outputs to bytes
 - [ ] No real data or identifiable information in examples (use generic geographic names or public datasets only)
 
 ## Avoid
@@ -68,6 +74,8 @@ Navigate the quirks and gotchas when working with geospatial data sources — Po
 - Trusting tool parser flags without verification — DBeaver and other tools flag valid SQL, causing unnecessary debugging.
 - Using `ON 1=1` in SQL Server `CROSS JOIN` — SQL Server does not accept this; use `CROSS JOIN` without the `ON` clause.
 - Calling `.STDistance()` or similar spatial methods on invalid geometries — validate first with `.MakeValid()`.
+- Using `sqlcmd -No` with local self-signed SQL Server certificates in v18 tooling — use `-C` instead.
+- Fetching SQL Server `geometry/geography` directly with `pyodbc` — cast to `varbinary(max)` or return WKT/WKB methods.
 
 ## Example usage
 

@@ -4,7 +4,7 @@ Work with geospatial data sources (PostGIS, SQL Server, Natural Earth) and handl
 
 ## What this skill does
 
-Guides you through working with geospatial data sources, navigating data coverage limitations, geometry validation requirements, and tool parser quirks. Ensures you understand what data you actually have and how to query it safely without losing time to confusing warnings or empty result sets.
+Guides you through working with geospatial data sources, navigating data coverage limitations, geometry validation requirements, SQL client quirks, and parser false positives. Ensures you understand what data you actually have and how to query it safely without losing time to confusing warnings or empty result sets.
 
 ## When to use it
 
@@ -20,6 +20,8 @@ Guides you through working with geospatial data sources, navigating data coverag
 - Querying WideWorldImporters for Australian cities and finding none because the dataset contains only US data
 - Running `.STDistance()` queries in SQL Server and seeing DBeaver parser warnings despite correct syntax
 - Casting PostGIS `geometry` to `geography` and seeing unexpected NOTICEs about coordinate coercion
+- Fixing SQL Server 2025 local scripts after `sqlcmd` v18 starts requiring trusted TLS configuration
+- Retrieving spatial data in Python when `pyodbc` fails on SQL type `-151` and `psycopg2` returns `memoryview` for WKB
 
 ## Files in this folder
 

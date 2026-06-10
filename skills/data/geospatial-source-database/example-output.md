@@ -14,6 +14,18 @@
 
 ## Query Patterns
 
+### SQL Server container connectivity (`sqlcmd` v18)
+
+```bash
+# Local lab: trust self-signed certificate in container
+sqlcmd -S localhost,1433 -U sa -P "<your-password>" -C -Q "SELECT @@VERSION;"
+```
+
+**Why this works:**
+- SQL Server 2025 images include `sqlcmd` v18 with encryption required by default
+- `-C` trusts the server certificate for local/self-signed environments
+- `-No` (optional encryption) now fails against self-signed certs in this setup
+
 ### Natural Earth with geography casting (PostgreSQL)
 
 ```sql
@@ -50,6 +62,35 @@ WHERE Border.STIsValid() = 0;  -- Find invalid geometries
 - `STIsValid()` checks geometry validity first
 - The `.STDistance()` call is valid despite DBeaver parser warnings
 
+### Python spatial retrieval compatibility
+
+```python
+# SQL Server via pyodbc: avoid direct geometry/geography fetches (ODBC type -151)
+sql_server_query = """
+SELECT
+  CityID,
+  CAST(Location AS varbinary(max)) AS location_wkb,
+  Location.STAsText() AS location_wkt
+FROM Application.Cities
+"""
+
+# PostGIS via psycopg2: convert memoryview to bytes for binary geometry outputs
+postgis_query = """
+SELECT
+  id,
+  geom,
+  ST_AsBinary(geom) AS geom_wkb,
+  ST_AsEWKB(geom) AS geom_ewkb
+FROM public.sample_geoms
+LIMIT 10
+"""
+```
+
+**Why this works:**
+- `pyodbc` cannot read SQL Server spatial columns directly when surfaced as ODBC SQL type `-151`
+- Casting to `varbinary(max)` or returning `STAsText()` / `STAsBinary()` avoids unsupported direct decoding
+- In `psycopg2`, `ST_AsBinary()` / `ST_AsEWKB()` values are often `memoryview`; convert using `bytes(val)` before parsing
+
 ## Tool-Specific Notes
 
 **DBeaver on SQL Server:**
@@ -62,9 +103,15 @@ WHERE Border.STIsValid() = 0;  -- Find invalid geometries
 - `client_min_messages = warning` suppresses NOTICE-level messages but not WARNING or ERROR
 - Always include this in scripts that cast to geography to reduce noise in query results
 
+**Python clients:**
+- `pyodbc` + SQL Server spatial columns: expect `ProgrammingError: ODBC SQL type -151 is not yet supported` unless you cast or use `STAs*` methods
+- `psycopg2` + PostGIS `geometry`: direct column reads are hex text (HEXEWKB-style), while `ST_AsBinary()` / `ST_AsEWKB()` return binary-compatible `memoryview`
+
 ## Coverage Verification Checklist
 
 - [ ] Natural Earth: Verified with `SELECT DISTINCT name FROM ne_110m_admin_1_states_provinces LIMIT 10` to confirm US-only
 - [ ] WideWorldImporters: Verified with `SELECT DISTINCT CountryID FROM Application.Cities` to confirm US-only
 - [ ] Geometries: Ran `.STIsValid()` or `ST_IsValid()` on sample rows to identify invalid geometries
 - [ ] Warnings: Identified which warnings are expected (DBeaver parser, coordinate coercion NOTICEs) vs. actual errors
+- [ ] SQL Server scripts: Switched local `sqlcmd` usage to `-C` where self-signed certs are expected
+- [ ] Python retrieval: Confirmed binary/text conversion path for `pyodbc` and `psycopg2` spatial reads

@@ -5,4 +5,4 @@ I'm setting up a local PostgreSQL 18 + PostGIS environment for geospatial featur
 - Our corporate network uses an Artifactory mirror for Docker images — I need to point to that
 - A PostGIS loader service that depends on the database being healthy before it runs
 
-Our network blocks direct Docker Hub access, but `riotinto-docker.artifactory.riotinto.com` is available for Docker Hub mirrors.
+Our network blocks direct Docker Hub access, but `<your-artifactory-mirror>` is available for Docker Hub mirrors.
