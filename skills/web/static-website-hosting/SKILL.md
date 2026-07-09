@@ -2,7 +2,7 @@
 name: static-website-hosting
 description: Plan and deploy a static website on Azure Static Web Apps with custom domains, DNS, IaC, and CI/CD
 author: PowerData
-version: 1.3.0
+version: 1.4.0
 license: MIT
 ---
 
@@ -57,6 +57,13 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - `style-src` still requires `'unsafe-inline'` unless every inline `<style>` block and `style=` attribute is extracted to an external stylesheet — extracting scripts alone does not let you tighten `style-src`. Deploy any new CSP in `Content-Security-Policy-Report-Only` mode first and check the DevTools Console for violations before switching to enforcement.
 - Azure SWA cancels an in-progress deployment when a newer push arrives, producing a GitHub Actions failure notification even though the site deploys correctly from the later commit. Verify no deployment is running (`gh run list --limit 3`) before pushing to avoid spurious failure alerts.
 - After deploying JS or CSS changes, verify behaviour against the live URL using WebFetch or by instructing the user to hard refresh (Ctrl+Shift+R). JS and CSS are cached at `max-age=3600` — the user may be looking at the previous version without realising it.
+- `script-src 'self'` also blocks inline event-handler attributes (`onclick`, `onchange`), not just `<script>` blocks. They work locally (`file://` has no CSP) but silently fail on the live site. Attach handlers via external JS `addEventListener`, never inline attributes, on any site with a CSP.
+- Guard every shared-script DOM lookup with a null check. A script referencing an element that does not exist on a given page (e.g. `document.getElementById('year').textContent = …`) throws a TypeError that halts *all* subsequent script execution, including unrelated handlers. Write `var el = document.getElementById('year'); if (el) el.textContent = …`.
+- With JS/CSS at `max-age=3600`, browsers serve stale files after a deploy. Append a version query string (`scripts.js?v=2`) to force a fresh fetch, and increment it whenever a change would break existing cached behaviour.
+- When reorganising a live site into subfolders, redirect every old URL to its new path — 301 for public/SEO pages, 302 for transient/auth pages — so existing links and app deep-links keep working. SWA auto-serves `index.html` for a directory and `foo.html` for `/foo`; add an explicit `rewrite` route for the no-trailing-slash folder URL to pin the canonical.
+- Moving an HTML page into a deeper folder breaks its relative asset references (`styles.css`, `assets/…`, `favicon.png`) — they resolve against the new path and 404. Convert them to root-absolute (`/styles.css`, `/assets/…`) when relocating a page.
+- A static page can double as a Supabase auth page (e.g. password reset): it reads the recovery token from the URL hash (`access_token`, `type=recovery`), loads supabase-js from a CDN, and calls `setSession` then `updateUser`. Its `staticwebapp.config.json` route needs a `rewrite` to the `.html` plus a per-route CSP allowing `connect-src https://<project-ref>.supabase.co` and `script-src … https://cdn.jsdelivr.net`.
+- A page that is also an Android App Link / iOS Universal Link target is verified for the whole domain by `.well-known/assetlinks.json` (`handle_all_urls`), so moving that page's URL does not require editing assetlinks. It does require updating the app's intent-filter paths and any auth redirect URLs (e.g. Supabase) to the new path — app-side work the website change cannot cover.
 
 ## Process
 
@@ -141,6 +148,9 @@ The AI should produce:
 - [ ] Per-asset Cache-Control routes placed before the `/*` catch-all (CSS/JS, assets, HTML)
 - [ ] New CSP deployed in Report-Only mode and Console violations cleared before enforcement
 - [ ] No deployment running (`gh run list`) before pushing a new commit
+- [ ] No inline event-handler attributes (`onclick`) on a CSP site — handlers attached via external `addEventListener`
+- [ ] Shared-script DOM lookups guarded with null checks
+- [ ] Relocated pages use root-absolute asset paths and 301/302 redirects from old URLs
 
 ## Avoid
 
@@ -157,6 +167,9 @@ The AI should produce:
 - Do not expect to drop `'unsafe-inline'` from `style-src` after only externalising scripts — inline styles and `style=` attributes must all be extracted first
 - Do not enforce a new CSP directly — deploy it as `Content-Security-Policy-Report-Only` first and clear all Console violations before switching to enforcement
 - Do not push while an Azure SWA deployment is still running — the cancelled run reports a spurious GitHub Actions failure; check `gh run list --limit 3` first
+- Do not use inline `onclick`/`onchange` attributes on a CSP site — `script-src 'self'` blocks them silently on the live site; attach via `addEventListener`
+- Do not leave shared-script DOM lookups unguarded — a missing element throws and halts all later script execution on that page
+- Do not keep relative asset paths when moving a page into a subfolder — they 404; switch to root-absolute paths
 
 ## Example usage
 

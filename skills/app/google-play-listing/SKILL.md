@@ -2,7 +2,7 @@
 name: google-play-listing
 description: Sign and publish an Android app (AAB) to the Google Play Store — covers keystore generation, Play Console setup, store listing content, App Content declarations, and CI automation
 author: POWR-DATA
-version: 1.3.0
+version: 1.4.0
 aliases: [flet-store-submission]
 license: MIT
 ---
@@ -34,7 +34,7 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
 - **Upload a signed AAB, not APK, to Google Play.** Gate the AAB build on `workflow_dispatch` — it should only run when intentionally preparing a release, not on every push.
 - **Google Play org accounts do not require a D-U-N-S number.** Unlike Apple, Google does not require D-U-N-S for organisation accounts. The one-time $25 USD fee is the only requirement. The "developer name" is the public-facing name shown on every listing — use your trading name exactly as customers should see it.
 - **Privacy policy must be a publicly accessible URL.** Play Console will not accept a file upload or email address. Host it on your website or use a privacy policy generator service.
-- **Data deletion URL is required if any account data is collected.** Play Store requires a deletion request URL or in-app deletion option when users have accounts.
+- **Account deletion must be offered both in-app and online, and declared in Data Safety.** For any app with account creation, Google Play requires *both* an in-app deletion path and an online (web) deletion request URL, and you must declare account deletion in the Data Safety form. The Play listing publicly surfaces whether the app offers account deletion, so a missing declaration is visible to users.
 - **Use dedicated reviewer credentials, not a real user account.** Create a shared mailbox (e.g. `app_reviewer@yourdomain.com`) and a dedicated app account using that email for Google's review team.
 - **GitHub free tier artifact storage fills quickly with APK/AAB builds.** Use `gh release create` to publish binaries as GitHub Releases instead — Release assets do not count against the Actions artifact storage quota.
 - **When migrating frameworks, match the bundle ID exactly and prepare testers for a full reinstall.** Replacing one build framework (e.g. Flet) with another (e.g. Expo) in an existing Play Store listing requires the new app's bundle ID to match the original exactly. The signing key will differ between frameworks — existing device installs require a full uninstall before the new build can be installed. The Play Store listing itself is unaffected.
@@ -155,7 +155,7 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
 - [ ] Privacy policy URL is live and publicly accessible (not an email or file)
 - [ ] Feature graphic (1024×500) uploaded — even if not promoting
 - [ ] All App Content declarations completed before first release promotion
-- [ ] Data deletion URL included if any account data is collected
+- [ ] Account deletion offered both in-app and online, and declared in the Data Safety form (if the app has account creation)
 - [ ] Reviewer credentials are for a dedicated account, not a real user account
 - [ ] Internal Testing opt-in URL shared with testers before expecting them to see the app
 - [ ] Service account email granted access in Play Console before CI automation runs
