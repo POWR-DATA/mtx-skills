@@ -90,6 +90,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Google Play Listing](skills/app/google-play-listing/) | Create effective Google Play Console listings |
 | [App Icon Asset Generation](skills/app/app-icon-asset-generation/) | Generate app icons and adaptive icon assets for iOS and Android |
 | [Supabase Edge Functions](skills/app/supabase-edge-functions/) | Deploy serverless functions to Supabase Edge Functions |
+| [Supabase Auth Email](skills/app/supabase-auth-email/) | Configure Supabase transactional auth email — custom SMTP, branded templates via the Management API, and reliable confirm/reset flows |
 
 ### Web skills
 
@@ -97,6 +98,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 |---|---|
 | [Static Website Hosting](skills/web/static-website-hosting/) | Deploy static websites using GitHub Pages, Netlify, or Vercel |
 | [Website SEO and Indexing](skills/web/website-seo-and-indexing/) | Optimise website structure and content for search engine indexing |
+| [Web Print PDF](skills/web/web-print-pdf/) | Produce reliable print and PDF output from an HTML page with print-specific CSS |
 
 ### Infrastructure skills
 

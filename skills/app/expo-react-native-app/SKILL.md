@@ -2,7 +2,7 @@
 name: expo-react-native-app
 description: Build cross-platform React Native apps with Expo — correct setup patterns, cross-platform gotchas, and hard-won lessons from native and web targets
 author: PowerData
-version: 1.2.0
+version: 1.3.0
 license: MIT
 ---
 
@@ -39,6 +39,16 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - **On Windows, the Android emulator lives at `C:\Users\<username>\Android\sdk\emulator\emulator.exe`** — not `%LOCALAPPDATA%\Android\Sdk\emulator`. Multiple `expo start` invocations accumulate Metro instances across ports 8081, 8083, 8085…; kill all processes on ports 8081–8090 before starting a new Metro instance, then run `adb reverse tcp:8081 tcp:8081` so the emulator can reach Metro on the host.
 - **Expo/React Native and Flet/Flutter are entirely separate stacks — no patterns transfer between them.** Expo uses TypeScript → React Native → native platform UI (UIKit on iOS, Jetpack Compose on Android). Flet uses Python → Flutter (Dart) → canvas-based rendering. No runtime is shared; packages, debugging approaches, and build tooling are completely different.
 - **Choose Expo over Flet for production mobile unless Python familiarity is the only constraint.** Expo's hot reload dev cycle, EAS build/signing/OTA tooling, native push notification support, and ecosystem size substantially outweigh Flet's sole advantage of Python. If the team is comfortable with TypeScript, choose Expo.
+- **Expo only exposes `EXPO_PUBLIC_*` env vars to client code.** `app.config.js` `extra` must read the prefixed names (e.g. `process.env.EXPO_PUBLIC_SUPABASE_URL`), and CI workflows must inject under those names too. Reading the unprefixed `SUPABASE_URL` yields empty values and a runtime "supabaseUrl is required" crash.
+- **`app.config.js` `extra` constants are Metro-cached.** After editing `app.config.js`, the old values persist until you restart with `npx expo start --clear`. A stale-config error that won't go away is usually this, not a code bug.
+- **Consolidate per-app placeholders into one `template.config.json` + a generator script.** The generator stamps `app.config.js` / `package.json` / `eas.json` / the CI workflow and regenerates a single `src/constants/AppConfig.ts` the screens import — killing hardcoded URL/name sprawl and making a new app one edit plus one command.
+- **Push notifications require a development build, not Expo Go.** Expo push was removed from Expo Go in SDK 53 (deprecated in 52) and only works in a dev build (`expo-dev-client`). The iOS Simulator cannot receive push (physical device required); EAS provisions the APNs/FCM credentials.
+- **Native in-app review is a silent no-op on sideloaded/dev builds.** `expo-store-review` (Play In-App Review / `SKStoreReviewController`) only renders on store-distributed installs (Android: any Play track, Internal testing is enough; iOS: TestFlight/App Store). On a dev APK `requestReview()` does nothing — that is correct, not a bug. Verify it as a launch-time test on a real store track; never add a dev-only fallback to force it.
+- **Lazy-load optional native modules with a synchronous `require()`.** Importing an optional native module (e.g. `expo-store-review`) at the top level crashes any dev build whose native binary predates the JS module ("Cannot find native module"); `await import()` then trips a Metro async-require bug ("Requiring unknown module N"). Use a synchronous `require()` inside the function (with an eslint-disable for `no-require-imports`) to keep graceful degradation.
+- **Reach Metro from a physical Android device over USB with `adb reverse`.** Run `adb reverse tcp:8081 tcp:8081`, start with plain `npx expo start --dev-client` (default 0.0.0.0 binding), and in the dev launcher enter `http://localhost:8081`. Do not pass `--localhost` — it binds Metro to IPv6 `::1` only, breaking the IPv4 adb-reverse tunnel ("unexpected end of stream" / UNAUTHORIZED).
+- **On Windows under OneDrive, mark `node_modules` "Always keep on this device".** OneDrive's on-demand placeholder files make Metro bundling fail with `readlink EINVAL` until the files are materialised locally.
+- **Scope App Links / Universal Links to the landing path only (`/<slug>`, `/<slug>/`), never `/<slug>/*`.** Broadening the pattern hijacks web-only auth pages (e.g. `/<slug>/reset-password`, `/<slug>/confirm-email`) into the app and breaks them — those must complete in the browser. Links also stay inert until `assetlinks.json` (Android, signing SHA-256) / AASA (iOS, Apple Team ID) are deployed to `/.well-known/` and the app is rebuilt.
+- **When the website's URL path differs from the Expo `slug`, use a separate web-path value.** The slug is a technical id tied to the EAS project — don't derive web URLs or App-Link paths from it. Introduce `webSlug` / `extra.webPath` for the web path and keep the slug for builds/credentials; `+native-intent.tsx` should strip `extra.webPath`, not `Constants.expoConfig.slug`, so the landing link resolves to the app root even when slug ≠ URL segment.
 
 ## Process
 
@@ -66,6 +76,10 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - [ ] iOS testing uses an EAS development build (`expo-dev-client`), not Expo Go, on SDK 56+
 - [ ] Portrait-locked iOS modals declare `supportedOrientations={['portrait']}`
 - [ ] Nested-ScrollView dropdowns on Android use a `Modal` rather than an inner ScrollView
+- [ ] Client env vars use the `EXPO_PUBLIC_*` prefix in `app.config.js` `extra` and in CI
+- [ ] Push notifications, in-app review, and other store-only features tested on a real store track — not a dev build
+- [ ] Optional native modules lazy-loaded via synchronous `require()`, not top-level or `await import()`
+- [ ] App Links / Universal Links scoped to the landing path only, with `assetlinks.json`/AASA deployed
 
 ## Avoid
 
@@ -79,6 +93,10 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - Leaving the Expo template's placeholder icon path in `app.config.js` — point the iOS `icon` field at a real PNG before building
 - Nesting a scrollable list inside an absolutely-positioned `View` within a parent `ScrollView` on Android — touch events are clipped; render the list in a `Modal` instead
 - Omitting `supportedOrientations={['portrait']}` on iOS modals when the app is portrait-locked — modals rotate independently of the app config
+- Reading unprefixed env vars (`SUPABASE_URL`) in client code — only `EXPO_PUBLIC_*` names reach the client; the rest are empty at runtime
+- Top-level importing an optional native module — it crashes dev builds whose native binary predates it; lazy-load with `require()`
+- Broadening App Links to `/<slug>/*` — it hijacks web-only auth pages into the app; scope to the landing path only
+- Passing `--localhost` to `expo start` for USB device debugging — it binds IPv6-only and breaks the adb-reverse tunnel
 
 ## Example usage
 

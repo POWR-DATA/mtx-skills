@@ -2,7 +2,7 @@
 name: website-seo-and-indexing
 description: Prepare a static website for search engine indexing and submit it to Google Search Console
 author: PowerData
-version: 1.3.0
+version: 1.4.0
 license: MIT
 ---
 
@@ -48,6 +48,10 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - "Discovered – currently not indexed" in Search Console is not a technical error — it means Google knows the page exists but has not yet crawled it. The fix is URL Inspection → Request Indexing, not Validate Fix. Validate Fix is only for confirmed code changes that resolved a prior error.
 - The Google Indexing API requires OAuth Desktop app credentials, not a service account, when the Search Console property is a Domain property — Domain properties reject service account emails with "email not found". Either create a URL-prefix property (`https://www.<domain>/`) alongside the Domain property and add the service account as Owner there, or use OAuth with the Google account that owns the property.
 - The OAuth flow for the Indexing API saves access and refresh tokens to `token.json` after first browser login; subsequent runs refresh silently. Both `oauth-client.json` and `token.json` must be gitignored — they grant write access to your Search Console property.
+- For a folder that mixes public landing pages with noindex auth/utility pages, do not blanket-noindex the folder. Apply `X-Robots-Tag: noindex` per auth route only, and keep `robots.txt` crawlable (do not `Disallow` the path) — Google must be able to fetch the page to read the noindex directive.
+- Automate indexing on deploy with a post-deploy CI job that submits every `sitemap.xml` URL to the Google Indexing API using a service-account key (stored as a secret), making the sitemap the single source of truth for what gets submitted. Guard the job to no-op when the secret is absent so it never blocks a deploy, and never fail the build on per-URL errors. See *Post-deploy Indexing API CI job* in [`reference.md`](reference.md).
+- For the Indexing API via a service account, the account must be added as an **Owner** of the Search Console property (Full/Restricted permissions do not work), and the Web Search Indexing API must be enabled **in the same Google Cloud project that owns the service account** — API calls are attributed to the SA's project, so enabling it in a different project silently fails.
+- Load the service-account JSON into a GitHub Actions secret with `gh secret set NAME < key.json` (uploads encrypted, never printed or committed). Extract only the non-secret `client_email` for the Search Console owner step; never `cat` the whole key or place it in the repo. See *reference.md*.
 
 ## Process
 
@@ -136,7 +140,10 @@ The AI should produce:
 - [ ] OG image uses a solid background — no transparency, exactly 1200×630px, under 600KB
 - [ ] All `<title>` tags are unique and use the correct brand name, including secondary pages
 - [ ] "Discovered – currently not indexed" pages actioned via URL Inspection → Request Indexing, not Validate Fix
-- [ ] If using the Indexing API: OAuth credentials (not service account) used for Domain properties; `oauth-client.json` and `token.json` gitignored
+- [ ] If using the Indexing API manually: OAuth credentials with `oauth-client.json` and `token.json` gitignored
+- [ ] If automating via CI: service account added as **Owner** of the Search Console property, Web Search Indexing API enabled in the SA's own GCP project, key stored as a secret via `gh secret set`
+- [ ] Post-deploy index job no-ops when the secret is absent and never fails the build on per-URL errors
+- [ ] Mixed public/auth folders use per-route `X-Robots-Tag: noindex`, not a blanket folder rule, with `robots.txt` left crawlable
 
 ## Avoid
 
@@ -152,7 +159,10 @@ The AI should produce:
 - Do not assume `<title>` tags are correct — they are invisible in browser UI and brand name inconsistencies on secondary pages can persist indefinitely without a deliberate audit pass
 - Do not treat a 404 on the HTTP non-www robots.txt entry in GSC as an error — if the canonical HTTPS www version is fetched successfully, the non-canonical 404 is expected and requires no action
 - Do not click Validate Fix for a "Discovered – currently not indexed" page — that status is not an error; use URL Inspection → Request Indexing instead
-- Do not use a service account with the Indexing API against a Domain property — it will be rejected with "email not found"; use OAuth Desktop credentials or a separate URL-prefix property
+- Do not add a service account to Search Console with Full/Restricted permissions and expect the Indexing API to work — it must be an **Owner** of the property; on a Domain property a non-Owner SA is rejected with "email not found", so use OAuth Desktop credentials, a URL-prefix property, or add the SA as Owner
+- Do not enable the Web Search Indexing API in a different project from the one that owns the service account — calls are attributed to the SA's project and silently fail otherwise
+- Do not `cat` or commit the service-account key — load it with `gh secret set NAME < key.json` and extract only `client_email` for the owner step
+- Do not blanket-`noindex` a folder that mixes public and auth pages, and do not `Disallow` it in robots.txt — apply `X-Robots-Tag: noindex` per route and keep the path crawlable so Google can read the directive
 - Do not commit `oauth-client.json` or `token.json` — they grant write access to your Search Console property
 
 ## Example usage

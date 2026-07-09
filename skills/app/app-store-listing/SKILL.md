@@ -2,7 +2,7 @@
 name: app-store-listing
 description: Prepare and submit an iOS app to the App Store — App Store Connect setup, screenshot dimensions, App Privacy, TestFlight, review submission, and ASC API key
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -36,6 +36,7 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 - **Apple burns the build number even on a failed submission.** If `eas submit` (or any upload) fails mid-upload, Apple still registers that build number as used. Re-submitting the same build ID fails immediately with "build number already used". The fix is a fresh build with `autoIncrement: true` in `eas.json` so the next number is assigned automatically.
 - **TestFlight internal testing needs a group, testers, and an assigned build.** Create a group under TestFlight → Internal Testing, add testers by Apple ID email, and assign a build via the Builds tab. Internal testers receive no email invitation — the app appears directly in TestFlight once a build is assigned. Builds must be in "Ready to Test" status before they can be installed.
 - **The screenshot DPR is the mechanism, not the viewport size.** Setting the DevTools viewport to the physical pixel dimensions at DPR 1 renders content tiny. The correct approach is always CSS pixels × DPR = required physical output.
+- **In-app account deletion is mandatory for any app with account creation.** Apple has required it since June 2022. An external web form does **not** satisfy the requirement — the deletion path must be reachable from inside the app itself, or review rejects the submission.
 
 ## Process
 
@@ -67,6 +68,7 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 - [ ] TestFlight group created, testers added, a "Ready to Test" build assigned
 - [ ] Privacy policy URL is live and publicly accessible
 - [ ] A fresh build with `autoIncrement: true` is used after any failed submission
+- [ ] If the app supports account creation, an in-app account-deletion path exists (not just a web form)
 
 ## Avoid
 
@@ -78,6 +80,7 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 - Setting the DevTools viewport to physical pixels at DPR 1 — content renders tiny; use CSS pixels × DPR
 - Re-submitting the same build number after a failed upload — Apple has already burned it; build fresh with `autoIncrement: true`
 - Expecting TestFlight internal testers to get an email invite — the app simply appears once a "Ready to Test" build is assigned
+- Relying on an external web form for account deletion — Apple requires the deletion path to be reachable inside the app for any app with account creation
 
 ## Example usage
 
