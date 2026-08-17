@@ -13,6 +13,7 @@ Guides Supabase auth email end-to-end: custom SMTP (Resend) setup, applying bran
 - Template editing is silently locked on a newer project
 - Confirmation links "work" but accounts never confirm (Safe Links)
 - Password reset ignores your `redirectTo` and falls back to Site URL
+- Users sign up but cannot log in (unconfirmed gate), or re-registering an email looks like success
 
 ## Example use cases
 

@@ -99,6 +99,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Static Website Hosting](skills/web/static-website-hosting/) | Deploy static websites using GitHub Pages, Netlify, or Vercel |
 | [Website SEO and Indexing](skills/web/website-seo-and-indexing/) | Optimise website structure and content for search engine indexing |
 | [Web Print PDF](skills/web/web-print-pdf/) | Produce reliable print and PDF output from an HTML page with print-specific CSS |
+| [Branded Link QR Service](skills/web/branded-link-qr-service/) | Build a permanent branded short-link and QR code service on a static host — 302 indirection, link registry, CI drift checks, validated QR generation |
 
 ### Infrastructure skills
 

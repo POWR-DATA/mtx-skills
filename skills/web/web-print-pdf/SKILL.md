@@ -2,7 +2,7 @@
 name: web-print-pdf
 description: Produce reliable print and PDF output from an HTML page with print-specific CSS — pagination, image cropping, equal columns, running footers, and colour
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -14,7 +14,7 @@ Turn an HTML page into clean, predictable print/PDF output using `@media print` 
 
 ## When to use
 
-When a web page must also produce a polished PDF or printout (invoices, reports, certificates, one/two-page summaries) via the browser's print engine (Ctrl+P → Save as PDF). Apply when print output crops wrongly, spills onto blank pages, drops background colours, or breaks awkwardly across pages. This covers the print-CSS layer, not server-side PDF generation.
+When a web page must also produce a polished PDF or printout (invoices, reports, certificates, one/two-page summaries) via the browser's print engine (Ctrl+P → Save as PDF). Apply when print output crops wrongly, spills onto blank pages, drops background colours, breaks awkwardly across pages, or inherits mobile-responsive reordering that should never reach paper. This covers the print-CSS layer, not server-side PDF generation.
 
 ## Inputs expected
 
@@ -22,6 +22,7 @@ When a web page must also produce a polished PDF or printout (invoices, reports,
 - The target page count / layout (e.g. single page, fixed two-page)
 - Which elements must keep background colour or images in print
 - Any header/footer that should repeat on every printed page
+- Any responsive (mobile) reordering the page does on screen that must not leak into print
 
 ---
 
@@ -33,6 +34,8 @@ When a web page must also produce a polished PDF or printout (invoices, reports,
 - **Force page breaks explicitly, and protect elements from splitting.** `break-before: page` (with the legacy `page-break-before: always`) on a section forces a clean break before it — the basis of reliable fixed-page layouts. Pair with `break-inside: avoid` (and `page-break-inside: avoid`) on cards/entries so they don't split across pages.
 - **Background colours, gradients, and dot patterns are stripped in print unless forced.** Browsers drop backgrounds in print mode by default. Add `-webkit-print-color-adjust: exact; print-color-adjust: exact` to any element whose background colour or image must appear in the PDF.
 - **Always include both the modern and legacy break properties.** Print CSS support is uneven across engines; write `break-inside`/`break-before` *and* their `page-break-*` equivalents together so the layout holds in Chrome, Firefox, and Safari print.
+- **Reorder content across CSS grid cells on mobile with `display: contents`, not duplicated markup.** Set the grid's column wrappers to `display: contents` (flattening their children into the grid's flow), then apply flex `order` to those now-direct children. One copy of the markup serves screen, mobile, and print.
+- **Scope every mobile/responsive reorder rule to `@media screen and (max-width: N)` so it can never reach print** — print media never matches a `screen` query. Add explicit `@media print` resets (`order: 0`, `display: block`, re-assert the grid, hide any new interactive buttons) as belt-and-suspenders against browsers leaking screen rules.
 
 ## Process
 
@@ -42,7 +45,8 @@ When a web page must also produce a polished PDF or printout (invoices, reports,
 4. **Set pagination** — add `break-before: page` where pages must split and `break-inside: avoid` on atomic blocks.
 5. **Add running header/footer** — `position: fixed` in `@media print`, with matching `padding` on the content.
 6. **Preserve colour** — add `print-color-adjust: exact` to elements whose backgrounds must survive.
-7. **Verify in the print dialog** — Ctrl+P → Save as PDF, checking every page boundary, crop, and background.
+7. **Isolate screen-only rules** — scope responsive reorders (`display: contents` + `order`) to `@media screen and (max-width: N)`, then add `@media print` resets (`order: 0`, `display: block`, grid re-asserted, screen-only buttons hidden).
+8. **Verify in the print dialog** — Ctrl+P → Save as PDF, checking every page boundary, crop, and background.
 
 ## Output format
 
@@ -60,6 +64,7 @@ When a web page must also produce a polished PDF or printout (invoices, reports,
 - [ ] Atomic blocks use both `break-inside: avoid` and `page-break-inside: avoid`
 - [ ] Running footers use `position: fixed` with matching content `padding-bottom`
 - [ ] Colour-critical elements set `-webkit-print-color-adjust: exact; print-color-adjust: exact`
+- [ ] Responsive reorder rules scoped to `@media screen and (...)`, with `@media print` resets (`order: 0`, `display: block`, grid re-asserted, screen-only buttons hidden)
 - [ ] Output verified in Ctrl+P → Save as PDF, every page checked
 
 ## Avoid
@@ -70,6 +75,8 @@ When a web page must also produce a polished PDF or printout (invoices, reports,
 - Writing only modern `break-*` (or only legacy `page-break-*`) properties — include both for cross-browser print
 - Expecting background colours to print by default — they are stripped without `print-color-adjust: exact`
 - Judging print output from the screen view — always verify in the actual print/PDF dialog
+- Putting mobile reorder rules in a bare `@media (max-width: N)` query — it also matches print; write `@media screen and (max-width: N)` and add print resets
+- Duplicating markup to reorder columns on mobile — use `display: contents` on the wrappers plus `order` on the children
 
 ## Example usage
 

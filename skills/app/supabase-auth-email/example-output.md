@@ -33,6 +33,7 @@ Early test emails landed in spam despite passing SPF/DKIM — expected warm-up, 
 
 - **Confirmation:** switched from `{{ .ConfirmationURL }}` to a hosted page calling `verifyOtp({ token_hash, type: 'signup' })` → deep-links into the app. Outlook Safe Links can no longer consume the link.
 - **Reset:** added the reset page URL to `uri_allow_list`, so `redirectTo` is honoured instead of falling back to Site URL.
+- **Unconfirmed state:** `mailer_autoconfirm = false` stays on, so the app shows a "check your inbox, then sign in" screen with a resend button; sign-up on an existing email (empty `identities`) is shown as "already registered — sign in or reset".
 
 ## 5. Verification
 

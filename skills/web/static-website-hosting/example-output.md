@@ -23,9 +23,9 @@
 param siteName string
 param location string = resourceGroup().location
 param skuName string = 'Free'
-param repositoryUrl string
-param branch string = 'main'
 
+// Token-deployed SWA: no repositoryUrl / provider / branch — the GitHub Actions
+// workflow's deploy token feeds the site. Custom domains are added post-deploy via CLI.
 resource swa 'Microsoft.Web/staticSites@2022-09-01' = {
   name: siteName
   location: location
@@ -33,15 +33,7 @@ resource swa 'Microsoft.Web/staticSites@2022-09-01' = {
     name: skuName
     tier: skuName
   }
-  properties: {
-    repositoryUrl: repositoryUrl
-    branch: branch
-    buildProperties: {
-      appLocation: '/'
-      apiLocation: ''
-      outputLocation: '/'
-    }
-  }
+  properties: {}
 }
 
 output defaultHostname string = swa.properties.defaultHostname
@@ -60,9 +52,7 @@ output resourceGroupName string = resourceGroup().name
   "parameters": {
     "siteName":        { "value": "stapp-example-prod" },
     "location":        { "value": "australiaeast" },
-    "skuName":         { "value": "Free" },
-    "repositoryUrl":   { "value": "https://github.com/my-org/example-website" },
-    "branch":          { "value": "main" }
+    "skuName":         { "value": "Free" }
   }
 }
 ```
@@ -80,14 +70,10 @@ output resourceGroupName string = resourceGroup().name
         "Content-Type": "application/xml"
       }
     },
-    {
-      "route": "/*",
-      "headers": {
-        "X-Content-Type-Options": "nosniff",
-        "X-Frame-Options": "SAMEORIGIN",
-        "Referrer-Policy": "same-origin"
-      }
-    }
+    { "route": "/infra/*",   "statusCode": 404 },
+    { "route": "/scripts/*", "statusCode": 404 },
+    { "route": "/.github/*", "statusCode": 404 },
+    { "route": "/README.md", "statusCode": 404 }
   ],
   "responseOverrides": {
     "404": {
@@ -96,6 +82,9 @@ output resourceGroupName string = resourceGroup().name
     }
   },
   "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "SAMEORIGIN",
+    "Referrer-Policy": "same-origin",
     "Cache-Control": "public, must-revalidate, max-age=30"
   },
   "mimeTypes": {
@@ -158,4 +147,5 @@ az staticwebapp hostname list \
 - [ ] Apex redirects to www: `http://example.com.au` → `https://www.example.com.au`
 - [ ] `sitemap.xml` reachable and returns `Content-Type: application/xml`
 - [ ] `robots.txt` reachable at `/robots.txt`
-- [ ] Security headers present in response
+- [ ] Security headers present in response (on CSS/JS/image responses too — set via `globalHeaders`)
+- [ ] Internal files return 404 on the live site: `curl -sI https://www.example.com.au/README.md` → `404`, body not served
