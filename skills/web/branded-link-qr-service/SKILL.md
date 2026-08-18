@@ -2,7 +2,7 @@
 name: branded-link-qr-service
 description: Build a permanent branded short-link and QR code service on a static host — 302 indirection, a source-controlled link registry, generated redirect config with CI drift checks, and validated QR generation
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -19,7 +19,7 @@ Apply **before anything is printed** — business cards, flyers, signage, produc
 - Adding per-person QR codes (employee business cards) that must survive staff and URL changes
 - A printed QR already points at a destination that has to move
 - Introducing a link registry so redirects stop being hand-edited in hosting config
-- Hosting the redirect layer on a static host such as Azure Static Web Apps (`staticwebapp.config.json` routes)
+- Hosting the redirect layer on a static host such as Azure Static Web Apps (`staticwebapp.config.json` routes) — or on Azure Container Apps when SWA domain binding is broken
 
 ## Inputs expected
 
@@ -35,25 +35,27 @@ Partial inputs are fine — infer sensible defaults and state them.
 
 ## Guiding principles
 
-- **Indirection is the whole point — never encode the destination in the QR.** The printed QR encodes a permanent `go.<domain>/<path>` URL that 302-redirects to a CHANGEABLE destination. Never use 301 — the destination must stay movable without reprinting; a cached 301 makes the printed link permanent in the worst way.
+- **Indirection is the whole point — never encode the destination in the QR.** The printed QR encodes a permanent `go.<domain>/<path>` URL that 302-redirects to a CHANGEABLE destination. Never use 301 — the destination must stay movable without reprinting; a cached 301 makes the printed link permanent in the worst way. In practice printed artwork has stayed final through three failed hosting attempts and a platform switch because only the 302 target and infrastructure changed.
+- **Give the QR path and the human-typed path different routes.** `/qr/<campaign>` for the code and `/<campaign>` for what people type, redirecting with `?src=qr` and `?src=url` respectively, so scans and typed visits are distinguishable downstream.
 - **A source-controlled registry is the single source of truth.** Keep `config/branded-links.json` (or equivalent) as the only place a link is defined, generate the deployed redirect config from it with a script, and never hand-edit the generated routes.
 - **The generator needs a CI `--check` mode.** `--check` rebuilds the config in memory and compares it semantically (CRLF-safe — parse, don't diff bytes) against the committed file, so the pipeline fails if the generated config drifts from the registry.
-- **Printed routes are immutable contracts.** Use a scalable per-person convention `/card/<person-slug>` for employee business-card QRs, and keep any earlier generic `/card` as a permanent 302 compatibility alias — once cards are printed, a route can only be added to, never removed or renamed.
-- **Generate QR codes deterministically with `segno`.** The pure-Python `segno` library (`segno.make_qr(url, error='m')`) is dependency-free and reproducible; its `boost_error` (on by default) raises the error-correction level as high as fits WITHOUT increasing the symbol version — free robustness at the same module density.
+- **Printed routes are immutable contracts.** Use a scalable per-person convention `/card/<person-slug>` for employee business-card QRs, and keep any earlier generic `/card` as a permanent 302 compatibility alias — once printed, a route is never deleted or repurposed: change its 302 destination, and when terminology changes add the new path as an alias while keeping the old one live (e.g. `/adviser` added, `/consultant` kept).
+- **Generate QR codes deterministically from the command line and commit them.** Python: `segno.make_qr(url, error='m')` — dependency-free and reproducible; its `boost_error` (on by default) raises the error-correction level as high as fits WITHOUT increasing the symbol version. Node: `npx -y qrcode -t svg -e Q -q 4 -d "<RRGGBB>FF" -l "FFFFFFFF" -o <name>.svg <url>` (and `-t png -w 1200` for proofs), producing brand-colour and pure-black colourways of the identical code. SVG is the print master and PNG the proof; keep the quiet zone, print at least about 2 cm, and test-scan a proof before sign-off.
 - **Always independently decode the generated QR.** Decode with `pyzbar` or OpenCV and assert it decodes to EXACTLY the branded URL; then assert the redirect destination string appears in neither the SVG nor the PNG — proving the QR encodes the permanent link, not the mutable destination.
 - **Encode bare paths.** A static `redirect` route on Azure SWA does not forward the query string, so put any UTM/tracking on the destination side of the registry, never in the printed URL.
-- **Verify the live 302 before printing.** `curl -I https://go.<domain>/<path>` must return `302` with the registry destination in `Location` — a QR is only ready to print once the redirect is live and decoded.
+- **Only green-light print when a fresh `curl` of the exact encoded URL returns the redirect over a valid certificate** (and `openssl s_client -servername` shows the right CN); until then layout work can proceed on the final artwork but nothing goes to the printer. A phone scan showing an "unsecure"/certificate warning right after adding the CNAME is `ERR_CERT_COMMON_NAME_INVALID`: DNS already reaches the edge but the hostname is not yet bound — expected, not a DNS mistake.
+- **Azure Container Apps is a working escape hatch when Static Web Apps domain binding is broken.** It validates domains through its own `asuid.<host>` TXT plus CNAME, issues free managed certificates, offers Australia East, and scales to zero for near-zero cost. Running the official `caddy` image with the Caddyfile injected through a Secret-type volume means no custom image, no registry and no build step; a whole rescue took about 90 minutes. Trade-off vs SWA: Caddyfile routing, real logs and region choice, at the cost of a cold start on the first scan after idle, image-version upkeep, and routing config living outside `staticwebapp.config.json` (mitigate by embedding the Caddyfile in the Bicep so routes stay in source control). See *ACA escape hatch* in [`reference.md`](reference.md).
 
 ## Process
 
 1. **Choose the link host** — a `go.<domain>` subdomain, deployed as its own static site (on Azure SWA, a subfolder SWA with its own deploy token; see the `static-website-hosting` skill).
-2. **Define the route convention** — `/card/<person-slug>` for people, short nouns for campaigns; list any legacy generic routes (`/card`) to retain as 302 aliases.
+2. **Define the route convention** — `/card/<person-slug>` for people, short nouns for campaigns, `/qr/<x>` (→ `?src=qr`) alongside `/<x>` (→ `?src=url`); list any legacy generic routes (`/card`) to retain as 302 aliases.
 3. **Create the registry** — one entry per link: `path`, `destination`, `status: 302`, `owner`, `notes`, and `aliases` where a legacy path must keep working.
 4. **Write the generator** — reads the registry, emits the host's redirect config (e.g. `staticwebapp.config.json` `routes` with `redirect` + `statusCode: 302`); supports `--check` for CI.
 5. **Wire the CI check** — run the generator in `--check` mode on every push/PR; fail on drift.
-6. **Generate QR artefacts** — `segno.make_qr(url, error='m')` per link, saved as SVG (print) and PNG (screen), file-named by slug.
+6. **Generate QR artefacts** — `segno` or `npx qrcode` per link, saved as SVG (print master) and PNG (proof), brand-colour and black colourways, file-named by slug; commit them.
 7. **Validate** — decode each artefact and assert exact-URL match; grep the SVG/PNG for the destination string and assert absence; record results.
-8. **Deploy and verify live** — confirm `302` + correct `Location` for every path, including aliases.
+8. **Deploy and verify live** — confirm `302` + correct `Location` for every path, including aliases, over a valid certificate (`openssl s_client` CN); test-scan a printed proof.
 9. **Operate** — to move a destination, edit the registry, regenerate, deploy. Never touch a printed path.
 
 ## Output format
@@ -76,8 +78,9 @@ Partial inputs are fine — infer sensible defaults and state them.
 - [ ] QR generated with `segno` (`error='m'`, `boost_error` left on) — deterministic and reproducible
 - [ ] Each artefact decoded independently and asserted equal to the exact branded URL
 - [ ] Destination string absent from every SVG and PNG
-- [ ] Printed URLs are bare paths (no query strings)
-- [ ] Live `302` + `Location` verified for every path and alias before print sign-off
+- [ ] Printed URLs are bare paths (no query strings); `/qr/<x>` and `/<x>` carry `?src=qr` / `?src=url` on the destination side
+- [ ] Live `302` + `Location` verified over a valid certificate for every path and alias, and a proof test-scanned, before print sign-off
+- [ ] If SWA domain binding is wedged, the host is served from ACA + Caddy with routes embedded in Bicep
 
 ## Avoid
 
@@ -88,7 +91,8 @@ Partial inputs are fine — infer sensible defaults and state them.
 - Renaming or removing a route that has been printed — add aliases instead
 - Trusting the generator without decoding the artefact — verify with `pyzbar`/OpenCV every time
 - Putting UTM/query parameters in the printed URL — a static redirect drops them; attach them to the destination
-- Printing before the live redirect returns `302` with the right `Location`
+- Printing before the live redirect returns `302` with the right `Location` over a valid certificate — a post-CNAME `ERR_CERT_COMMON_NAME_INVALID` means the hostname is not yet bound, not that DNS is wrong
+- Repurposing a printed route when terminology changes — add the new path as an alias and keep the old one live
 
 ## Example usage
 

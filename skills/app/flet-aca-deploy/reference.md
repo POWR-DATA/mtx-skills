@@ -145,3 +145,18 @@ SP=$(MSYS_NO_PATHCONV=1 az ad sp create-for-rbac --name "sp-${APP}-github" \
 # ... extract appId/password/tenant from $SP, assemble the SP JSON, then:
 echo "$SP_JSON" | gh secret set AZURE_CREDENTIALS --repo "$REPO"
 ```
+
+## Custom domain (managed certificate)
+
+```bash
+# DNS first: <host> CNAME → <app>.<env-id>.<region>.azurecontainerapps.io ; asuid.<host> TXT → $(az containerapp show -n <app> -g <rg> --query properties.customDomainVerificationId -o tsv)
+# verify both via DoH, soak ~15 min, then:
+az containerapp hostname add  -n <app> -g <rg> --hostname <host>
+az containerapp hostname bind -n <app> -g <rg> --hostname <host> --environment <env> --validation-method CNAME
+az containerapp env certificate list -g <rg> -n <env> --managed-certificates-only -o table      # wait for Succeeded
+az containerapp hostname list -n <app> -g <rg> -o table                                          # bindingType Disabled? then:
+az containerapp hostname bind -n <app> -g <rg> --hostname <host> --environment <env> --certificate <managed-cert-name>   # → SniEnabled
+openssl s_client -servername <host> -connect <host>:443 </dev/null 2>/dev/null | openssl x509 -noout -subject           # CN=<host>
+```
+
+`az containerapp create --yaml app.yaml -n <app> -g <rg>` — `-n`/`-g` are still required with `--yaml`.

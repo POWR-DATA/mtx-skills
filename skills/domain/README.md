@@ -9,6 +9,7 @@ These skills address patterns that arise in particular industries, data types, o
 | Skill | Description |
 |---|---|
 | [Time-Series Use Case Assessment](time-series-use-case-assessment/) | Assess time-series use cases and translate them into data ingestion and analytics requirements |
+| [App Terms and Policies](app-terms-and-policies/) | Draft and publish Terms of Service and policy pages for a subscription app — unlisted preview publishing, price-proof billing wording, insurance-aware liability terms, versioned acceptance flows |
 
 ## Relationship to core skills
 

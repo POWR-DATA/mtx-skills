@@ -14,6 +14,7 @@ Guides Supabase auth email end-to-end: custom SMTP (Resend) setup, applying bran
 - Confirmation links "work" but accounts never confirm (Safe Links)
 - Password reset ignores your `redirectTo` and falls back to Site URL
 - Users sign up but cannot log in (unconfirmed gate), or re-registering an email looks like success
+- Hosting reset/confirm pages on the static site and switching them between dev and prod Supabase projects safely
 
 ## Example use cases
 

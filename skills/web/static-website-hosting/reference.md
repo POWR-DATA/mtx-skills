@@ -4,23 +4,6 @@ Load-on-demand excerpts for [`SKILL.md`](SKILL.md). Illustrative — load-bearin
 
 ---
 
-## Hiding internal files
-
-Azure SWA serves everything under `app_location`. Route wildcards match only at the **end** of a route, so block directories with `/dir/*` and list each root-level internal file explicitly. A `statusCode: 404` route with no `rewrite`/`redirect` returns 404 and never serves the file body. Place these before the `/*` catch-all.
-
-```json
-"routes": [
-  { "route": "/docs/*",        "statusCode": 404 },
-  { "route": "/infra/*",       "statusCode": 404 },
-  { "route": "/scripts/*",     "statusCode": 404 },
-  { "route": "/.github/*",     "statusCode": 404 },
-  { "route": "/OPERATIONS.md", "statusCode": 404 },
-  { "route": "/.gitignore",    "statusCode": 404 }
-]
-```
-
-Verify after deploy: `curl -sI https://<host>/OPERATIONS.md` → `404`, and the body is not the file.
-
 ## Subfolder SWA workflow
 
 A second, independent SWA deployed from a subfolder of the same repo. Own workflow, own deploy-token secret, `paths:` filter so the main site never redeploys on a subfolder change, and a repository **variable** gate so the job stays skipped (green) until the SWA is provisioned.
@@ -48,7 +31,7 @@ jobs:
 
 ## Token-deployed Bicep
 
-No repository properties — the workflow's deploy token feeds the site. The subdomain `customDomains` child is gated behind a bool because it fails validation until the CNAME exists.
+No repository properties — the workflow's deploy token feeds the site. The subdomain `customDomains` child is gated behind a bool because it fails validation until the CNAME exists (binding itself is covered by `azure-swa-custom-domains`).
 
 ```bicep
 param siteName string
@@ -69,23 +52,24 @@ resource domain 'Microsoft.Web/staticSites/customDomains@2022-09-01' = if (deplo
 }
 ```
 
-## Subdomain custom domain (CNAME validation)
+## Deployment token into GitHub Secrets (PowerShell)
 
-```text
-<sub>   CNAME   <defaultHostname>.azurestaticapps.net
+```powershell
+$t = (az staticwebapp secrets list -n <site> -g <rg> | ConvertFrom-Json).properties.apiKey.Trim()
+gh secret set AZURE_SWA_TOKEN --body $t          # never pipe az output straight into gh secret set — it corrupted the token
 ```
 
-```bash
-az staticwebapp hostname set  -n <site> -g <rg> --hostname <sub>.<domain>   # or redeploy Bicep with deployCustomDomain=true
-az staticwebapp hostname show -n <site> -g <rg> --hostname <sub>.<domain> --query status   # "Ready" = validated + managed TLS cert issued
-```
-
-## Extra MIME types
+## Baseline `staticwebapp.config.json`
 
 ```json
-"mimeTypes": {
-  ".json": "application/json",
-  ".xml":  "application/xml",
-  ".vcf":  "text/vcard"
+{
+  "routes": [ { "route": "/sitemap.xml", "headers": { "Content-Type": "application/xml" } } ],
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff", "X-Frame-Options": "SAMEORIGIN", "Referrer-Policy": "same-origin",
+    "Cache-Control": "public, must-revalidate, max-age=30"
+  },
+  "mimeTypes": { ".json": "application/json", ".xml": "application/xml" }
 }
 ```
+
+Hidden-file routes, cache tiers, redirects and CSP: see `static-website-config-and-csp`.
