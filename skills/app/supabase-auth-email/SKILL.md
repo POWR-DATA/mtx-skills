@@ -2,7 +2,7 @@
 name: supabase-auth-email
 description: Configure Supabase transactional auth email — custom SMTP, branded templates via the Management API, and reliable confirm/reset flows
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -32,6 +32,7 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 - **PATCH the full SMTP group together — a single `smtp_*` field clears the rest.** On the Management API (`/v1/projects/{ref}/config/auth`), PATCHing one `smtp_*` field empties the whole SMTP group (host/user/pass go blank). Send the complete SMTP config in one PATCH. Flat fields like `mailer_*` and `uri_allow_list` patch independently and safely.
 - **Apply branded templates via the API *last*, and re-apply after any dashboard change.** Saving the dashboard Emails/SMTP page overwrites Management-API-pushed templates with the dashboard's stale defaults. Apply templates via the API after SMTP is set, and re-run the apply after any dashboard email/SMTP edit.
 - **Templates have no runtime app-name variable — bake it at apply time.** Templates expose only Go tokens (`{{ .ConfirmationURL }}`, `{{ .SiteURL }}`, `{{ .Email }}`). Substitute the app name via `__APP_NAME__` when applying; on a rebrand, re-run the apply. The "From" display name is a *separate* `smtp_sender_name` field in the SMTP group that the template apply does not touch — change it in the dashboard, then re-run the template apply.
+- **With `mailer_autoconfirm = false`, email confirmation is a hard sign-in gate.** An unconfirmed account exists but cannot log in, so the app must surface a "confirm then sign in" state plus a resend action. A sign-up on an already-registered email is detected client-side by an empty `identities` array on the returned user (anti-enumeration otherwise makes it look like success) — surface that rather than silently "succeeding".
 - **A password-reset `redirectTo` must be in the redirect allow-list.** Add it under Auth → URL Configuration → Redirect URLs (or `uri_allow_list` via the API). Otherwise Supabase ignores it and falls back to Site URL, so the reset link never reaches your page.
 - **Don't use the default `{{ .ConfirmationURL }}` server-side confirm link.** Mail-security scanners (Outlook Safe Links, etc.) pre-fetch and *consume* it, so accounts never confirm. Instead link to a hosted page that completes confirmation client-side via `verifyOtp({ token_hash, type: 'signup' })`, then deep-links back into the app. See *Client-side confirm page* in `reference.md`.
 - **A failed email send returns HTTP 500 on `/auth/v1/signup` but still creates the user row.** The real SMTP error (e.g. "535 Invalid username") is in the project's `auth_logs`, queryable via the Management API analytics logs endpoint — check there, not the HTTP response.
@@ -45,14 +46,15 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 3. **Apply branded templates via the API**, substituting `__APP_NAME__`, *after* SMTP is configured. Set `smtp_sender_name` in the dashboard, then re-apply.
 4. **Add redirect/confirm URLs to the allow-list** (`uri_allow_list`).
 5. **Switch confirmation to a client-side `verifyOtp` page** so Safe Links cannot consume the link.
-6. **Test sign-up and reset**; on a 500, read `auth_logs` for the real SMTP error.
+6. **Handle the unconfirmed state in the app** — a "confirm then sign in" screen with resend, and treat an empty `identities` array on sign-up as "already registered".
+7. **Test sign-up and reset**; on a 500, read `auth_logs` for the real SMTP error.
 
 ## Output format
 
 1. **SMTP configuration** — provider, the full PATCHed SMTP group, sender name
 2. **DNS records** — DKIM/SPF/MX/DMARC entries added, verification status
 3. **Templates applied** — which templates, app name baked in, applied after SMTP
-4. **Flow config** — allow-listed redirect URLs, client-side confirm page in place
+4. **Flow config** — allow-listed redirect URLs, client-side confirm page in place, unconfirmed/already-registered states handled in the app
 5. **Verification** — sign-up and reset tested; `auth_logs` clean
 
 ## Quality checklist
@@ -63,6 +65,7 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 - [ ] `smtp_sender_name` set (separately) and current after any rename
 - [ ] Confirm flow uses a client-side `verifyOtp` page, not the default `{{ .ConfirmationURL }}`
 - [ ] Reset/confirm redirect URLs added to `uri_allow_list`
+- [ ] App shows "confirm then sign in" + resend for unconfirmed accounts; empty `identities` on sign-up surfaced as already-registered
 - [ ] Sending domain DKIM/SPF/MX/DMARC verified; spam warm-up expected
 - [ ] Sign-up/reset tested; `auth_logs` checked on any HTTP 500
 
@@ -76,6 +79,7 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 - Trusting the HTTP response on send failure — the 500 hides the real error; read `auth_logs`
 - Sending the Management API body as a default PowerShell string — encode as UTF-8 bytes or get 400s
 - Treating early spam-foldering on a new domain as a misconfiguration — it is reputation warm-up
+- Treating a sign-up response with an empty `identities` array as a fresh account — the email is already registered; anti-enumeration hides the error
 
 ## Example usage
 

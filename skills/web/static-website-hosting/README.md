@@ -13,6 +13,7 @@ This skill guides an AI through the full setup of a production-ready static webs
 - Adding a custom domain to an existing Azure Static Web Apps deployment
 - Auditing an existing setup for missing IaC, security headers, or DNS hygiene
 - Rebuilding or moving a site to a new resource group with CAF naming
+- Hiding committed internal files (docs, infra, scripts) from a live SWA, or adding a second SWA (e.g. `go.<domain>`) from a subfolder of the same repo
 
 ## Example use cases
 
@@ -20,6 +21,7 @@ This skill guides an AI through the full setup of a production-ready static webs
 - Migrate a manually deployed static site to Bicep + GitHub Actions
 - Add an apex domain with HTTPS to an existing Azure SWA deployment
 - Write a validation script to check DNS, HTTPS, and redirect behaviour after a deployment
+- Deploy a subfolder as its own SWA on a subdomain, gated in CI until the resource is provisioned
 
 ## Files in this folder
 
@@ -29,6 +31,7 @@ This skill guides an AI through the full setup of a production-ready static webs
 | `README.md` | Yes | Short navigation guide for this skill (this file) |
 | `example-input.md` | Optional | Example input — include when it helps users frame their request |
 | `example-output.md` | Optional | Example output — include when it sets a useful quality bar or the output is a concrete artefact |
+| `reference.md` | Optional | Load-on-demand excerpts — hidden-file routes, subfolder SWA workflow, token-deployed Bicep, subdomain binding |
 
 ## How to use
 

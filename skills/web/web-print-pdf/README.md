@@ -12,6 +12,7 @@ Guides the `@media print` CSS needed to turn a web page into clean PDF/print out
 - Print output crops images wrongly or drops background colours
 - Content spills onto a blank final page, or cards split across page breaks
 - A header/footer must repeat on every printed page
+- A mobile-responsive reorder (photo-first on phones) must not leak into the printed page
 
 ## Example use cases
 

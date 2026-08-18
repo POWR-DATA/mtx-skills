@@ -22,13 +22,24 @@
   /* pagination */
   .detail-section { break-before: page; page-break-before: always; }
   .summary-card   { break-inside: avoid; page-break-inside: avoid; }
+
+  /* reset any screen-only mobile reordering (belt-and-suspenders) */
+  .two-col > * { order: 0; }
+  .two-col .col { display: block; }
+  .print-hidden { display: none; }
+}
+
+/* mobile reorder lives under `screen` only — print media never matches this */
+@media screen and (max-width: 640px) {
+  .two-col .col { display: contents; }   /* flatten wrappers into the grid */
+  .two-col .photo-wrap { order: -1; }    /* photo first on phones */
 }
 ```
 
 ## 2. Structural changes
 
 - Wrapped the header photo in `<div class="photo-wrap">` (fixed height + `overflow: hidden`) instead of `object-fit: cover`.
-- No other markup changes — the two-column and card structures already existed.
+- No other markup changes — the two-column and card structures already existed; the mobile photo-first reorder uses `display: contents` + `order`, not duplicated markup.
 
 ## 3. Pagination map
 
@@ -43,3 +54,4 @@
 - Header photo cropped to the banner; coloured header band and badges retain colour
 - Footer present on both pages; no card split across the break
 - Photo and text columns render equal height
+- Mobile photo-first reorder does not appear in the PDF — it is scoped to `@media screen` and reset in `@media print`
