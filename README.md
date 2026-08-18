@@ -8,6 +8,21 @@ These skills are not just prompts. They are lightweight delivery procedures that
 
 ---
 
+## Tool-agnostic by design
+
+Matrix Skills are written to the open `SKILL.md` standard, so the *same* skill runs across Claude Code, Cursor, GitHub Copilot, Windsurf, Gemini CLI, and 30+ other agents — install once with [Skillfish](https://github.com/POWR-DATA/skillfish) and they appear in every tool on your machine.
+
+That is the difference between this library and a tool-specific marketplace:
+
+- **Portable, not locked in.** A single-vendor plugin or tool-marketplace extension lives in one tool — switch tools and you start over. These skills move with you: go from Cursor to Claude to Copilot and your skills come too, unchanged.
+- **You own the library.** Skills are plain Markdown in Git — reviewable, versionable, and diffable. No vendor-hosted black box.
+- **One source, every tool.** Maintain a single set of skills; Skillfish installs them everywhere. Teams roll the same capabilities out across mixed toolchains with one command.
+- **Grounded in real delivery.** Every skill is built from actual project experience through a disciplined capture-and-review workflow — not written speculatively.
+
+Your skill library outlasts whatever tool you happen to use today.
+
+---
+
 ## Quick navigation
 
 **I want to use skills in my projects**
