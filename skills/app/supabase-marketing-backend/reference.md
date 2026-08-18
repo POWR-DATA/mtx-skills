@@ -44,7 +44,7 @@ curl -s -o /dev/null -w '%{http_code}\n' $H -H "Prefer: return=minimal" -d '{"ca
 ## Reader role, policy, and view revoke
 
 ```sql
-create role reporting login password '<strong-password>';
+create role reporting login password '<strong-password>';   -- avoid % in the value (broke role creation in the SQL editor)
 grant usage on schema public to reporting;
 grant select on public.interest_signups, public.page_hits to reporting;
 create policy reporting_read on public.interest_signups for select to reporting using (true);   -- GRANT alone reads 0 rows

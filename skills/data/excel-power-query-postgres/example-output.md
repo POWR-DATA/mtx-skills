@@ -30,9 +30,12 @@ Loaded once via Navigator → **Select multiple items** → tick both → **Load
 - **Readers (5):** open from SharePoint and see the last refreshed data. No driver, no password needed.
 - **Refreshers (Sam, Priya):** each installs Npgsql 4.0.17 and enters the password once — Excel caches it **per machine** under Data Source Settings; the `.xlsx` never carries it. A wrong username on either machine is fixed at Data Source Settings → Edit Permissions → Credentials.
 - Password is shared out-of-band, never in the workbook or this document.
+- Readers opening from SharePoint in **Excel Online** see the snapshot only — Excel Online cannot refresh this connection; Sam and Priya refresh in desktop Excel.
+- Sam's first connect threw "The remote certificate is invalid according to the validation procedure"; unticking "Encrypt connections" in Data Source Settings → Edit Permissions got it through (psqlODBC `sslmode=require` was the fallback).
 
 ## 4. Automation notes
 
 - **Root cause of the blank pivots:** the PowerShell run opened the file in a headless Excel with refresh-on-open enabled; with no cached credentials in that session every query table became a "Getting Data..." shell and the pivots snapshotted "(blank)".
 - **Fix applied:** `RefreshOnFileOpen = $false` on both connections; all pivots built on one shared cache per query; Sam refreshes once in her own Excel; only then does the script run.
+- **Date columns:** setting `NumberFormat` via COM failed ("property NumberFormat cannot be found") and dates showed as serials; formatted the columns manually once — it sticks across refreshes.
 - **COM approach:** `New-Object -ComObject Excel.Application` (a fresh instance — `GetActiveObject` throws `MK_E_UNAVAILABLE` from the agent session even with Excel open) after asking Sam to close the workbook. `Get-Process EXCEL` PIDs captured before, and only new PIDs stopped after — a COM timeout during the first attempt had left two zombie `EXCEL.EXE` processes.

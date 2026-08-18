@@ -2,7 +2,7 @@
 name: expo-react-native-app
 description: Build cross-platform React Native apps with Expo — correct setup patterns, cross-platform gotchas, and hard-won lessons from native and web targets
 author: PowerData
-version: 1.4.0
+version: 1.5.0
 license: MIT
 ---
 
@@ -55,6 +55,7 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - **Make the server authoritative about onboarding.** Return an explicit `needs_onboarding` flag rather than inferring it client-side from a missing profile row — the client guess also fires on a transient read failure and wrongly bounces an onboarded user to the wizard. Self-heal the onboarding page too (redirect an already-onboarded user away) so a stale tab can't strand them there.
 - **Persist the pending-confirmation email for an email-confirmation sign-up gate** (email only, never the password) so closing and reopening the app mid-wait restores the "confirm your email" state instead of a blank login with full re-entry.
 - **A coloured badge inside a web form field is the browser's native autofill or a password-manager extension, not your code.** `autocomplete` attributes (`given-name`/`family-name`/`tel`/`email`, and `off` on unique/credential fields) steer the browser's native autofill but cannot suppress a third-party extension (e.g. LastPass); confirm by loading the page in a private window.
+- **The red bottom-left error popup on the Expo web target is Expo's dev-only notification.** The dismissable lightning-bolt popup for a runtime or network error does not ship to production — don't mistake it for your own in-app toast or UI.
 - **Run the project's own `lint` script, not `npx eslint` directly.** A JS/TS project may lint with oxlint rather than eslint; invoking eslint applies a different (often stricter) ruleset and reports "errors" the project never gates on.
 - **View a private Supabase Storage file with a signed URL + `WebBrowser.openBrowserAsync`.** Create a short-lived signed URL and open it with `expo-web-browser` (usually already installed) rather than adding `expo-file-system` or a download step; open plain links with `Linking.openURL`.
 - **Render tappable links inside message text with nested `<Text onPress>`.** Split the string on a URL regex and return the URL segments as nested `<Text onPress={() => Linking.openURL(url)}>` within the parent `<Text>` — RN honours press handlers on nested Text runs, so you get inline links with no rich-text library.
@@ -118,6 +119,7 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - Testing errors with `instanceof Error` — Supabase/fetch errors are often plain objects; read `.message` by shape
 - Inferring onboarding state client-side from a missing profile row — a transient read failure bounces onboarded users to the wizard
 - Chasing a coloured autofill badge as a styling bug — it is the browser or a password-manager extension; check in a private window
+- Mistaking Expo's dev-only red error popup on web for your own toast — it never ships
 - Running `npx eslint` on an oxlint project — wrong ruleset, phantom errors
 
 ## Example usage

@@ -2,7 +2,7 @@
 name: excel-power-query-postgres
 description: Connect Excel Power Query to PostgreSQL (including Supabase) — the Npgsql driver that works, credential caching and sharing, first-load refresh, and the COM-automation traps when scripting the workbook
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -33,23 +33,26 @@ Partial inputs are fine.
 - **"Refresh All" does nothing until the queries have been loaded once** through Get Data → Navigator → "Select multiple items" → Load; a workbook shipped with unloaded queries looks broken to the recipient.
 - **COM-automated workbooks refresh headlessly with no credentials.** Query tables become "ExternalData_1: Getting Data..." shells, pivots built on them snapshot "(blank)", and opening the file in headless Excel with refresh-on-open enabled blanked the user's already-populated tables. Set `RefreshOnFileOpen=false`, build all pivots on shared caches, let the user refresh once in their own Excel, and only then run any automation against the populated file.
 - **`GetActiveObject("Excel.Application")` fails from an agent session** with `MK_E_UNAVAILABLE` (0x800401E3) even while Excel is open in the user's session; ask the user to close the workbook and drive a fresh `New-Object -ComObject Excel.Application` instead. COM timeouts leave zombie `EXCEL.EXE` processes, so capture `Get-Process EXCEL` IDs before and kill only the new ones after.
+- **Npgsql 4.0 can reject the Supabase session pooler's certificate** ("The remote certificate is invalid according to the validation procedure"). Work around it under Data → Get Data → Data Source Settings → Edit Permissions by unticking "Encrypt connections" (plan B: psqlODBC with `sslmode=require`); the connection later worked, though the exact step that fixed it was not pinned down in session.
+- **Setting `NumberFormat` on query-table date columns through COM fails** ("property NumberFormat cannot be found") and timestamps display as serials (e.g. `46246.669`); a manual Format Cells on the column sticks across refreshes, cause unknown.
+- **Excel Online cannot refresh Power Query database connections.** The refresher must use desktop Excel; everyone else consumes the cached snapshot.
 - **Supabase reporting reads need a SELECT policy on each table**, not just a `GRANT` — otherwise Excel reports "0 rows loaded" (see `supabase-marketing-backend`).
 
 ## Process
 
 1. **Install the driver** — Npgsql 4.0.17 MSI, GAC installation ticked, restart Excel.
-2. **Connect** — Get Data → From Database → From PostgreSQL; server `host:port`, database; Database credentials with the role and password.
+2. **Connect** — Get Data → From Database → From PostgreSQL; server `host:port`, database; Database credentials with the role and password. On a certificate-validation error against the Supabase pooler, untick "Encrypt connections" in Data Source Settings → Edit Permissions (or fall back to psqlODBC `sslmode=require`).
 3. **Load once** — Navigator → Select multiple items → tick tables/views → Load (to sheets or the data model). Only now does Refresh All work.
 4. **Fix credentials if needed** — Data Source Settings → Edit Permissions → Credentials (per-machine cache).
-5. **Build reporting** — pivots on shared caches; leave `RefreshOnFileOpen` off if any automation will touch the file.
-6. **Hand over** — recipients need nothing to *read*; refreshers need Npgsql + the password.
+5. **Build reporting** — pivots on shared caches; leave `RefreshOnFileOpen` off if any automation will touch the file; format date columns manually (COM `NumberFormat` fails on query tables).
+6. **Hand over** — recipients need nothing to *read*; refreshers need Npgsql + the password and desktop Excel (Excel Online cannot refresh this connection type).
 7. **Automate carefully** — user refreshes first in their own Excel; then a fresh COM instance, never `GetActiveObject`; track and kill only new `EXCEL.EXE` PIDs.
 
 ## Output format
 
 1. **Driver + connection recipe** — versions, dialog values, credential type
 2. **Query list** — tables/views loaded, sheet/data-model destination
-3. **Sharing notes** — who needs what (driver, password), refresh model
+3. **Sharing notes** — who needs what (driver, password), refresh model, Excel Online caveat
 4. **Automation notes** (if any) — refresh-on-open setting, COM approach, PID hygiene
 
 ## Quality checklist
@@ -60,6 +63,7 @@ Partial inputs are fine.
 - [ ] Reader role has SELECT policies on RLS tables (non-zero rows)
 - [ ] `RefreshOnFileOpen=false` and pivots on shared caches before any COM automation
 - [ ] Automation uses a fresh COM instance after the user's own refresh; new `EXCEL.EXE` PIDs cleaned up
+- [ ] Refreshers know to use desktop Excel; date columns formatted manually where COM `NumberFormat` failed
 
 ## Avoid
 
@@ -69,6 +73,8 @@ Partial inputs are fine.
 - Opening the workbook in headless Excel with refresh-on-open enabled — it blanks populated tables
 - `GetActiveObject` from an agent session — `MK_E_UNAVAILABLE`; use `New-Object -ComObject`
 - Killing every `EXCEL.EXE` after a COM timeout — kill only the PIDs you spawned
+- Expecting Excel Online to refresh the connection — it consumes the snapshot only
+- Fighting a pooler certificate error in the connection string — use the Data Source Settings encryption toggle or psqlODBC
 
 ## Example usage
 

@@ -2,7 +2,7 @@
 name: website-seo-and-indexing
 description: Prepare a static website for search engine indexing and submit it to Google Search Console
 author: PowerData
-version: 1.5.0
+version: 1.6.0
 license: MIT
 ---
 
@@ -38,6 +38,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - Use a **Domain property** in Google Search Console, not a URL-prefix property. A Domain property tracks all variants (http, https, www, apex) in a single view and requires a DNS TXT verification record.
 - Submit the sitemap in GSC after verification. Use the URL Inspection tool to check individual pages after submission. "Invalid sitemap address" when the URL is correct means you are inside the wrong property (check the property selector top-left) — a sitemap can only be submitted inside a property that covers its host, so create or switch to the Domain property for that domain first.
 - Domain-property verification is per Google account: a user added via Users and permissions shows Owner but not Verified and only works while a verified owner still exists. To make a business account self-standing, sign in as it, go Settings → Ownership verification → DNS record, and publish its second, different `google-site-verification` TXT token at the apex alongside the first (both coexist permanently). Add the business account as Owner on every company property, not just the new one.
+- Search Console living on a personal Google account is low-risk because Domain-property ownership is anchored to DNS and can be re-verified by anyone controlling the zone — but Play Console and Apple Developer accounts should be organisation accounts owned by the company from day one, because those are painful or impossible to migrate later.
 - Confirm the `google-site-verification` TXT via a public DoH resolver before pressing Verify, then still expect Google's own check to lag: a record visible worldwide within seconds of saving at the registrar failed the first Verify click and passed about an hour later with no change. Sitemap status flips to Success the same day but the Performance and Indexing panels show "processing data" for a day or more — normal for a new property.
 - `lastmod` dates in `sitemap.xml` should reflect actual content changes. Do not set future dates. Priority values (0.0–1.0) are relative — the homepage is typically 1.0.
 - Avoid duplicate indexing by ensuring the non-canonical URL (apex, http) redirects to the canonical before Google crawls it. On Azure SWA, the apex → www redirect is automatic but takes 20–30 minutes to activate after domain validation.

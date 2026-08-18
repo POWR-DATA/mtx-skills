@@ -2,7 +2,7 @@
 name: supabase-marketing-backend
 description: Use Supabase as the backend for a static marketing site — insert-only public forms on the anon key with RLS, a privacy-tiered first-party page-hit beacon, reader roles for Excel, and the RLS/view leaks that bite
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -33,6 +33,7 @@ Partial inputs are acceptable — infer defaults and state them.
 - **Verify with curl before shipping the client.** `apikey` plus `Authorization: Bearer <anon>` with `Prefer: return=minimal` returns 201; a duplicate returns 409 (map it to "already on the list"); an anon GET returns `[]`; a check-constraint failure returns 400. If any of those differ, the policies are wrong.
 - **Every reader role needs a SELECT policy, not just a GRANT.** `GRANT SELECT` to a reporting role on an RLS-enabled table reads zero rows (Excel reported "0 rows loaded"); add `create policy ... for select to <role> using (true)` on each table the role should read.
 - **Views bypass RLS and get auto-granted to anon — revoke in the same migration.** Views run with owner privileges, and Supabase default privileges auto-grant SELECT on new public views to `anon` and `authenticated`, so a summary view over a write-only table becomes readable through the anon API; always `revoke select on <view> from anon, authenticated` in the migration that creates it.
+- **Avoid `%` in a `create role … password '…'` value.** A `%` character broke the role-creation path in the SQL editor; the owner re-ran with a different password and it worked, mechanism unconfirmed.
 - **Session-pooler login for external tools:** host `aws-0-<region>.pooler.supabase.com`, port `5432`, database `postgres`, username `<role>.<project-ref>` — the project-ref suffix is mandatory and easy to mistype.
 - **Count page hits with a first-party beacon and pick the privacy tier deliberately.** SWA Free has no access logs and Search Console only sees Google traffic. Referrer host, device class, browser and OS family, and timezone-derived region are not personal information; storing raw IP or user agent is — so derive region from the browser timezone client-side and never send the IP. Publish a privacy-policy section for it even when nothing personal is collected.
 - **Beacon on every marketing page including the 404, never on auth pages, and in the CSP.** The 404 catches mistyped printed URLs; auth pages stay beacon-free; add the Supabase host to the site-wide CSP `connect-src` or the beacon is blocked silently.
@@ -47,7 +48,7 @@ Partial inputs are acceptable — infer defaults and state them.
 3. **Create views last and revoke** — any summary view gets `revoke select … from anon, authenticated` in the same migration.
 4. **Verify with curl** — 201 / 409 / `[]` / 400 as above, using only the anon key.
 5. **Wire the front end** — form JS with honeypot + 3 s gate + 409 → "already on the list"; beacon on all marketing pages + 404, minimal-payload fallback; `[hidden]` CSS rule; Supabase host in CSP `connect-src`.
-6. **Add readers** — role with a strong password, `GRANT` + `SELECT` policies, session-pooler connection details handed over (see `excel-power-query-postgres` for the Excel side).
+6. **Add readers** — role with a strong password (no `%`), `GRANT` + `SELECT` policies, session-pooler connection details handed over (see `excel-power-query-postgres` for the Excel side).
 7. **Publish the privacy note** and record which fields are collected and why.
 
 ## Output format
@@ -79,6 +80,7 @@ Partial inputs are acceptable — infer defaults and state them.
 - Shipping the beacon and the migration in lockstep — use the minimal-payload fallback instead
 - Relying on a `hidden` attribute where the element also has a CSS `display` rule
 - Typing the pooler username without the `.<project-ref>` suffix
+- Putting a `%` in a role password created through the SQL editor — role creation broke
 
 ## Example usage
 
