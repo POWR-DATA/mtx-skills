@@ -12,6 +12,7 @@ These skills cover the full delivery lifecycle for Python-based multi-platform a
 | [Flet Multi-Platform Build](flet-multiplatform-build/) | Configure Android, iOS, and web Docker build pipelines for a Flet app with CI/CD | Flet ACA Deploy |
 | [Flet ACA Deploy](flet-aca-deploy/) | Deploy a Flet web app to Azure Container Apps | — |
 | [App Icon Asset Generation](app-icon-asset-generation/) | Generate a consistent application icon asset set from an approved high-resolution logo | — |
+| [Supabase Marketing Backend](supabase-marketing-backend/) | Supabase as the backend for a static marketing site — insert-only public forms on the anon key with RLS, a privacy-tiered page-hit beacon, reader roles, and the RLS/view leaks that bite | Excel Power Query Postgres (data) |
 
 ## Suggested delivery sequence
 

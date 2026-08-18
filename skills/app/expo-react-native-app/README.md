@@ -15,6 +15,7 @@ Guides the setup and debugging of Expo React Native apps, focusing on the class 
 
 ## Example use cases
 
+- Make error toasts, offline sign-in checks, and onboarding routing behave the same on native and web
 - Ionicons rendering blank boxes despite the package being installed — fixed by adding `useFonts(Ionicons.font)` to the root layout
 - New package install causes a crash until `npx expo start --clear` is run
 - External API calls work on iOS but fail with CORS on Expo web — resolved by proxying through a Supabase Edge Function

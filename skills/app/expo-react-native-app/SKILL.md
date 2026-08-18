@@ -2,7 +2,7 @@
 name: expo-react-native-app
 description: Build cross-platform React Native apps with Expo — correct setup patterns, cross-platform gotchas, and hard-won lessons from native and web targets
 author: PowerData
-version: 1.3.0
+version: 1.4.0
 license: MIT
 ---
 
@@ -48,6 +48,16 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - **Reach Metro from a physical Android device over USB with `adb reverse`.** Run `adb reverse tcp:8081 tcp:8081`, start with plain `npx expo start --dev-client` (default 0.0.0.0 binding), and in the dev launcher enter `http://localhost:8081`. Do not pass `--localhost` — it binds Metro to IPv6 `::1` only, breaking the IPv4 adb-reverse tunnel ("unexpected end of stream" / UNAUTHORIZED).
 - **On Windows under OneDrive, mark `node_modules` "Always keep on this device".** OneDrive's on-demand placeholder files make Metro bundling fail with `readlink EINVAL` until the files are materialised locally.
 - **Scope App Links / Universal Links to the landing path only (`/<slug>`, `/<slug>/`), never `/<slug>/*`.** Broadening the pattern hijacks web-only auth pages (e.g. `/<slug>/reset-password`, `/<slug>/confirm-email`) into the app and breaks them — those must complete in the browser. Links also stay inert until `assetlinks.json` (Android, signing SHA-256) / AASA (iOS, Apple Team ID) are deployed to `/.well-known/` and the app is rebuilt.
+- **`Alert.alert` is a silent no-op on react-native-web.** Message-type errors never appear on the web target — provide a cross-platform toast (a root-mounted host plus a plain `showToast` function) for one-way messages, and keep native `Alert` only for interactive prompts (action sheets, camera-permission dialogs).
+- **Create `Animated.Value`s with a lazy `useState`, not `useRef(...).current`.** `useRef(new Animated.Value(0)).current` trips the newer `react-hooks/refs` lint rule ("cannot access refs during render") — use `useState(() => new Animated.Value(0))` for a value that is stable across renders without reading `.current` during render.
+- **Resolve the current user via `getSession()`, not `getUser()`, in write paths.** supabase-js `getUser()` makes a network round-trip and returns null when offline (surfacing a misleading "not signed in"); `getSession()` reads the persisted local session and is offline-safe, so an offline action fails as a network error, not a false sign-out.
+- **Supabase and fetch errors are frequently plain objects, not `Error` instances.** `e instanceof Error` misses their `.message` — extract `.message` from any object shape and map network strings ("failed to fetch", "network request failed") to a friendly line, so raw errors and the backend URL never reach users.
+- **Make the server authoritative about onboarding.** Return an explicit `needs_onboarding` flag rather than inferring it client-side from a missing profile row — the client guess also fires on a transient read failure and wrongly bounces an onboarded user to the wizard. Self-heal the onboarding page too (redirect an already-onboarded user away) so a stale tab can't strand them there.
+- **Persist the pending-confirmation email for an email-confirmation sign-up gate** (email only, never the password) so closing and reopening the app mid-wait restores the "confirm your email" state instead of a blank login with full re-entry.
+- **A coloured badge inside a web form field is the browser's native autofill or a password-manager extension, not your code.** `autocomplete` attributes (`given-name`/`family-name`/`tel`/`email`, and `off` on unique/credential fields) steer the browser's native autofill but cannot suppress a third-party extension (e.g. LastPass); confirm by loading the page in a private window.
+- **Run the project's own `lint` script, not `npx eslint` directly.** A JS/TS project may lint with oxlint rather than eslint; invoking eslint applies a different (often stricter) ruleset and reports "errors" the project never gates on.
+- **View a private Supabase Storage file with a signed URL + `WebBrowser.openBrowserAsync`.** Create a short-lived signed URL and open it with `expo-web-browser` (usually already installed) rather than adding `expo-file-system` or a download step; open plain links with `Linking.openURL`.
+- **Render tappable links inside message text with nested `<Text onPress>`.** Split the string on a URL regex and return the URL segments as nested `<Text onPress={() => Linking.openURL(url)}>` within the parent `<Text>` — RN honours press handlers on nested Text runs, so you get inline links with no rich-text library.
 - **When the website's URL path differs from the Expo `slug`, use a separate web-path value.** The slug is a technical id tied to the EAS project — don't derive web URLs or App-Link paths from it. Introduce `webSlug` / `extra.webPath` for the web path and keep the slug for builds/credentials; `+native-intent.tsx` should strip `extra.webPath`, not `Constants.expoConfig.slug`, so the landing link resolves to the app root even when slug ≠ URL segment.
 
 ## Process
@@ -56,7 +66,9 @@ When starting a new Expo project or debugging a problem that appears only on a s
 2. **Install packages via `npx expo install`.** This selects the SDK-compatible version. After every install, restart with `--clear` to flush Metro's module cache.
 3. **Route all external API calls through a proxy.** Create a Supabase Edge Function (or equivalent server-side proxy) that forwards requests to the external API. Call the proxy from both native and web — do not use `Platform.OS` branching for fetch logic.
 4. **Audit interactive UI for dark-theme compatibility.** Check any component that uses emoji, icon characters, or colour-reliant elements against a dark background. Replace emoji with text labels or `@expo/vector-icons` components that respect the `color` prop.
-5. **Smoke test on web target.** Run `npx expo start --web` and exercise all screens. CORS errors and font failures that pass on native will surface here.
+5. **Smoke test on web target.** Run `npx expo start --web` and exercise all screens. CORS errors, font failures, and silent `Alert.alert` no-ops that pass on native will surface here.
+6. **Harden auth/session paths.** `getSession()` for the current user in writes, object-shape error extraction with friendly network messages, server-driven `needs_onboarding`, persisted pending-confirmation email.
+7. **Lint with the project's script** (`npm run lint`), not `npx eslint`.
 
 ## Output format
 
@@ -80,6 +92,10 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - [ ] Push notifications, in-app review, and other store-only features tested on a real store track — not a dev build
 - [ ] Optional native modules lazy-loaded via synchronous `require()`, not top-level or `await import()`
 - [ ] App Links / Universal Links scoped to the landing path only, with `assetlinks.json`/AASA deployed
+- [ ] One-way messages use a cross-platform toast; native `Alert` reserved for interactive prompts
+- [ ] Write paths resolve the user via `getSession()`; errors extracted by shape, network strings mapped to friendly text
+- [ ] Onboarding driven by a server `needs_onboarding` flag; onboarding page self-heals; pending-confirmation email persisted (never the password)
+- [ ] `Animated.Value` created via lazy `useState`; project `lint` script used
 
 ## Avoid
 
@@ -97,6 +113,12 @@ When starting a new Expo project or debugging a problem that appears only on a s
 - Top-level importing an optional native module — it crashes dev builds whose native binary predates it; lazy-load with `require()`
 - Broadening App Links to `/<slug>/*` — it hijacks web-only auth pages into the app; scope to the landing path only
 - Passing `--localhost` to `expo start` for USB device debugging — it binds IPv6-only and breaks the adb-reverse tunnel
+- Using `Alert.alert` for error messages — it is a silent no-op on web; use a toast
+- Calling `getUser()` in write paths — offline it returns null and reads as "signed out"; use `getSession()`
+- Testing errors with `instanceof Error` — Supabase/fetch errors are often plain objects; read `.message` by shape
+- Inferring onboarding state client-side from a missing profile row — a transient read failure bounces onboarded users to the wizard
+- Chasing a coloured autofill badge as a styling bug — it is the browser or a password-manager extension; check in a private window
+- Running `npx eslint` on an oxlint project — wrong ruleset, phantom errors
 
 ## Example usage
 

@@ -2,7 +2,7 @@
 
 ## Context
 
-A solo consultant is setting up a new professional website. They have purchased the domain `example.com.au` through VentraIP (an Australian domain registrar). They have an Azure subscription and a private GitHub repository containing a few static HTML files. They want the site accessible at `www.example.com.au` with HTTPS, deployed automatically on every push to `main`.
+A solo consultant is setting up a new professional website. They have purchased the domain `example.com.au` through VentraIP (an Australian domain registrar). They have an Azure subscription and a private GitHub repository containing a few static HTML files. They want the site provisioned with Bicep and deployed automatically on every push to `main`; the custom domain (`www.example.com.au`) will be bound as a follow-up step.
 
 ## Input provided
 

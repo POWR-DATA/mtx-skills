@@ -14,6 +14,7 @@ Guides the end-to-end EAS (Expo Application Services) submission process for Goo
 
 ## Example use cases
 
+- Auto-submit an iOS build to internal TestFlight with `--auto-submit` and a `submit.<profile>` ASC key block
 - Generating a Google Service Account JSON key from Play Console and wiring it to `eas.json`
 - Granting the Release Manager role to a service account in Play Console Users and permissions
 - Configuring separate `eas.json` profiles for internal testing and production submission tracks

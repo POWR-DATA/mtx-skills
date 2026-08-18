@@ -2,7 +2,7 @@
 name: flet-aca-deploy
 description: Deploy a Flet web app to Azure Container Apps — covers all pitfalls: container startup, WebSocket transport, GHCR auth, ACA provisioning, revision forcing, and health diagnosis
 author: POWR-DATA
-version: 2.0.0
+version: 2.1.0
 license: MIT
 ---
 
@@ -41,6 +41,8 @@ After the Flet web Docker image is building and pushing to GHCR successfully (se
 - **Set ACA min replicas to 1.** With 0, the first browser request arrives before the container is ready and the WebSocket cold-starts into a timeout.
 - **Bootstrap, then deploy.** Create the app with the helloworld placeholder image at `--target-port 8550`, then let CI deploy the real image — the deploy step updates the image, not the port.
 - **Force a new revision on every deploy.** `az containerapp update --image ...:latest` may reuse a revision if the tag is unchanged; add `--revision-suffix r${{ github.run_number }}`. Use `az containerapp update` directly rather than `container-apps-deploy-action@v2`, which does not support revision suffixes.
+- **`az containerapp create --yaml <file>` still requires `-n` and `-g` on the command line** even though the YAML carries name and resource group; without them the extension prints usage and exits 2.
+- **A custom domain with a managed certificate can bind but stay `bindingType: Disabled`.** `az containerapp hostname bind` with a managed certificate can leave the binding Disabled after the certificate has issued (TLS still not serving 30 minutes later despite the "up to 20 minutes" note). Fix: confirm `az containerapp env certificate list --managed-certificates-only` shows the cert `Succeeded`, then re-run `hostname bind ... --certificate <managed-cert-name>`; `bindingType` flips to `SniEnabled` and TLS serves within minutes. Working order overall: publish CNAME plus `asuid.<host>` TXT, verify both via DoH and soak about 15 minutes, `hostname add`, `hostname bind`, poll the cert, re-bind with the cert name, then prove with `openssl s_client -servername <host>` showing `CN=<host>`. See *Custom domain* in `reference.md`.
 - **Script all provisioning in `infra/setup-azure.sh`.** Register `Microsoft.App` and `Microsoft.OperationalInsights` before creating the environment; build the SP credentials JSON manually (`--sdk-auth` is deprecated in CLI 2.37+); prefix `az` calls passing `/subscriptions/...` paths in Git bash with `MSYS_NO_PATHCONV=1`.
 
 ---
@@ -57,6 +59,7 @@ Commands and templates for every step are in [`reference.md`](reference.md).
 6. **Create the service principal** and store `AZURE_CREDENTIALS` as a GitHub secret. See *infra/setup-azure.sh*.
 7. **Add the deploy job** — `az containerapp update` with a lowercase image ref and `--revision-suffix r${{ github.run_number }}`. See *Deploy job*.
 8. **Diagnose failures** if needed — inspect `runningStateDetails` and container logs to tell `ImagePullBackOff` from a startup crash. See *Diagnosing revision failures*.
+9. **Custom domain (optional)** — CNAME + `asuid.<host>` TXT, DoH-verify and soak ~15 min, `hostname add`, `hostname bind`, poll the managed cert, re-bind with `--certificate <name>` if `bindingType` stays `Disabled`, prove with `openssl s_client`. See *Custom domain*.
 
 ---
 
@@ -83,6 +86,7 @@ Present the deployment as:
 - [ ] GHCR package public; no registry credentials stored in ACA
 - [ ] Deploy job uses `az containerapp update` with `--revision-suffix r${{ github.run_number }}` and a lowercase image ref
 - [ ] `infra/setup-azure.sh` provisions everything from scratch; `AZURE_CREDENTIALS` secret set
+- [ ] Any `--yaml` create/update also passes `-n`/`-g`; custom-domain binding shows `bindingType: SniEnabled` and `openssl s_client` returns `CN=<host>`
 
 ---
 
@@ -102,6 +106,8 @@ Present the deployment as:
 - Min replicas 0 — WebSocket cold-start breaks the UI
 - `--sdk-auth` with `az ad sp create-for-rbac` — deprecated in CLI 2.37+
 - Unix-style paths in `az` from Git bash without `MSYS_NO_PATHCONV=1`
+- `az containerapp create --yaml` without `-n`/`-g` — prints usage and exits 2
+- Assuming a managed cert that shows `Succeeded` is serving — check `bindingType`; re-bind with `--certificate` if it is `Disabled`
 
 ---
 

@@ -75,6 +75,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Medallion Architecture Designer](skills/data/medallion-architecture-designer/) | Design bronze/silver/gold lakehouse data layers |
 | [Data Pipeline Designer](skills/data/data-pipeline-designer/) | Design high-level data pipelines for source-to-target data flows |
 | [Geospatial Source Database](skills/data/geospatial-source-database/) | Work with geospatial data sources (PostGIS, SQL Server, Natural Earth) and handle data-specific quirks |
+| [Excel Power Query Postgres](skills/data/excel-power-query-postgres/) | Connect Excel Power Query to PostgreSQL (including Supabase) — the Npgsql driver that works, credential caching and sharing, first-load refresh, and COM-automation traps |
 
 ### App skills
 
@@ -91,12 +92,15 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [App Icon Asset Generation](skills/app/app-icon-asset-generation/) | Generate app icons and adaptive icon assets for iOS and Android |
 | [Supabase Edge Functions](skills/app/supabase-edge-functions/) | Deploy serverless functions to Supabase Edge Functions |
 | [Supabase Auth Email](skills/app/supabase-auth-email/) | Configure Supabase transactional auth email — custom SMTP, branded templates via the Management API, and reliable confirm/reset flows |
+| [Supabase Marketing Backend](skills/app/supabase-marketing-backend/) | Use Supabase as the backend for a static marketing site — insert-only public forms on the anon key with RLS, a privacy-tiered page-hit beacon, reader roles, and the RLS/view leaks that bite |
 
 ### Web skills
 
 | Skill | Description |
 |---|---|
-| [Static Website Hosting](skills/web/static-website-hosting/) | Deploy static websites using GitHub Pages, Netlify, or Vercel |
+| [Static Website Hosting](skills/web/static-website-hosting/) | Provision and deploy a static website on Azure Static Web Apps with Bicep IaC, GitHub Actions CI/CD, deploy tokens, region choice, and multi-site layouts |
+| [Azure SWA Custom Domains](skills/web/azure-swa-custom-domains/) | Bind and troubleshoot custom domains on Azure Static Web Apps — DNS, apex/subdomain validation, www canonicalisation, managed TLS, cutover, wedged-domain recovery |
+| [Static Website Config and CSP](skills/web/static-website-config-and-csp/) | Configure and safely change a live static site on Azure SWA — staticwebapp.config.json routes, headers, caching, MIME types, CSP, and production front-end gotchas |
 | [Website SEO and Indexing](skills/web/website-seo-and-indexing/) | Optimise website structure and content for search engine indexing |
 | [Web Print PDF](skills/web/web-print-pdf/) | Produce reliable print and PDF output from an HTML page with print-specific CSS |
 | [Branded Link QR Service](skills/web/branded-link-qr-service/) | Build a permanent branded short-link and QR code service on a static host — 302 indirection, link registry, CI drift checks, validated QR generation |
@@ -108,12 +112,15 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Docker Compose Database Lab](skills/infra/docker-compose-database-lab/) | Set up local Docker Compose database environments with correct volume mounts, configuration, and network access |
 | [GitHub Org Repository Setup](skills/infra/github-org-repository-setup/) | Set up a new GitHub repository in an organisation with correct access, security, and baseline branch protection |
 | [Git Secret Remediation](skills/infra/git-secret-remediation/) | Remove committed secrets from Git history safely and verify remediations across local and remote repositories |
+| [M365 Email Authentication](skills/infra/m365-email-authentication/) | Enable DKIM, SPF and DMARC for a Microsoft 365 custom domain — Defender portal path, per-domain CNAME values, negative-cache delays, cross-resolver DNS verification |
+| [Windows CLI Gotchas](skills/infra/windows-cli-gotchas/) | Run native CLIs reliably from PowerShell 5.1 and Git Bash on Windows — quoting, JSON payloads, stderr and exit codes, MSYS path mangling, which shell for which tool |
 
 ### Domain-specific skills
 
 | Skill | Description |
 |---|---|
 | [Time Series Use Case Assessment](skills/domain/time-series-use-case-assessment/) | Assess whether a use case is suitable for time series analysis and select an appropriate approach |
+| [App Terms and Policies](skills/domain/app-terms-and-policies/) | Draft and publish Terms of Service and policy pages for a subscription app — unlisted preview publishing, price-proof billing wording, insurance-aware liability terms, versioned acceptance flows |
 
 ### AI skills
 
