@@ -219,10 +219,32 @@ Skills can be adapted into Copilot prompt files:
 
 ---
 
-## Cursor or similar tools
+## Cursor (native Agent Skills)
 
-- Paste the skill content into a custom agent instruction, system prompt, or project rules file.
-- Skills work well as agent instructions in tools that support persistent context.
+Cursor supports the same `SKILL.md` format this library uses, through its [Agent Skills](https://cursor.com/docs/skills) feature — so these skills run natively, with no conversion needed.
+
+> **Skills, not Rules.** Cursor *Rules* (`.cursor/rules/*.mdc`) are project conventions and constraints — a different feature. These are *skills*, so they belong in Cursor's skills directories, not the rules folder.
+
+Cursor auto-discovers skills on startup from several locations, including:
+
+- `.cursor/skills/` — project-scoped (committed to the repo)
+- `~/.cursor/skills/` — global (available in every project)
+
+**Easiest — install with Skillfish:**
+
+```bash
+npx skillfish add POWR-DATA/mtx-skills
+```
+
+Skillfish installs into Cursor's global skills directory (`~/.cursor/skills/`), where Cursor picks the skills up automatically.
+
+**Manual — drop a skill folder in:**
+
+Copy a whole skill folder (e.g. `skills/app/flet-supabase-framework/`) into `.cursor/skills/<skill-name>/`, keeping `SKILL.md` and any `reference.md` intact. Cursor loads it on the next start.
+
+**Using a skill:** Cursor's agent selects one automatically based on its `description`, or you can type `/` in the Agent chat and search for it by name.
+
+Cursor requires a skill's folder name to match its `name` frontmatter field — a convention this library already follows — and it loads linked files like `reference.md` on demand, so the progressive-disclosure structure behaves exactly as it does in Claude Code.
 
 ---
 
