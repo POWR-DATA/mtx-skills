@@ -1,27 +1,25 @@
-﻿# Static Website Hosting
+# Static Website Hosting
 
-Plan and deploy a static website on Azure Static Web Apps with custom domains, DNS, IaC, and CI/CD.
+Provision and deploy a static website on Azure Static Web Apps with Bicep IaC, GitHub Actions CI/CD, deploy tokens, region choice, and multi-site layouts.
 
 ## What this skill does
 
-This skill guides an AI through the full setup of a production-ready static website: creating Azure infrastructure via Bicep, configuring DNS records for custom domains (www and apex), wiring up GitHub Actions for automated deployment, and writing the `staticwebapp.config.json` configuration for security headers and correct MIME types. The output is a complete, reproducible deployment covering every layer from IaC to DNS to CI/CD.
+This skill guides an AI through standing up a production-ready static website: Azure infrastructure via Bicep (token-deployed, no repository properties), the GitHub Actions deploy workflow with the deployment token stored correctly, region choice, gating for not-yet-provisioned resources, second sites from a subfolder, and a baseline `staticwebapp.config.json`. It hands off to [Azure SWA Custom Domains](../azure-swa-custom-domains/) for DNS/TLS and to [Static Website Config and CSP](../static-website-config-and-csp/) for routes, caching and CSP.
 
 ## When to use it
 
 - Starting a new static website and want a properly structured, repeatable deployment
 - Migrating a site from click-ops to infrastructure-as-code
-- Adding a custom domain to an existing Azure Static Web Apps deployment
-- Auditing an existing setup for missing IaC, security headers, or DNS hygiene
+- Auditing an existing setup for missing IaC or CI hygiene
 - Rebuilding or moving a site to a new resource group with CAF naming
-- Hiding committed internal files (docs, infra, scripts) from a live SWA, or adding a second SWA (e.g. `go.<domain>`) from a subfolder of the same repo
+- Adding a second SWA (e.g. `go.<domain>` or an authenticated portal subdomain) from a subfolder of the same repo
 
 ## Example use cases
 
-- Set up `www.example.com` on Azure Static Web Apps with DNS at VentraIP
+- Provision `stapp-example-prod` with Bicep and deploy it from GitHub Actions on push to `main`
 - Migrate a manually deployed static site to Bicep + GitHub Actions
-- Add an apex domain with HTTPS to an existing Azure SWA deployment
-- Write a validation script to check DNS, HTTPS, and redirect behaviour after a deployment
-- Deploy a subfolder as its own SWA on a subdomain, gated in CI until the resource is provisioned
+- Deploy a subfolder as its own SWA, gated in CI until the resource is provisioned
+- Decide where an authenticated Supabase portal should live relative to the marketing site
 
 ## Files in this folder
 
@@ -31,7 +29,7 @@ This skill guides an AI through the full setup of a production-ready static webs
 | `README.md` | Yes | Short navigation guide for this skill (this file) |
 | `example-input.md` | Optional | Example input — include when it helps users frame their request |
 | `example-output.md` | Optional | Example output — include when it sets a useful quality bar or the output is a concrete artefact |
-| `reference.md` | Optional | Load-on-demand excerpts — hidden-file routes, subfolder SWA workflow, token-deployed Bicep, subdomain binding |
+| `reference.md` | Optional | Load-on-demand excerpts — subfolder SWA workflow, token-deployed Bicep, deploy token into secrets, baseline config |
 
 ## How to use
 

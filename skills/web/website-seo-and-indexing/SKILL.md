@@ -1,8 +1,8 @@
-﻿---
+---
 name: website-seo-and-indexing
 description: Prepare a static website for search engine indexing and submit it to Google Search Console
 author: PowerData
-version: 1.4.0
+version: 1.6.0
 license: MIT
 ---
 
@@ -36,7 +36,10 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - `sitemap.xml` must be a real static file, not served via a CMS or framework route that could return HTML. Verify it returns `Content-Type: application/xml`. On Azure SWA, this requires an explicit route in `staticwebapp.config.json`.
 - `robots.txt` must be a static file at the root. Do not route it through a SPA fallback. The `Sitemap:` directive in `robots.txt` should reference the full absolute URL.
 - Use a **Domain property** in Google Search Console, not a URL-prefix property. A Domain property tracks all variants (http, https, www, apex) in a single view and requires a DNS TXT verification record.
-- Submit the sitemap in GSC after verification. Use the URL Inspection tool to check individual pages after submission.
+- Submit the sitemap in GSC after verification. Use the URL Inspection tool to check individual pages after submission. "Invalid sitemap address" when the URL is correct means you are inside the wrong property (check the property selector top-left) — a sitemap can only be submitted inside a property that covers its host, so create or switch to the Domain property for that domain first.
+- Domain-property verification is per Google account: a user added via Users and permissions shows Owner but not Verified and only works while a verified owner still exists. To make a business account self-standing, sign in as it, go Settings → Ownership verification → DNS record, and publish its second, different `google-site-verification` TXT token at the apex alongside the first (both coexist permanently). Add the business account as Owner on every company property, not just the new one.
+- Search Console living on a personal Google account is low-risk because Domain-property ownership is anchored to DNS and can be re-verified by anyone controlling the zone — but Play Console and Apple Developer accounts should be organisation accounts owned by the company from day one, because those are painful or impossible to migrate later.
+- Confirm the `google-site-verification` TXT via a public DoH resolver before pressing Verify, then still expect Google's own check to lag: a record visible worldwide within seconds of saving at the registrar failed the first Verify click and passed about an hour later with no change. Sitemap status flips to Success the same day but the Performance and Indexing panels show "processing data" for a day or more — normal for a new property.
 - `lastmod` dates in `sitemap.xml` should reflect actual content changes. Do not set future dates. Priority values (0.0–1.0) are relative — the homepage is typically 1.0.
 - Avoid duplicate indexing by ensuring the non-canonical URL (apex, http) redirects to the canonical before Google crawls it. On Azure SWA, the apex → www redirect is automatic but takes 20–30 minutes to activate after domain validation.
 - GSC shows a robots.txt entry for every URL variant it has crawled. Only the canonical (HTTPS www) needs to return a valid response. A 404 on the HTTP non-www variant is harmless if the HTTPS www version shows "Fetched".
@@ -102,7 +105,8 @@ Provide as many of the following as available. Partial inputs are acceptable —
    - Go to [Google Search Console](https://search.google.com/search-console)
    - Create a **Domain property** for `<domain>` (without protocol or www)
    - Add the provided DNS TXT verification record to the domain's DNS at the registrar or DNS host
-   - Wait for DNS to propagate, then click **Verify**
+   - Confirm the TXT via a public DoH resolver, click **Verify**; if it fails, wait ~1 h and retry without changing DNS
+   - Verify the business Google account as a second owner (its own TXT token) so ownership does not hinge on one personal account
 
 11. **Submit the sitemap**
     - In GSC: go to **Sitemaps** → enter `sitemap.xml` → **Submit**
@@ -132,7 +136,7 @@ The AI should produce:
 - [ ] `robots.txt` exists at `/robots.txt` with `Sitemap:` directive
 - [ ] Every page has a unique `<title>` and `<meta name="description">`
 - [ ] Favicon is present and linked on every page
-- [ ] Google Search Console Domain property created and verified
+- [ ] Google Search Console Domain property created and verified — by the business account too (second TXT token), and it is Owner on every company property
 - [ ] Sitemap submitted in GSC
 - [ ] URL Inspection confirms Google can render the homepage
 - [ ] Apex and http URLs redirect to the canonical (www, https) before indexing
@@ -152,7 +156,9 @@ The AI should produce:
 - Do not omit canonical tags on any public page, even a simple landing page — duplicate content signals accumulate across http/https and www/apex variants
 - Do not serve `sitemap.xml` through a SPA fallback — verify the actual `Content-Type` header in a browser dev tools network tab
 - Do not add `Disallow: /` to `robots.txt` while testing and forget to remove it before launch — this blocks all crawlers
-- Do not assume GSC verification via DNS is instant — allow up to 24–48 hours for TXT record propagation
+- Do not assume GSC verification via DNS is instant — confirm the TXT via DoH, then allow Google's own check to lag (~1 h seen), up to 24–48 hours
+- Do not fight "Invalid sitemap address" by editing the URL — you are in the wrong property; switch to the Domain property that covers the host
+- Do not leave Search Console ownership hanging on a single personal account's verification — verify the business account with its own TXT token
 - Do not add a canonical tag without first checking whether one already exists and is correct — if it is, the redirect and internal links are the more likely cause of any GSC duplicate signal
 - Do not treat a 301 redirect on `/index.html → /` as a complete fix — internal links pointing to `index.html` must also be updated, or Googlebot will still follow them to the duplicate URL
 - Do not stop at the first `.html` duplicate found — check all pages, as the pattern typically exists across the whole site

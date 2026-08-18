@@ -4,7 +4,7 @@ Build a permanent branded short-link and QR code service on a static host — 30
 
 ## What this skill does
 
-Guides an AI through building a `go.<domain>` short-link layer where every printed QR encodes a permanent branded URL that 302-redirects to a changeable destination. It covers the link registry, the script that generates the host's redirect config (with a CI `--check` mode), deterministic QR generation with `segno`, and independent decode validation that proves the QR encodes the link — not the destination.
+Guides an AI through building a `go.<domain>` short-link layer where every printed QR encodes a permanent branded URL that 302-redirects to a changeable destination. It covers the link registry, the script that generates the host's redirect config (with a CI `--check` mode), deterministic QR generation with `segno` or the `qrcode` CLI, and independent decode validation that proves the QR encodes the link — not the destination.
 
 ## When to use it
 
@@ -12,7 +12,7 @@ Guides an AI through building a `go.<domain>` short-link layer where every print
 - Giving each employee a permanent business-card QR (`/card/<person-slug>`)
 - A printed QR already points somewhere that has to move
 - Replacing hand-edited redirects with a registry that generates the hosting config
-- Hosting the redirect layer on Azure Static Web Apps or another static host with route-based redirects
+- Hosting the redirect layer on Azure Static Web Apps or another static host with route-based redirects — or rescuing it onto Azure Container Apps + Caddy when SWA domain binding is stuck
 
 ## Example use cases
 
@@ -29,7 +29,7 @@ Guides an AI through building a `go.<domain>` short-link layer where every print
 | `README.md` | This file |
 | `example-input.md` | Example input for this skill |
 | `example-output.md` | Example output produced by this skill |
-| `reference.md` | Load-on-demand excerpts — registry schema, generator/check sketch, SWA routes, segno + decode snippets, CI step |
+| `reference.md` | Load-on-demand excerpts — registry schema, generator/check sketch, SWA routes, segno / qrcode + decode snippets, CI step, ACA + Caddy escape hatch |
 
 ## How to use
 

@@ -13,6 +13,7 @@ These skills cover the most frequently needed patterns in data engineering and a
 | [Medallion Architecture Designer](medallion-architecture-designer/) | Design bronze/silver/gold lakehouse data layers | Data Pipeline Designer |
 | [Data Pipeline Designer](data-pipeline-designer/) | Design a high-level source-to-target data pipeline | — |
 | [Geospatial Source Database](geospatial-source-database/) | Work with geospatial data sources (PostGIS, SQL Server, Natural Earth) and handle data-specific quirks | — |
+| [Excel Power Query Postgres](excel-power-query-postgres/) | Connect Excel Power Query to PostgreSQL (including Supabase) — the Npgsql driver that works, credential caching and sharing, first-load refresh, and COM-automation traps | — |
 
 ## Suggested delivery sequence
 

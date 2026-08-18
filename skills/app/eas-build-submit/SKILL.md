@@ -2,7 +2,7 @@
 name: eas-build-submit
 description: Build and submit Expo apps to Google Play and the App Store using EAS — credential setup, eas.json configuration, CI/CD integration, and the EAS CLI submission workflow
 author: PowerData
-version: 1.2.0
+version: 1.3.0
 license: MIT
 ---
 
@@ -41,6 +41,9 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 - **When a build succeeds but the deploy fails, re-deploy — don't rebuild.** For a build-number conflict or network error after a successful build, trigger `deploy-only` mode passing the EAS `build_id` from the successful build. This skips the 20–25 minute build and goes straight to submission — critical for iterating on submit failures.
 - **EAS caches the native build layer.** When only JavaScript changes (no native package added or removed), subsequent builds reuse the cached native output and only re-bundle JS, cutting build time from ~25 min to ~6–7 min. Adding or removing a native package invalidates the cache and forces a full rebuild.
 - **EAS free plan is 15 Android + 15 iOS builds/month** (not 30 as older docs state). The Starter plan ($19/month) provides $45 in build credits — enough for active CI/CD. Cancel once the pipeline is stable to avoid ongoing cost.
+- **Treat a build as a scarce resource, not a per-change action.** The free tier's ~30 builds/month is exhausted fast by iterative per-tweak app rebuilds — batch app-code changes into ONE build and iterate anything web/portal (deployed separately) for free.
+- **`eas build:view` shows "Build Artifacts URL: null" for a finished app build** — the installable APK/IPA is under the separate **Application Archive URL** field. Set `EAS_SKIP_AUTO_FINGERPRINT=1` before `eas build ... --no-wait` to skip a slow project-fingerprint step that can otherwise make the kickoff exceed a short shell timeout before it prints the build URL.
+- **Auto-submit an iOS build to internal TestFlight from the build command.** Put the App Store Connect API key config (`ascAppId`, `appleTeamId`, `ascApiKeyPath` to a local `.p8`, `ascApiKeyId`, `ascApiKeyIssuerId`) in a `submit.<profile>` block in `eas.json`, then `eas build --profile <p> --platform ios --auto-submit`; the build number auto-increments and the submission is scheduled after the build, with Apple's TestFlight processing adding roughly 10–30 min before it is installable.
 
 ## Process
 
@@ -50,7 +53,7 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 4. **Configure the `eas.json` submit profile.** Add a `submit` section with `serviceAccountKeyPath` and `track` set for the target Play Console track.
 5. **For iOS, register an App Store Connect API key.** Create the key in App Store Connect → Users and Access → Integrations, then run `eas credentials --platform ios` and select the API key option so EAS can submit non-interactively.
 6. **Store build-time config as EAS environment variables.** Use `eas env:create --environment production` for any value `app.config.js` needs at build time — GitHub secrets do not reach EAS servers. Link the environment via `environment: "production"` in the eas.json build profile (do not also pass `--environment` on the CLI).
-7. **Build via EAS.** Run `eas build --platform android|ios --profile <profile>` or reuse an existing build ID.
+7. **Build via EAS.** Run `eas build --platform android|ios --profile <profile>` (with `EAS_SKIP_AUTO_FINGERPRINT=1` and `--no-wait` for a fast kickoff) or reuse an existing build ID; batch changes — builds are rationed. For iOS internal TestFlight, add `--auto-submit` with a `submit.<profile>` ASC key block.
 8. **Submit.** Run `eas submit --platform android|ios --profile <profile>`. Pass `--id <build-id>` to target a specific build. If a build succeeded but the deploy failed, re-run in deploy-only mode with the existing `build_id` rather than rebuilding.
 
 ## Output format
@@ -71,6 +74,8 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 - [ ] No double-specification of `--environment` flag and eas.json `environment` field
 - [ ] `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true` set at job level if using `expo/expo-github-action`
 - [ ] `package-lock.json` committed and in sync before relying on `npm ci`
+- [ ] App-code changes batched into one build; artefact fetched from **Application Archive URL**, not Build Artifacts URL
+- [ ] iOS `submit.<profile>` block holds `ascAppId`/`appleTeamId`/`ascApiKeyPath`/`ascApiKeyId`/`ascApiKeyIssuerId` when using `--auto-submit`
 
 ## Avoid
 
@@ -83,6 +88,8 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 - Passing `--environment` on the CLI while also setting `environment` in eas.json — the double-specification fails immediately
 - Rebuilding from scratch when a build succeeded but only the deploy failed — re-run deploy-only with the existing `build_id`
 - Running `eas submit --non-interactive` for iOS without a pre-registered App Store Connect API key — it cannot prompt for one in non-interactive mode
+- Rebuilding the app for every small tweak — the free tier's ~30 builds/month runs out; batch, and iterate web/portal separately
+- Reading "Build Artifacts URL: null" as a failed build — the APK/IPA is under Application Archive URL
 
 ## Example usage
 

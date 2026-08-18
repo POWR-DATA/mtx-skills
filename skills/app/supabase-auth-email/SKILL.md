@@ -2,7 +2,7 @@
 name: supabase-auth-email
 description: Configure Supabase transactional auth email — custom SMTP, branded templates via the Management API, and reliable confirm/reset flows
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -18,7 +18,7 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 
 ## Inputs expected
 
-- Supabase project ref and a Management API access token
+- Supabase project ref and a Management API **personal access token** (the CLI login token cannot be reused for the API — see principles)
 - Email provider account and API key (Resend assumed; any SMTP works)
 - The sending domain and access to its DNS host
 - App name and the confirm/reset redirect URLs
@@ -33,10 +33,14 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 - **Apply branded templates via the API *last*, and re-apply after any dashboard change.** Saving the dashboard Emails/SMTP page overwrites Management-API-pushed templates with the dashboard's stale defaults. Apply templates via the API after SMTP is set, and re-run the apply after any dashboard email/SMTP edit.
 - **Templates have no runtime app-name variable — bake it at apply time.** Templates expose only Go tokens (`{{ .ConfirmationURL }}`, `{{ .SiteURL }}`, `{{ .Email }}`). Substitute the app name via `__APP_NAME__` when applying; on a rebrand, re-run the apply. The "From" display name is a *separate* `smtp_sender_name` field in the SMTP group that the template apply does not touch — change it in the dashboard, then re-run the template apply.
 - **With `mailer_autoconfirm = false`, email confirmation is a hard sign-in gate.** An unconfirmed account exists but cannot log in, so the app must surface a "confirm then sign in" state plus a resend action. A sign-up on an already-registered email is detected client-side by an empty `identities` array on the returned user (anti-enumeration otherwise makes it look like success) — surface that rather than silently "succeeding".
+- **Host reset-password / confirm-email as static pages driven by one same-origin config script.** Read every environment value from a tiny `auth-config.js` (`window.<APP>_AUTH`) so a dev-to-prod Supabase project switch is a one-file change; widen those pages' CSP `connect-src` to `https://*.supabase.co` so the project swap needs no CSP edits. Only the anon/publishable key ever goes in the file.
+- **Harden the hosted auth pages.** Load supabase-js from a version-pinned CDN URL with SRI and guard for the library being absent so the page fails closed to an error state; create the client with `persistSession: false` so no session is written to the visitor's browser; implement no `redirect_to` handling (open-redirect vector) — navigation targets stay hardcoded to the portal origin and the app scheme.
+- **Exclude the hosted auth page paths from mobile deep-link scopes** (`/reset-password`, `/confirm-email` out of AASA `components` and Android `intentFilters`); if the app captures those URLs, the browser-based reset/confirm flows break mid-flight.
 - **A password-reset `redirectTo` must be in the redirect allow-list.** Add it under Auth → URL Configuration → Redirect URLs (or `uri_allow_list` via the API). Otherwise Supabase ignores it and falls back to Site URL, so the reset link never reaches your page.
 - **Don't use the default `{{ .ConfirmationURL }}` server-side confirm link.** Mail-security scanners (Outlook Safe Links, etc.) pre-fetch and *consume* it, so accounts never confirm. Instead link to a hosted page that completes confirmation client-side via `verifyOtp({ token_hash, type: 'signup' })`, then deep-links back into the app. See *Client-side confirm page* in `reference.md`.
 - **A failed email send returns HTTP 500 on `/auth/v1/signup` but still creates the user row.** The real SMTP error (e.g. "535 Invalid username") is in the project's `auth_logs`, queryable via the Management API analytics logs endpoint — check there, not the HTTP response.
 - **Verify the sending domain in DNS, and expect a warm-up period.** Resend needs DKIM on `resend._domainkey`, MX + SPF on a `send` subdomain, and DMARC on `_dmarc`, added at the domain's actual DNS host (which may differ from the registrar or web host). These sit on different hostnames than existing Microsoft 365 mail records, so they don't conflict. A brand-new sending domain has no reputation, so early emails often land in spam even when SPF/DKIM pass — expected, and it improves as the domain sends legitimate mail.
+- **The Supabase CLI login token is not a Management API token.** It lives in Windows Credential Manager (LegacyGeneric target "Supabase CLI:supabase") and cannot be reused for the Management API, which needs a personal access token (optionally at `%USERPROFILE%\.supabase\access-token`); ask the project owner for a token rather than trying to extract vault credentials. `supabase projects list` prints "Cannot find project ref. Have you run supabase link?" to stderr yet still lists every project, and truncating its output (`Select-Object -First N`) hid the production row and produced a wrong "different org" conclusion — filter noise instead of truncating.
 - **From PowerShell 5.1, send the Management API body as UTF-8 bytes.** The default string encoding is Latin-1, which mangles UTF-8 and returns 400 errors. Encode the JSON with `[System.Text.Encoding]::UTF8.GetBytes($json)` and read template files with `[System.IO.File]::ReadAllText($path,[Text.Encoding]::UTF8)`. See *reference.md*.
 
 ## Process
@@ -45,7 +49,7 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 2. **Confirm template editing is unlocked** — on a newer project, editing stays locked until SMTP is set.
 3. **Apply branded templates via the API**, substituting `__APP_NAME__`, *after* SMTP is configured. Set `smtp_sender_name` in the dashboard, then re-apply.
 4. **Add redirect/confirm URLs to the allow-list** (`uri_allow_list`).
-5. **Switch confirmation to a client-side `verifyOtp` page** so Safe Links cannot consume the link.
+5. **Switch confirmation to a client-side `verifyOtp` page** so Safe Links cannot consume the link — hosted statically, config from `auth-config.js`, pinned+SRI supabase-js, `persistSession: false`, no `redirect_to`, and excluded from app deep-link scopes.
 6. **Handle the unconfirmed state in the app** — a "confirm then sign in" screen with resend, and treat an empty `identities` array on sign-up as "already registered".
 7. **Test sign-up and reset**; on a 500, read `auth_logs` for the real SMTP error.
 
@@ -64,6 +68,8 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 - [ ] Branded templates applied via the API *after* SMTP; re-applied after any dashboard save
 - [ ] `smtp_sender_name` set (separately) and current after any rename
 - [ ] Confirm flow uses a client-side `verifyOtp` page, not the default `{{ .ConfirmationURL }}`
+- [ ] Hosted auth pages: one `auth-config.js` (anon key only), CSP `connect-src https://*.supabase.co`, pinned CDN + SRI with fail-closed guard, `persistSession: false`, no `redirect_to`, paths excluded from AASA/intent-filter scopes
+- [ ] Management API calls use a personal access token, not the CLI login token; `supabase projects list` output filtered, not truncated
 - [ ] Reset/confirm redirect URLs added to `uri_allow_list`
 - [ ] App shows "confirm then sign in" + resend for unconfirmed accounts; empty `identities` on sign-up surfaced as already-registered
 - [ ] Sending domain DKIM/SPF/MX/DMARC verified; spam warm-up expected
@@ -77,6 +83,9 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 - Assuming `smtp_sender_name` updates with the template apply — it is separate and stays stale after a rename
 - Using the default `{{ .ConfirmationURL }}` — Safe Links pre-fetch and consume it; use a client-side `verifyOtp` page
 - Trusting the HTTP response on send failure — the 500 hides the real error; read `auth_logs`
+- Hardcoding the Supabase URL/key into each hosted auth page, or honouring a `redirect_to` parameter on them — one config script, fixed navigation targets
+- Letting the app's App Links / Universal Links capture `/reset-password` or `/confirm-email` — the browser flow breaks mid-flight
+- Reusing the CLI login token for the Management API, or `Select-Object -First N` on `supabase projects list` — use a PAT and filter, don't truncate
 - Sending the Management API body as a default PowerShell string — encode as UTF-8 bytes or get 400s
 - Treating early spam-foldering on a new domain as a misconfiguration — it is reputation warm-up
 - Treating a sign-up response with an empty `identities` array as a fresh account — the email is already registered; anti-enumeration hides the error

@@ -2,7 +2,7 @@
 name: supabase-edge-functions
 description: Write, deploy, and debug Supabase Edge Functions — Deno import constraints, CLI auth, LLM provider integration, and cache invalidation patterns
 author: PowerData
-version: 1.2.0
+version: 1.3.0
 license: MIT
 ---
 
@@ -35,6 +35,7 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 - **New-format Supabase PATs (`sbp_v0_…`) are rejected by older CLI versions.** PATs issued in 2026 start with `sbp_v0_`, and the Supabase CLI (v2.101.0) rejects them with "Invalid access token format". There is no CLI workaround — set Edge Function secrets directly via the Supabase dashboard (Edge Functions → function → Secrets) instead.
 - **On Windows, `supabase login` stores credentials in Windows Credential Manager, not `~/.supabase/credentials`.** The token is saved under `LegacyGeneric:target=Supabase CLI:supabase` and can conflict with the `SUPABASE_ACCESS_TOKEN` environment variable or carry restricted permissions for management API operations. Remove it with `cmdkey /delete:"Supabase CLI:supabase"` if it causes auth conflicts.
 - **The functions gateway rejects non-JWT bearer tokens before your code runs.** Any bearer that is not a JWT fails at the gateway with `UNAUTHORIZED_INVALID_JWT_FORMAT`. A function that must accept a non-JWT shared secret (a system or cron caller) has to set `verify_jwt = false` in `supabase/config.toml` and do its own authorization inside. Keep `verify_jwt = true` for functions only ever called with a real user JWT (e.g. a signed-in user submitting feedback); flip it to false only when a trusted non-JWT caller is involved.
+- **Never pass `--no-verify-jwt` to `supabase functions deploy`.** It turns OFF the gateway JWT check for that function (a silent security regression); deploy WITHOUT the flag to keep the default `verify_jwt=true`, which the CLI takes from `config.toml` where only the intentionally-public functions are listed as `false`. Verify the live state empirically: an unauthenticated POST returns the gateway body `{"code":"UNAUTHORIZED_NO_AUTH_HEADER"}` (401) when `verify_jwt=true`, versus the function's own JSON when it is off.
 - **Schedule server-side invocation with `pg_cron` + `pg_net` + a Vault secret.** A `pg_cron` job calls a `dispatch_*()` SQL function that fires due rows at the edge function via `pg_net`, authenticated with a Vault secret (`vault.create_secret`) that must equal the function's env-var secret. Because that bearer is not a JWT, the target function needs `verify_jwt = false`. Verify delivery by checking `net._http_response` for a `200`.
 - **For account deletion, verify the JWT then use the service role — and de-identify rather than hard-delete.** In the function, verify the caller JWT, then call `auth.admin.deleteUser` (service role), which cascades `public.users` via its FK. To retain non-identifying activity, first snapshot coarse stats to an archive table keyed by the user's UUID; an `event_log` with no FK to `auth.users` survives keyed by UUID, so retained activity stays linkable without PII.
 
@@ -63,6 +64,7 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 - [ ] New-format `sbp_v0_` PATs set via the dashboard if the CLI rejects them
 - [ ] On Windows, no stale `supabase login` token in Credential Manager conflicting with `SUPABASE_ACCESS_TOKEN`
 - [ ] `verify_jwt = false` set only for functions with non-JWT callers (cron/system), which authorize internally
+- [ ] Deployed without `--no-verify-jwt`; unauthenticated POST to a protected function returns `UNAUTHORIZED_NO_AUTH_HEADER` (401)
 - [ ] Scheduled functions use `pg_cron` + `pg_net` with a Vault secret matching the function's env-var secret
 - [ ] Account-deletion functions verify the JWT, use the service role, and de-identify retained activity by UUID
 
@@ -76,6 +78,7 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 - Fighting the CLI to accept a new-format `sbp_v0_` PAT — older CLI versions reject it; set secrets via the Supabase dashboard instead
 - Overlooking Windows Credential Manager when `supabase login` auth misbehaves on Windows — the stored token can conflict with `SUPABASE_ACCESS_TOKEN`; clear it with `cmdkey /delete`
 - Leaving `verify_jwt = true` on a function called by a non-JWT system/cron caller — the gateway rejects it before your code runs; set `verify_jwt = false` and authorize inside
+- Deploying with `--no-verify-jwt` — it silently disables the gateway check; let `config.toml` decide and prove the live 401
 - Hard-deleting a user's activity on account deletion when you need to retain aggregates — snapshot coarse stats keyed by UUID and de-identify instead
 
 ## Example usage

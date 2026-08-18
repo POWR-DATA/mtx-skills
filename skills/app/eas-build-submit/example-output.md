@@ -74,6 +74,24 @@ EAS will confirm the build being submitted and the target track before proceedin
 
 ---
 
+## Step 5 — iOS auto-submit to TestFlight (optional)
+
+```json
+"submit": {
+  "production": {
+    "ios": {
+      "ascAppId": "<asc-app-id>",
+      "appleTeamId": "<team-id>",
+      "ascApiKeyPath": "./AuthKey_<key-id>.p8",
+      "ascApiKeyId": "<key-id>",
+      "ascApiKeyIssuerId": "<issuer-id>"
+    }
+  }
+}
+```
+
+`EAS_SKIP_AUTO_FINGERPRINT=1 eas build --profile production --platform ios --auto-submit --no-wait` — build number auto-increments; TestFlight processing adds ~10–30 min. Fetch the IPA from **Application Archive URL** (Build Artifacts URL reads `null`).
+
 ## Checklist
 
 - [ ] Service account JSON key downloaded from GCP

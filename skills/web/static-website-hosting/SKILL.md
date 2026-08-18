@@ -1,8 +1,8 @@
-﻿---
+---
 name: static-website-hosting
-description: Plan and deploy a static website on Azure Static Web Apps with custom domains, DNS, IaC, and CI/CD
+description: Provision and deploy a static website on Azure Static Web Apps with Bicep IaC, GitHub Actions CI/CD, deploy tokens, region choice, and multi-site layouts
 author: PowerData
-version: 1.5.0
+version: 2.0.0
 license: MIT
 ---
 
@@ -10,189 +10,116 @@ license: MIT
 
 ## Purpose
 
-Design and deploy a production-ready static website on Azure Static Web Apps with a custom domain, DNS configuration, infrastructure-as-code, and automated CI/CD deployment. The output covers every layer from Bicep template to DNS record to GitHub Actions workflow, with decisions recorded so the deployment can be reproduced or handed over.
+Design and stand up a production-ready static website on Azure Static Web Apps — resource naming, Bicep template, deploy scripts, GitHub Actions workflow with the deploy token, and a baseline `staticwebapp.config.json` — with decisions recorded so the deployment can be reproduced or handed over. Custom domains, DNS and TLS are covered by `azure-swa-custom-domains`; routes, headers, CSP and live-site edits by `static-website-config-and-csp`.
 
 ## When to use
 
-Use this skill when setting up a new static website or migrating an existing one to a properly structured hosting environment. Apply it when the site needs:
+Use this skill when setting up a new static website, migrating one from click-ops to infrastructure-as-code, or adding a second site (subfolder or subdomain) to an existing repo. Apply it when the site needs:
 
-- A custom domain (e.g. `www.example.com`) with HTTPS
 - Repeatable infrastructure deployments (not click-ops)
-- Automated deployment on push to main
+- Automated deployment on push to main, including sites whose Azure resource does not exist yet
 - Clear operator documentation for future maintenance
 
-This skill is also useful when auditing an existing deployment for gaps in IaC coverage, DNS hygiene, or security headers.
+Also useful when auditing an existing deployment for gaps in IaC coverage or CI hygiene.
 
 ## Inputs expected
 
 Provide as many of the following as available. Partial inputs are acceptable — the AI should identify gaps and ask structured follow-up questions only where needed.
 
-- Domain name (e.g. `example.com`)
-- Preferred primary domain (apex or www — default: www is primary, apex redirects)
-- DNS registrar or DNS hosting provider
-- Hosting platform preference (default: Azure Static Web Apps Free tier)
+- Domain name (e.g. `example.com`) and preferred primary host (default `www`)
+- Hosting platform preference (default: Azure Static Web Apps Free tier) and audience location (drives region)
 - Azure subscription and preferred resource group naming convention
 - GitHub repository name and branch to deploy from (default: `main`)
-- Static site output folder (default: `/` for pre-built HTML, or build output path)
+- Static site output folder (default: `/` for pre-built HTML, or build output path); whether a second site lives in a subfolder
 - Security header requirements (default: `nosniff`, `SAMEORIGIN`, `same-origin`)
 - Any existing infrastructure to preserve or migrate from
 
 ## Guiding principles
 
-- Use `www` as the primary domain. Azure Static Web Apps handles the apex → www redirect automatically once both domains are added. Do not try to reverse this without a good reason.
 - Use Infrastructure-as-Code (Bicep) from the start. Click-ops deployments create undocumented state and are hard to reproduce. Even for a Free-tier SWA, a Bicep template takes 30 minutes to write and saves hours on every future change or rebuild.
 - Name resources using CAF conventions: `rg-<workload>-<env>` for resource groups, `stapp-<workload>-<env>` for Static Web Apps.
-- Store the deployment token in GitHub Secrets — never in code. The token grants full deployment access and must be rotated if it is ever exposed.
-- For apex domain validation on Azure SWA, use the `dns-txt-token` validation method via the REST API (`az rest --method put`). The standard `az staticwebapp hostname set` command fails for apex domains when DNS hasn't yet propagated.
-- Static A records for apex domains can become stale if Azure changes the underlying IP. Document the current IP and add a note to re-verify it after any Azure infrastructure event. Use ALIAS/ANAME records if the DNS provider supports them.
-- Keep `staticwebapp.config.json` in source control. Use it to set security headers globally, configure MIME types for non-HTML files (XML, JSON), and add explicit routes for files like `sitemap.xml` that would otherwise be intercepted by the SPA fallback.
-- Use `globalHeaders` in `staticwebapp.config.json` for security headers, not a `/*` route. Route-based headers only apply to HTML responses — CSS, JS, and image requests will be served without them. `globalHeaders` applies to every response type.
-- Set `Cache-Control: public, must-revalidate, max-age=30` globally on Azure SWA Free tier. The Free tier does not support long-lived cache invalidation, so low max-age is the safe default.
-- Override the global Cache-Control per asset type by adding specific routes *before* the `/*` catch-all in `staticwebapp.config.json`: `/*.css` and `/*.js` at `max-age=3600`, `/assets/*` at `max-age=86400`, and HTML at `max-age=0, must-revalidate`. Route-level Cache-Control overrides `globalHeaders` for matched paths; route order matters — the catch-all must be last.
-- Write a validation script that checks DNS, HTTPS, and redirect behaviour on both domains. Run it after every deployment or DNS change.
-- On a static HTML site with no templating, every shared component exists as a separate copy per page. Read each page's actual nav markup before editing — CTA text, hrefs, and aria attributes routinely differ between pages.
-- Place mobile menu dropdowns inside `<header>`, not after it. A sticky header is a containing block — a mobile nav placed outside loses `backdrop-filter` and sticky positioning.
-- When adding a hamburger menu to an existing stylesheet, audit all existing mobile media query rules for the nav. Stale rules conflict with new ones. Replace; don't just append.
-- `script-src 'self'` in the CSP silently blocks inline `<script>` tags on the live site. Inline scripts work locally because no CSP is applied during local development. All JavaScript must live in external `.js` files served from the same origin. When adding interactive behaviour to a static site with this CSP, never use inline script blocks — always write to an existing or new `.js` file.
-- `style-src` still requires `'unsafe-inline'` unless every inline `<style>` block and `style=` attribute is extracted to an external stylesheet — extracting scripts alone does not let you tighten `style-src`. Deploy any new CSP in `Content-Security-Policy-Report-Only` mode first and check the DevTools Console for violations before switching to enforcement.
-- Azure SWA cancels an in-progress deployment when a newer push arrives, producing a GitHub Actions failure notification even though the site deploys correctly from the later commit. Verify no deployment is running (`gh run list --limit 3`) before pushing to avoid spurious failure alerts.
-- After deploying JS or CSS changes, verify behaviour against the live URL using WebFetch or by instructing the user to hard refresh (Ctrl+Shift+R). JS and CSS are cached at `max-age=3600` — the user may be looking at the previous version without realising it.
-- `script-src 'self'` also blocks inline event-handler attributes (`onclick`, `onchange`), not just `<script>` blocks. They work locally (`file://` has no CSP) but silently fail on the live site. Attach handlers via external JS `addEventListener`, never inline attributes, on any site with a CSP.
-- Guard every shared-script DOM lookup with a null check. A script referencing an element that does not exist on a given page (e.g. `document.getElementById('year').textContent = …`) throws a TypeError that halts *all* subsequent script execution, including unrelated handlers. Write `var el = document.getElementById('year'); if (el) el.textContent = …`.
-- With JS/CSS at `max-age=3600`, browsers serve stale files after a deploy. Append a version query string (`scripts.js?v=2`) to force a fresh fetch, and increment it whenever a change would break existing cached behaviour.
-- When reorganising a live site into subfolders, redirect every old URL to its new path — 301 for public/SEO pages, 302 for transient/auth pages — so existing links and app deep-links keep working. SWA auto-serves `index.html` for a directory and `foo.html` for `/foo`; add an explicit `rewrite` route for the no-trailing-slash folder URL to pin the canonical.
-- Moving an HTML page into a deeper folder breaks its relative asset references (`styles.css`, `assets/…`, `favicon.png`) — they resolve against the new path and 404. Convert them to root-absolute (`/styles.css`, `/assets/…`) when relocating a page.
-- A static page can double as a Supabase auth page (e.g. password reset): it reads the recovery token from the URL hash (`access_token`, `type=recovery`), loads supabase-js from a CDN, and calls `setSession` then `updateUser`. Its `staticwebapp.config.json` route needs a `rewrite` to the `.html` plus a per-route CSP allowing `connect-src https://<project-ref>.supabase.co` and `script-src … https://cdn.jsdelivr.net`.
-- A page that is also an Android App Link / iOS Universal Link target is verified for the whole domain by `.well-known/assetlinks.json` (`handle_all_urls`), so moving that page's URL does not require editing assetlinks. It does require updating the app's intent-filter paths and any auth redirect URLs (e.g. Supabase) to the new path — app-side work the website change cannot cover.
-- Azure SWA serves the entire `app_location` (the whole repo by default), so any committed internal file (docs, `.md`, infra, scripts) is publicly fetchable unless a route hides it — a route with `"statusCode": 404` and no rewrite/redirect returns 404 and does not serve the file's content (verified live).
-- SWA route wildcards only match at the END of a route (`/docs/*`), so wildcard-before-extension rules like `/*.md` are unreliable for hiding files — block internal files with directory blocks plus explicit exact-match rules per root file (`/OPERATIONS.md`, `/.gitignore`), each with `"statusCode": 404`. Dot-path routes (`/.github/*`, `/.gitignore`) do work; the built-in `/.well-known/assetlinks.json` route proves it. See *Hiding internal files* in [`reference.md`](reference.md).
-- Run a second independent SWA from one repo by deploying only a subfolder: a dedicated GitHub Actions workflow with `app_location: <subfolder>`, `skip_app_build: true`, its OWN deploy-token secret (never the main site's), and a `paths:` filter so a subfolder change never redeploys the whole site. See *Subfolder SWA workflow* in `reference.md`.
+- Azure SWA is offered in only five regions (none in Australia); static content is served from a global edge network regardless, so the region choice mainly affects attached Functions. East Asia is the standard pick for Australian audiences.
+- For a token-deployed SWA, omit repository properties from the Bicep entirely — `provider: 'GitHub'` + `repositoryUrl` without a `repositoryToken` adds friction, while a bare `Microsoft.Web/staticSites` deploys cleanly and is fed by the workflow's deploy token. Gate any `customDomains` child behind a bool param (`if (deployCustomDomain)`) because it fails validation until DNS exists. See *Token-deployed Bicep* in [`reference.md`](reference.md).
+- Store the deployment token in GitHub Secrets — never in code. The token grants full deployment access and must be rotated if it is ever exposed. Set it with `gh secret set --body` on a trimmed variable; piping the `az` CLI output straight into `gh secret set` from PowerShell corrupted the token and produced "deployment_token provided was invalid" at deploy time.
 - Gate a not-yet-provisioned deploy job with a repository VARIABLE in the job `if:` (`vars.X == 'true'`) — GitHub secrets are NOT available in `if:` conditions but repository variables are — so the workflow stays skipped (green CI) until you provision the resource and set the variable.
-- For a token-deployed SWA, omit repository properties from the Bicep entirely — `provider: 'GitHub'` + `repositoryUrl` without a `repositoryToken` adds friction, while a bare `Microsoft.Web/staticSites` deploys cleanly and is fed by the workflow's deploy token. Gate the `customDomains` child behind a bool param (`if (deployCustomDomain)`) because it fails validation until DNS exists. See *Token-deployed Bicep* in `reference.md`.
-- An SWA custom domain on a SUBDOMAIN uses CNAME-based validation (no apex TXT): add `<sub>` CNAME → `<defaultHostname>.azurestaticapps.net`, then bind it (`az staticwebapp hostname set` or Bicep `deployCustomDomain=true`) and Azure auto-issues the managed TLS cert — hostname `status: Ready` means validated and certificate issued.
-- An SWA static `redirect` route does NOT forward the query string to the destination (`/x?a=1` redirects to the bare target), which is fine for a QR encoding a bare path but must be revisited if a link needs UTM pass-through.
-- Serve `.vcf` (vCard) downloads reliably by adding `".vcf": "text/vcard"` to `mimeTypes` in `staticwebapp.config.json` — the default octet-stream is less reliable than an explicit `text/vcard` for iOS/Android "add to contacts".
+- Run a second independent SWA from one repo by deploying only a subfolder: a dedicated GitHub Actions workflow with `app_location: <subfolder>`, `skip_app_build: true`, its OWN deploy-token secret (never the main site's), and a `paths:` filter so a subfolder change never redeploys the whole site. See *Subfolder SWA workflow* in `reference.md`.
+- Host an authenticated SPA (e.g. a Supabase-auth portal) on its OWN subdomain, not as a subdirectory of the marketing site: a subdomain is a distinct browser origin, so the SPA localStorage/PKCE tokens, CSP, and XSS blast radius are isolated, and it deploys as two independent Static Web Apps (each with its own managed TLS + CI) instead of a reverse-proxy / Front Door subpath. Caveat: a subdomain is NOT a cookie trust boundary (the registrable domain is), so use host-only / `__Host-` cookies and never wildcard the CSP to `*.yourdomain`.
+- Azure SWA cancels an in-progress deployment when a newer push arrives, producing a GitHub Actions failure notification even though the site deploys correctly from the later commit. Verify no deployment is running (`gh run list --limit 3`) before pushing to avoid spurious failure alerts.
+- Ship a baseline `staticwebapp.config.json` with the first deploy — security headers in `globalHeaders` (not a `/*` route), a short global `Cache-Control`, `.xml`/`.json` MIME types and an explicit `/sitemap.xml` route — then hand the file to `static-website-config-and-csp` for caching tiers, hidden files, redirects and CSP.
+- Custom domains are a separate lifecycle from provisioning: publish DNS, bind and prove TLS with `azure-swa-custom-domains` after this skill's deploy is green.
 
 ## Process
 
-1. **Confirm inputs** — Domain name, DNS provider, Azure subscription, GitHub repo. Ask for anything missing.
+1. **Confirm inputs** — domain, audience region, Azure subscription, GitHub repo, single vs multi-site layout. Ask for anything missing.
 
 2. **Design the resource structure**
-   - Resource group: `rg-<workload>-<env>` (e.g. `rg-powrdata-prod`)
-   - SWA resource: `stapp-<workload>-<env>` (e.g. `stapp-powrdata-prod`)
-   - Region: select based on proximity to primary audience
+   - Resource group: `rg-<workload>-<env>`; SWA: `stapp-<workload>-<env>` (one per site — marketing, `go.<domain>`, portal)
+   - Region: East Asia for Australian audiences (edge-served regardless)
 
 3. **Write the Bicep template** (`infra/main.bicep`)
-   - Define SWA resource with `sku: { name: 'Free', tier: 'Free' }`
-   - Use `existing` keyword if the resource already exists; otherwise create it
-   - Output: `defaultHostname`, `siteName`, `resourceGroupName`
-   - Token-deployed SWA: omit `repositoryUrl`/`provider`/`branch` — a bare `Microsoft.Web/staticSites` deploys cleanly
-   - Do not hardcode the apex domain in Bicep — manage it post-deploy via CLI; a subdomain `customDomains` child may sit behind `if (deployCustomDomain)`, enabled only once its CNAME exists
+   - Bare `Microsoft.Web/staticSites` with `sku: { name: 'Free', tier: 'Free' }`, `properties: {}` — no repository properties
+   - Optional `customDomains` child behind `if (deployCustomDomain)`, default `false`
+   - Use `existing` if the resource already exists; outputs `defaultHostname`, `siteName`, `resourceGroupName`
 
-4. **Write the parameters file** (`infra/parameters/prod.parameters.json`)
-   - Include `siteName`, `location`, `skuName` (plus `deployCustomDomain`/`customDomain` if used); no repository properties for a token-deployed SWA
-   - No secrets in parameters files
+4. **Write the parameters file** (`infra/parameters/prod.parameters.json`) — `siteName`, `location`, `skuName` (+ `deployCustomDomain`/`customDomain` if used); no secrets
 
-5. **Write deploy scripts** (`scripts/deploy-infra.ps1` and `scripts/deploy-infra.sh`)
-   - Default `ResourceGroup` to the CAF-named resource group
-   - Include `--what-if` flag support
-   - Avoid `2>&1` on native executables in PowerShell 5.1 — use `2>$null` instead
+5. **Write deploy scripts** (`scripts/deploy-infra.ps1` and `.sh`) — default to the CAF resource group, support `--what-if`, avoid `2>&1` on native executables in PowerShell 5.1
 
-6. **Write `staticwebapp.config.json`**
-   - Add explicit route for `/sitemap.xml` with `Content-Type: application/xml`
-   - Add security headers to `globalHeaders` (not `/*` — route headers only apply to HTML responses)
-   - Add global `Cache-Control` header
-   - Register `.xml` and `.json` MIME types (and `".vcf": "text/vcard"` if serving vCards)
-   - Block internal files (docs, infra, scripts, dotfiles) with directory `/*` blocks plus exact-match root-file routes, each `"statusCode": 404`
+6. **Write the baseline `staticwebapp.config.json`** — `globalHeaders` security headers + `Cache-Control: public, must-revalidate, max-age=30`, `.xml`/`.json` MIME types, `/sitemap.xml` route
 
 7. **Configure GitHub Actions**
-   - Retrieve deployment token: `az staticwebapp secrets list --name <name> --resource-group <rg>`
-   - Store as GitHub Secret via `gh secret set`
-   - Workflow: single deploy job using the SWA deploy action with `app_location: "/"`, `api_location: ""`, `output_location: "/"`
-   - Not yet provisioned? Gate the job with `if: vars.<FLAG> == 'true'` (a repository variable, not a secret) so CI stays green until the resource exists
+   - Deployment token: `az staticwebapp secrets list --name <name> --resource-group <rg>` → `$t = (…).properties.apiKey.Trim()` → `gh secret set AZURE_SWA_TOKEN --body $t`
+   - Workflow: single deploy job with `app_location: "/"`, `api_location: ""`, `output_location: "/"`
+   - Not yet provisioned? `if: vars.<FLAG> == 'true'` on the job; set the variable after Bicep succeeds
    - Second SWA from a subfolder: separate workflow, `app_location: <subfolder>`, `skip_app_build: true`, its own token secret, `paths:` filter
 
-8. **Configure DNS**
-   - www: CNAME → `<swa-default-hostname>` (e.g. `ambitious-ground-xxx.azurestaticapps.net`)
-   - Apex: A record → SWA IP (obtain via `nslookup <swa-default-hostname>`)
-   - If DNS provider supports ALIAS/ANAME, use that for apex instead of a static A record
+8. **Deploy and confirm** — Bicep `--what-if` then deploy; push; `gh run watch`; fetch `https://<defaultHostname>/`
 
-9. **Add custom domains to Azure SWA**
-   - www: `az staticwebapp hostname set` — works after CNAME propagates
-   - Apex: use `az rest --method put` with `validationMethod: dns-txt-token`, add the returned TXT record to DNS, then complete validation
-   - Other subdomains (e.g. `go.<domain>`): CNAME → default hostname, then `hostname set` or Bicep `deployCustomDomain=true` — CNAME validation, no TXT
-   - Wait for all to reach `Ready` status (validated + managed TLS cert issued)
+9. **Hand off** — custom domains, DNS and TLS → `azure-swa-custom-domains`; routing, caching, CSP, hidden files → `static-website-config-and-csp`
 
-10. **Validate**
-    - Run validation script: checks DNS, HTTPS cert, HTTP→HTTPS redirect, apex→www redirect
-    - Verify `sitemap.xml` and `robots.txt` are reachable
-    - Confirm security headers are present
-
-11. **Document the deployment**
-    - Record current SWA hostname, IP, resource names, deployment secret name, DNS records
-    - Note that the apex A record IP may change after Azure infrastructure events
+10. **Document the deployment** — SWA name(s), default hostname(s), secret and variable names, workflow files, subfolder layout
 
 ## Output format
 
 The AI should produce:
 
-1. **Resource naming summary** — resource group name, SWA name, region, DNS target hostname
+1. **Resource naming summary** — resource group, SWA name(s), region, default hostname(s)
 2. **Bicep template** — complete `infra/main.bicep` content
 3. **Parameters file** — complete `infra/parameters/prod.parameters.json` content
 4. **Deploy scripts** — `deploy-infra.ps1` and `deploy-infra.sh`
-5. **`staticwebapp.config.json`** — complete file content
-6. **GitHub Actions workflow** — deploy job YAML (with `vars.<FLAG>` gating and any subfolder-SWA workflow)
-7. **DNS record table** — hostname, type, value, TTL for each required record
-8. **Custom domain CLI commands** — `az staticwebapp hostname set` (www / subdomains) and `az rest` commands for apex validation
-9. **Validation script** — checks DNS, HTTPS, redirects
-10. **Post-deployment checklist** — confirm each layer is live
+5. **Baseline `staticwebapp.config.json`** — headers, cache, MIME, sitemap route
+6. **GitHub Actions workflow(s)** — deploy job YAML, `vars.<FLAG>` gating, any subfolder-SWA workflow, secret/variable names
+7. **Hand-off notes** — what `azure-swa-custom-domains` and `static-website-config-and-csp` pick up next
+8. **Post-deployment checklist** — confirm each layer is live on the default hostname
 
 ## Quality checklist
 
-- [ ] Resources named using CAF conventions
-- [ ] Deployment token stored in GitHub Secrets, not in any file
-- [ ] `staticwebapp.config.json` has explicit route for `sitemap.xml`
-- [ ] Security headers present on all response types — configured via `globalHeaders`, not `/*`
-- [ ] Both www and apex domains added to SWA and showing `Ready`
-- [ ] HTTPS working on both domains
-- [ ] Apex redirecting to www (may take 20–30 min after domain validation)
-- [ ] Validation script runs clean
-- [ ] Apex A record IP documented with a note to re-verify if site stops resolving
-- [ ] Per-asset Cache-Control routes placed before the `/*` catch-all (CSS/JS, assets, HTML)
-- [ ] New CSP deployed in Report-Only mode and Console violations cleared before enforcement
-- [ ] No deployment running (`gh run list`) before pushing a new commit
-- [ ] No inline event-handler attributes (`onclick`) on a CSP site — handlers attached via external `addEventListener`
-- [ ] Shared-script DOM lookups guarded with null checks
-- [ ] Relocated pages use root-absolute asset paths and 301/302 redirects from old URLs
-- [ ] Internal files (docs, infra, scripts, dotfiles) return 404 on the live site — fetched and confirmed, using directory + exact-match routes (no `/*.md` wildcards)
-- [ ] Token-deployed Bicep has no repository properties; any subdomain `customDomains` child is gated behind a bool param
-- [ ] Not-yet-provisioned deploy jobs gated with `vars.<FLAG> == 'true'`; a second subfolder SWA has its own token secret and `paths:` filter
+- [ ] Resources named using CAF conventions; region chosen deliberately (East Asia for AU audiences)
+- [ ] Bicep for a token-deployed SWA has no repository properties; any `customDomains` child gated behind a bool
+- [ ] Deployment token stored via `gh secret set --body` on a trimmed value — never piped, never in a file
+- [ ] Not-yet-provisioned deploy jobs gated with `vars.<FLAG> == 'true'`, not a secret
+- [ ] Second subfolder SWA has its own token secret and `paths:` filter
+- [ ] Authenticated SPA lives on its own subdomain/SWA, with `__Host-` cookies and no `*.domain` CSP wildcard
+- [ ] Baseline config: security headers via `globalHeaders`, MIME types, `/sitemap.xml` route
+- [ ] No deployment running (`gh run list`) before pushing
+- [ ] Site reachable on the default hostname; hand-off items listed
 
 ## Avoid
 
 - Do not hardcode deployment tokens, subscription IDs, or DNS passwords in any file committed to version control
-- Do not manage the apex domain in Bicep — its `dns-txt-token` validation is a separate lifecycle from provisioning; a subdomain `customDomains` child is fine only behind a bool param that stays `false` until its CNAME exists
+- Do not pipe `az` output straight into `gh secret set` from PowerShell — trim into a variable and use `--body`
 - Do not put `repositoryUrl`/`provider: 'GitHub'` in Bicep for a token-deployed SWA — without a `repositoryToken` it only adds friction
-- Do not hide files with `/*.md`-style wildcards — wildcards match only at the end of a route; use directory blocks plus exact-match 404 routes, and remember everything under `app_location` is public otherwise
-- Do not gate a job on a secret in `if:` — secrets are unavailable there; use a repository variable. Do not reuse the main site's deploy token for a second SWA in the same repo
-- Do not assume a static `redirect` route forwards the query string — it drops it
-- Do not skip the `staticwebapp.config.json` MIME type registration for `.xml` files — Azure SWA will serve `sitemap.xml` as HTML (falling through to the SPA fallback) without it
+- Do not manage the apex domain in Bicep — its validation is a separate lifecycle (see `azure-swa-custom-domains`)
+- Do not gate a job on a secret in `if:` — secrets are unavailable there; use a repository variable. Do not reuse the main site's deploy token for a second SWA
+- Do not host an authenticated portal as a subpath of the marketing site — give it its own subdomain and SWA
+- Do not add security headers to the `/*` route — they only reach HTML responses; use `globalHeaders`
 - Do not use `2>&1` on native Azure CLI commands in PowerShell 5.1 — it wraps stderr into error records and breaks `ConvertFrom-Json`
-- Do not assume the apex A record IP is permanent — document it and verify if the site ever stops resolving at the apex
 - Do not rely on the Azure portal for reproducible deployments — all configuration should be expressible as Bicep or CLI
-- Do not add security headers to the `/*` route — they will only apply to HTML responses. Use `globalHeaders` to ensure headers are present on CSS, JS, image, and all other response types
-- Do not assume nav markup is identical across pages — inspect each page individually before editing
-- Do not place a mobile menu element after the closing `</header>` tag — it will not inherit backdrop-filter or sticky positioning
-- Do not add inline `<script>` blocks or inline `onclick`/`onchange` attributes when the site has a `script-src 'self'` CSP — they are silently blocked on the live site but appear to work locally, making the failure hard to diagnose; attach handlers via external `addEventListener`
-- Do not expect to drop `'unsafe-inline'` from `style-src` after only externalising scripts — inline styles and `style=` attributes must all be extracted first
-- Do not enforce a new CSP directly — deploy it as `Content-Security-Policy-Report-Only` first and clear all Console violations before switching to enforcement
-- Do not push while an Azure SWA deployment is still running — the cancelled run reports a spurious GitHub Actions failure; check `gh run list --limit 3` first
-- Do not leave shared-script DOM lookups unguarded — a missing element throws and halts all later script execution on that page
-- Do not keep relative asset paths when moving a page into a subfolder — they 404; switch to root-absolute paths
+- Do not push while an Azure SWA deployment is still running — the cancelled run reports a spurious failure; check `gh run list --limit 3` first
 
 ## Example usage
 
-> I'm setting up a static HTML website at `powrdata.com.au` with DNS managed at VentraIP. I want to host it on Azure Static Web Apps, deploy via GitHub Actions, and have both `www.powrdata.com.au` and the apex domain working with HTTPS. Give me the full setup.
+> I'm setting up a static HTML website at `powrdata.com.au` with the repo on GitHub. Provision it on Azure Static Web Apps with Bicep, wire up GitHub Actions with the deploy token, and lay it out so I can add a `go.` short-link site from a subfolder later. Give me the full setup — I'll do the DNS/custom domain step next.
 
 ---
 

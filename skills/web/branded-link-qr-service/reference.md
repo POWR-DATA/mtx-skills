@@ -50,7 +50,14 @@ OUT.write_text(json.dumps(build(), indent=2) + "\n", encoding="utf-8", newline="
 
 Incoming query strings are dropped by a static SWA redirect — keep printed URLs as bare paths and put UTM on the destination.
 
-## QR generation — `segno`
+## QR generation — `npx qrcode` (Node) or `segno` (Python)
+
+```bash
+npx -y qrcode -t svg -e Q -q 4 -d "<RRGGBB>FF" -l "FFFFFFFF" -o qr/<slug>.svg "https://go.<domain>/qr/<slug>"   # brand-colour print master
+npx -y qrcode -t svg -e Q -q 4 -d "000000FF"   -l "FFFFFFFF" -o qr/<slug>-black.svg "https://go.<domain>/qr/<slug>"
+npx -y qrcode -t png -w 1200 -e Q -q 4 -o qr/<slug>.png "https://go.<domain>/qr/<slug>"                       # proof
+```
+
 
 ```python
 import segno
@@ -80,3 +87,35 @@ assert dest.encode() not in open("qr/<person-slug>.png", "rb").read()
 ```bash
 curl -sI https://go.<domain>/card/<person-slug> | grep -iE '^(HTTP|location)'   # expect 302 + registry destination
 ```
+
+## ACA escape hatch — Caddy redirect host, no image build
+
+Use when SWA custom-domain binding is wedged. Domain validation: `asuid.<host>` TXT + CNAME to the ACA ingress FQDN; managed cert is free; scale-to-zero. Routes live in the Caddyfile secret below — amend here and redeploy so they stay in source control.
+
+```bicep
+var caddyfile = '''
+:8080 {
+  route {
+    redir /qr/<campaign> https://www.<domain>/promotions/<campaign>?src=qr 302
+    redir /<campaign> https://www.<domain>/promotions/<campaign>?src=url 302
+    redir https://www.<domain>/ 302
+  }
+}
+'''
+// ...
+configuration: {
+  ingress: { external: true, targetPort: 8080 }
+  secrets: [ { name: 'caddyfile', value: caddyfile } ]
+}
+template: {
+  containers: [ {
+    image: 'docker.io/library/caddy:2.8'
+    command: ['caddy', 'run', '--config', '/mnt/secrets/caddyfile', '--adapter', 'caddyfile']
+    volumeMounts: [ { volumeName: 'config', mountPath: '/mnt/secrets' } ]
+  } ]
+  scale: { minReplicas: 0, maxReplicas: 2 }
+  volumes: [ { name: 'config', storageType: 'Secret' } ]
+}
+```
+
+Custom-domain binding on ACA (managed cert, `bindingType Disabled` re-bind fix): see `flet-aca-deploy` *Custom domain*.

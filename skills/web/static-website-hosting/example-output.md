@@ -13,7 +13,7 @@
 | Region | `australiaeast` |
 | SWA default hostname | `<assigned after deploy>.azurestaticapps.net` |
 | Primary domain | `www.example.com.au` |
-| Apex domain | `example.com.au` (redirects to www automatically) |
+| Apex domain | `example.com.au` (bound next via Azure SWA Custom Domains) |
 
 ---
 
@@ -69,11 +69,7 @@ output resourceGroupName string = resourceGroup().name
       "headers": {
         "Content-Type": "application/xml"
       }
-    },
-    { "route": "/infra/*",   "statusCode": 404 },
-    { "route": "/scripts/*", "statusCode": 404 },
-    { "route": "/.github/*", "statusCode": 404 },
-    { "route": "/README.md", "statusCode": 404 }
+    }
   ],
   "responseOverrides": {
     "404": {
@@ -96,43 +92,35 @@ output resourceGroupName string = resourceGroup().name
 
 ---
 
-## DNS records
+## GitHub Actions workflow — `.github/workflows/deploy.yml`
 
-| Hostname | Type | Value | TTL |
-|---|---|---|---|
-| `www` | CNAME | `<swa-default-hostname>.azurestaticapps.net` | 3600 |
-| `@` (apex) | A | `<IP from nslookup of SWA hostname>` | 3600 |
+```yaml
+name: Deploy site
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_SWA_TOKEN }}
+          action: upload
+          app_location: "/"
+          api_location: ""
+          output_location: "/"
+```
 
-> Obtain the A record IP after deploying: `nslookup <swa-default-hostname>.azurestaticapps.net 8.8.8.8`
-> Document this IP — re-verify it if the site ever stops resolving at the apex.
+Token: `$t = (az staticwebapp secrets list -n stapp-example-prod -g rg-example-prod | ConvertFrom-Json).properties.apiKey.Trim(); gh secret set AZURE_SWA_TOKEN --body $t` — not piped.
 
 ---
 
-## Custom domain CLI commands
+## Hand-off notes
 
-```bash
-# Add www domain (after CNAME propagates)
-az staticwebapp hostname set \
-  --name stapp-example-prod \
-  --resource-group rg-example-prod \
-  --hostname "www.example.com.au"
-
-# Get TXT validation token for apex domain
-az rest --method put \
-  --uri "https://management.azure.com/subscriptions/<sub-id>/resourceGroups/rg-example-prod/providers/Microsoft.Web/staticSites/stapp-example-prod/customDomains/example.com.au?api-version=2022-09-01" \
-  --body '{"properties":{"validationMethod":"dns-txt-token"}}'
-# Add the returned dns-txt-token value as a TXT record at @ in VentraIP, then:
-az staticwebapp hostname set \
-  --name stapp-example-prod \
-  --resource-group rg-example-prod \
-  --hostname "example.com.au"
-
-# Check status
-az staticwebapp hostname list \
-  --name stapp-example-prod \
-  --resource-group rg-example-prod \
-  --output table
-```
+- **Custom domains / DNS / TLS** → *Azure SWA Custom Domains*: `www` CNAME → `<swa-default-hostname>.azurestaticapps.net`; apex A record (VentraIP has no ALIAS) + `dns-txt-token` validation; make `www` the default domain for the apex redirect; prove TLS.
+- **Routes / caching / CSP** → *Static Website Config and CSP*: per-asset cache tiers, hidden-file 404 routes, CSP Report-Only → enforce.
 
 ---
 
@@ -140,12 +128,9 @@ az staticwebapp hostname list \
 
 - [ ] Bicep deployed successfully, SWA resource exists in `rg-example-prod`
 - [ ] GitHub Actions workflow running on push to `main`
-- [ ] CNAME `www` → SWA hostname propagated (`nslookup www.example.com.au 8.8.8.8`)
-- [ ] A record apex → SWA IP propagated (`nslookup example.com.au 8.8.8.8`)
-- [ ] Both domains showing `Ready` in `az staticwebapp hostname list`
-- [ ] HTTPS working: `https://www.example.com.au` returns 200
-- [ ] Apex redirects to www: `http://example.com.au` → `https://www.example.com.au`
+- [ ] Site returns 200 on `https://<swa-default-hostname>.azurestaticapps.net/`
 - [ ] `sitemap.xml` reachable and returns `Content-Type: application/xml`
 - [ ] `robots.txt` reachable at `/robots.txt`
-- [ ] Security headers present in response (on CSS/JS/image responses too — set via `globalHeaders`)
-- [ ] Internal files return 404 on the live site: `curl -sI https://www.example.com.au/README.md` → `404`, body not served
+- [ ] Security headers present on CSS/JS/image responses too (set via `globalHeaders`)
+- [ ] `AZURE_SWA_TOKEN` secret set via `--body`; no token in any file
+- [ ] Hand-off items queued: custom domains (Azure SWA Custom Domains), routes/CSP (Static Website Config and CSP)

@@ -99,6 +99,13 @@ The shared bordered container with `flexDirection: 'row'` prevents an internal d
 
 ---
 
+## Fix 5 — Errors invisible on web, false "signed out" offline
+
+- `Alert.alert` calls for one-way errors replaced with a root-mounted toast host + `showToast()`; native `Alert` kept for the camera-permission prompt.
+- Write paths now call `supabase.auth.getSession()` (offline-safe) instead of `getUser()`; failures surface as a network toast, not a sign-out.
+- Error helper extracts `.message` from any object shape and maps "failed to fetch" / "network request failed" to "You're offline — try again shortly".
+- Onboarding redirect now keys off the server's `needs_onboarding` flag; the onboarding screen redirects already-onboarded users away.
+
 ## Remaining work
 
 - Smoke test all icon-dependent screens on `npx expo start --web` after font preloading is added
