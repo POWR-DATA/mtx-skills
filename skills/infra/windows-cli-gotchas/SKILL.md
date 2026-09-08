@@ -2,7 +2,7 @@
 name: windows-cli-gotchas
 description: Run native CLIs reliably from PowerShell 5.1 and Git Bash on Windows — quoting, JSON payloads, stderr and exit codes, MSYS path mangling, and which shell to use for which tool
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -34,6 +34,8 @@ Any time `az`, `gh`, `git`, `supabase`, `curl.exe`, `python`, or `npx` is being 
 - **`gh run list --jq` with `\(.headSha[0:7])` inside a PowerShell double-quoted string is parsed as a command.** Use `gh run list --commit <full-sha> --json databaseId --jq ".[0].databaseId"` (a short SHA returned nothing; the full SHA from `git rev-parse HEAD` worked), then `gh run watch <id> --exit-status` before curling, because new files 404 until the deploy workflow completes.
 - **Do not hand 8.3 short paths to `az`.** Passing a short path (e.g. `C:\Users\<USER>~1\...`) as a file argument to `az` appeared to break the command; resolve to the long form first with `(Get-Item $p).FullName`.
 - **Three more PowerShell traps seen in agent sessions:** chained `Remove-Item` calls were blocked by safety hooks (split them into separate commands); an array-literal `.Replace` chain silently no-op'd through operator precedence (use literal chained `.Replace` calls and check `git diff`); embedded double quotes in commit messages broke native argument parsing (use single-quoted here-strings for messages).
+- **`Invoke-WebRequest -MaximumRedirection 0` throws in Windows PowerShell 5.1** ("Operation is not valid due to the current state of the object") instead of returning the 3xx response; check redirect chains with `curl.exe -s -o NUL -w "%{http_code} %{redirect_url}"` instead.
+- **Backslash does not escape anything in PowerShell.** Writing `\"` inside a command string is a parser error ("Missing expression", "Unexpected token") — a habit imported from bash that bites when composing commands programmatically. Use single-quoted strings, here-strings, or doubled quotes (`""`) for literal quotes instead.
 - **A trailing `bash: line N: /c/Users/.../claude-XXXX-cwd: No such file or directory` with exit code 1 is harmless.** An agent running native commands through Git Bash on Windows often sees it even when the command succeeded — it is a working-directory-cleanup artefact; judge success by the command's real stdout, not that trailing exit status.
 
 ## Process
@@ -44,6 +46,7 @@ Any time `az`, `gh`, `git`, `supabase`, `curl.exe`, `python`, or `npx` is being 
 4. **Move JSON bodies to files** (UTF-8, no BOM) and pass `-d @file` / `--body-file`.
 5. **Never `2>&1` a native command in PowerShell 5.1** — read its JSON or run a `show`/`list` afterwards to confirm state.
 6. **Judge success by output** — ignore the `claude-XXXX-cwd` trailer; use full SHAs with `gh run list --commit`; `gh run watch --exit-status` before testing deployed files.
+7. **Check redirects with `curl.exe -w`**, never `Invoke-WebRequest -MaximumRedirection 0` — it throws on a 3xx in 5.1.
 
 ## Output format
 

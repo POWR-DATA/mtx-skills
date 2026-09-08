@@ -14,6 +14,8 @@ These skills cover the delivery lifecycle for static websites: infrastructure se
 | [Website SEO and Indexing](website-seo-and-indexing/) | Prepare a static website for search engine indexing and submit it to Google Search Console | — |
 | [Web Print PDF](web-print-pdf/) | Produce reliable print and PDF output from an HTML page with print-specific CSS | — |
 | [Branded Link QR Service](branded-link-qr-service/) | Build a permanent branded short-link and QR code service on a static host — 302 indirection, link registry, CI drift checks, validated QR generation | — |
+| [Marketing Email Campaign](marketing-email-campaign/) | Design, test and send a marketing email campaign — template, seed-test protocol, Spam Act compliance, scanner-safe unsubscribe, deliverability forensics, warm-up batching | Resend Email Sending (app) |
+| [Email Address Obfuscation](email-address-obfuscation/) | Protect published email addresses from scrapers — JavaScript-assembled mailto links, accessible fallbacks, CSP-clean implementation, payload verification | — |
 
 ## Suggested delivery sequence
 

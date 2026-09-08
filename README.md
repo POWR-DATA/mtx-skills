@@ -108,6 +108,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Supabase Edge Functions](skills/app/supabase-edge-functions/) | Deploy serverless functions to Supabase Edge Functions |
 | [Supabase Auth Email](skills/app/supabase-auth-email/) | Configure Supabase transactional auth email — custom SMTP, branded templates via the Management API, and reliable confirm/reset flows |
 | [Supabase Marketing Backend](skills/app/supabase-marketing-backend/) | Use Supabase as the backend for a static marketing site — insert-only public forms on the anon key with RLS, a privacy-tiered page-hit beacon, reader roles, and the RLS/view leaks that bite |
+| [Resend Email Sending](skills/app/resend-email-sending/) | Operate Resend as an application's email provider — API key and domain scoping, marketing vs transactional stream separation, Svix-signed delivery webhooks with suppression |
 
 ### Web skills
 
@@ -119,6 +120,8 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Website SEO and Indexing](skills/web/website-seo-and-indexing/) | Optimise website structure and content for search engine indexing |
 | [Web Print PDF](skills/web/web-print-pdf/) | Produce reliable print and PDF output from an HTML page with print-specific CSS |
 | [Branded Link QR Service](skills/web/branded-link-qr-service/) | Build a permanent branded short-link and QR code service on a static host — 302 indirection, link registry, CI drift checks, validated QR generation |
+| [Marketing Email Campaign](skills/web/marketing-email-campaign/) | Design, test and send a marketing email campaign — bulletproof HTML template, seed-test protocol, Spam Act compliance, scanner-safe unsubscribe, deliverability forensics, warm-up batching |
+| [Email Address Obfuscation](skills/web/email-address-obfuscation/) | Protect published email addresses from scrapers on a static site — JavaScript-assembled mailto links, accessible fallbacks, CSP-clean implementation, payload verification |
 
 ### Infrastructure skills
 

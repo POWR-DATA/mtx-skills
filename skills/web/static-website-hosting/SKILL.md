@@ -2,7 +2,7 @@
 name: static-website-hosting
 description: Provision and deploy a static website on Azure Static Web Apps with Bicep IaC, GitHub Actions CI/CD, deploy tokens, region choice, and multi-site layouts
 author: PowerData
-version: 2.0.0
+version: 2.1.0
 license: MIT
 ---
 
@@ -47,6 +47,9 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - Azure SWA cancels an in-progress deployment when a newer push arrives, producing a GitHub Actions failure notification even though the site deploys correctly from the later commit. Verify no deployment is running (`gh run list --limit 3`) before pushing to avoid spurious failure alerts.
 - Ship a baseline `staticwebapp.config.json` with the first deploy — security headers in `globalHeaders` (not a `/*` route), a short global `Cache-Control`, `.xml`/`.json` MIME types and an explicit `/sitemap.xml` route — then hand the file to `static-website-config-and-csp` for caching tiers, hidden files, redirects and CSP.
 - Custom domains are a separate lifecycle from provisioning: publish DNS, bind and prove TLS with `azure-swa-custom-domains` after this skill's deploy is green.
+- In a multi-environment system NEVER deploy a change straight to prod — always deploy to DEV first, validate there, then promote the SAME validated build to prod as a deliberate, separately-approved step. Prod sitting behind dev (dev has validated fixes prod doesn't yet) is the correct state, not drift to "fix" by pushing untested code to prod.
+- For a no-build static site whose dev/prod backend switch is a single config file, keep the repo copy permanently prod and serve local dev from a staged scratch COPY (robocopy to temp excluding `.git`, overwrite the config with dev values, `npx serve` the copy): dev credentials become impossible to commit or deploy, and "local = dev, deployed = prod" is structural rather than a discipline.
+- Deploy a Vite SPA to a SEPARATE prod SWA by building with prod env overrides via a temporary gitignored `.env.production.local` (Vite loads `.local` over `.env.production`) that you DELETE right after, so an ordinary `npm run build` stays on dev config; swap a `staticwebapp.prod.config.json` (prod CSP/routes) over `dist/staticwebapp.config.json` before uploading. Deploy with `npx @azure/static-web-apps-cli deploy ./dist --deployment-token <t> --env production`, fetching the token via `az staticwebapp secrets list --name <swa> --resource-group <rg> --query properties.apiKey -o tsv`.
 
 ## Process
 
@@ -102,6 +105,7 @@ The AI should produce:
 - [ ] Authenticated SPA lives on its own subdomain/SWA, with `__Host-` cookies and no `*.domain` CSP wildcard
 - [ ] Baseline config: security headers via `globalHeaders`, MIME types, `/sitemap.xml` route
 - [ ] No deployment running (`gh run list`) before pushing
+- [ ] Changes deployed to dev first and validated; prod promotion is a separate approved step; any `.env.production.local` deleted right after a prod build
 - [ ] Site reachable on the default hostname; hand-off items listed
 
 ## Avoid
@@ -116,6 +120,8 @@ The AI should produce:
 - Do not use `2>&1` on native Azure CLI commands in PowerShell 5.1 — it wraps stderr into error records and breaks `ConvertFrom-Json`
 - Do not rely on the Azure portal for reproducible deployments — all configuration should be expressible as Bicep or CLI
 - Do not push while an Azure SWA deployment is still running — the cancelled run reports a spurious failure; check `gh run list --limit 3` first
+- Do not deploy straight to prod in a multi-env setup, or "fix" prod-behind-dev by pushing untested code — promote the validated build instead
+- Do not keep dev values in the repo copy of a config-switched static site — dev lives in a scratch copy; the repo stays prod
 
 ## Example usage
 

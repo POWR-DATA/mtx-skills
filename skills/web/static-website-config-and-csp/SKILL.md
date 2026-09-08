@@ -2,7 +2,7 @@
 name: static-website-config-and-csp
 description: Configure and safely change a live static site on Azure Static Web Apps — staticwebapp.config.json routes, headers, caching and MIME types, Content Security Policy, and the front-end gotchas of editing a static HTML site in production
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -38,6 +38,8 @@ Partial inputs are fine — infer from the repo and ask only where needed.
 - **Security headers go in `globalHeaders`, not a `/*` route.** Route-based headers apply only to HTML responses; `globalHeaders` covers CSS, JS, images — every response type.
 - **Cache: `Cache-Control: public, must-revalidate, max-age=30` globally on Free tier** (no long-lived invalidation), then override per asset type with routes placed *before* the `/*` catch-all: `/*.css` and `/*.js` at `max-age=3600`, `/assets/*` at `max-age=86400`, HTML at `max-age=0, must-revalidate`. Route order matters — the catch-all must be last.
 - **Everything under `app_location` is public unless a route hides it.** A committed doc, script or infra file is fetchable; a route with `"statusCode": 404` and no rewrite/redirect returns 404 without serving the body (verified live). Wildcards match only at the END of a route (`/docs/*`), so `/*.md` is unreliable — block directories plus exact-match root files (`/OPERATIONS.md`, `/.gitignore`). Dot-path routes work (`/.github/*`); the built-in `/.well-known/assetlinks.json` route proves it. See *Hiding internal files* in [`reference.md`](reference.md).
+- **SWA rejects `statusCode` combined with `rewrite` on a route** ("Status code cannot be specified for a rule with Rewrite") — the deploy fails config validation in about 30 seconds and the site keeps serving the previous version. To mask blocked paths as a branded 404 page, put `"allowedRoles": ["administrator"]` on the routes plus a `"401": { "rewrite": "/404.html", "statusCode": 404 }` responseOverride — `statusCode` plus `rewrite` IS allowed inside `responseOverrides`.
+- **An `<iframe srcDoc=...>` (about:srcdoc) inherits the EMBEDDING page's CSP**, so images/fonts loaded inside the iframe from an external host (e.g. an email preview pulling template images from the marketing site) are blocked unless the parent page's `img-src` allows that host — widen the global CSP `img-src`, not anything on the iframe.
 - **Register MIME types explicitly** — `.xml application/xml`, `.txt text/plain` (crawlers), `.json`, `.vcf text/vcard` (iOS/Android "add to contacts" is unreliable on octet-stream). Extensionless files such as `apple-app-site-association` are served with the wrong content type unless an explicit route sets `Content-Type: application/json`.
 - **A static `redirect` route drops the query string** (`/x?a=1` → bare target). Fine for a QR encoding a bare path; revisit if a link needs UTM pass-through.
 - **`script-src 'self'` silently blocks inline `<script>` blocks *and* inline handler attributes (`onclick`, `onchange`).** They work locally (`file://` has no CSP) and fail on the live site. All JS lives in external same-origin `.js` files; attach handlers with `addEventListener`.
@@ -82,6 +84,8 @@ Partial inputs are fine — infer from the repo and ask only where needed.
 
 - Adding security headers to the `/*` route — they only reach HTML responses
 - Hiding files with `/*.md`-style wildcards — wildcards match only at the end of a route
+- Combining `statusCode` with `rewrite` on a route — config validation rejects it and the deploy fails; that combination lives in `responseOverrides` only
+- Adding CSP directives to an `<iframe srcDoc>` — it inherits the parent page's policy; fix the parent's `img-src`
 - Assuming a `redirect` route forwards the query string — it drops it
 - Adding inline scripts or handler attributes to a `script-src 'self'` site — they pass locally and fail live
 - Dropping `'unsafe-inline'` from `style-src` before every inline style is extracted

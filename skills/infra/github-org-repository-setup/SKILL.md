@@ -2,7 +2,7 @@
 name: github-org-repository-setup
 description: Set up a new GitHub repository in an organisation with correct access, security, and baseline branch protection
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -33,6 +33,7 @@ Create and baseline a new organisation-owned GitHub repository without access su
 - **Do not enable billed features without policy approval.** Secret Protection, Code Security, and Code Quality can trigger charges on private/internal repositories.
 - **Use minimal branch protection first.** For labs and PoCs, start with a default-branch ruleset that blocks deletion and force pushes, then layer stricter controls later if needed.
 - **Record manual decisions.** Capture repo-level choices in a learning log so future repos follow repeatable standards.
+- **Separate transient registry errors from real findings in an `npm audit` CI step.** `npm audit` conflates transient npm-registry errors (503/502/ETIMEDOUT/"audit endpoint returned an error") with real vulnerability findings — both exit non-zero — so a naive step emails false "workflow failed" alerts whenever npm's registry blips. Grep the step output for transient-error signatures and retry-then-warn-and-pass on those (a registry outage must not fail the build) while a genuine findings exit still fails, and gate the workflow trigger on dependency-manifest paths (`package.json`/`package-lock.json`) so it doesn't run on unrelated code pushes (Dependabot's bump PRs re-trigger it).
 
 ## Process
 
@@ -67,6 +68,7 @@ Create and baseline a new organisation-owned GitHub repository without access su
 - Enabling billed security features as a default step in lab repositories.
 - Adding strict PR/status/signed-commit policies too early for single-owner PoCs.
 - Leaving branch deletion and force-push open on the default branch once the repo stabilises.
+- Letting an `npm audit` step fail the build on npm-registry outages — transient errors and real findings both exit non-zero; distinguish them.
 
 ## Example usage
 

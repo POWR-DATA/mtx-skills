@@ -2,7 +2,7 @@
 name: app-terms-and-policies
 description: Draft and publish Terms of Service and policy pages for a subscription app — unlisted preview publishing, billing wording that survives price changes, insurance-aware liability terms, and versioned in-app acceptance flows
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -35,6 +35,16 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 - **A bare `terms_accepted` boolean is inadequate.** Acceptance needs a configurable terms URL, explicit acceptance UI with links to Terms and Privacy, `terms_version` (equal to the effective date) plus `accepted_at`, and re-acceptance on version change.
 - **Keep the terms reachable and the flow flag-gated.** Links to Terms/Privacy must be reachable after onboarding, fees plus terms must be shown at checkout, and the whole acceptance flow sits behind a feature flag until publication so it can ship dark with the pages.
 - **Version by effective date.** `terms_version` equals the effective date shown on the published page; a revision is a new effective date and triggers re-acceptance.
+- **Publish in place, and distinguish finalised from launched.** An unlisted draft at its final URL publishes in place: remove the draft banner and every confirm-flag, set Effective and Last-updated dates (the effective date doubles as the platform's `terms_version` string), and notify acceptance-flow owners of the version. "Finalised" is not "publicly launched": keep noindex and stay out of nav and sitemap while apps link the page directly, and when a later legal review edits the live document, bump Last-updated and `terms_version` and re-notify.
+- **In-app-linked Terms must be in effect before real users or store review.** A "DRAFT / pending legal review" banner on a page the app links (e.g. a More-menu row) is both a legal gap and an app-review rejection trigger. Either finalise and date the document, or remove the in-app link until it is; an unlisted (noindex, not in nav) but in-effect page is fine.
+- **Phrase the liability cap as a greater-of, expressly subject to the ACL.** "Our total liability is limited to the GREATER OF the fees you have paid us in the 12 months before the claim and AUD $100" — the greater-of form guarantees the floor to every user including free/non-paying ones (state plainly which user type pays nothing so the floor visibly applies to them). The cap sits inside a "to the extent permitted by law" preamble alongside an explicit section stating non-excludable consumer guarantees are not excluded; an unqualified cap is unenforceable in an Australian consumer context (consumer guarantees and personal-injury liability cannot be limited for personal-use services) and is a rejection/complaint risk.
+- **Keep any indemnity narrow — the safe Australian shape.** Australian-drafted app terms routinely include a user indemnity, even free consumer wellbeing apps (Smiling Mind) and both sides of two-audience platforms (Halaxy consumer AND practitioner terms), but the unfair-contract-terms regime makes broad indemnities in standard-form consumer contracts risky. Draft it breach-scoped, reasonableness-limited and fault-excluded ("loss we reasonably incur arising from your breach or unlawful use, except to the extent we caused the loss"), and open the liability section "Subject to [the ACL section], and to the extent permitted by law" so cap and indemnity visibly sit under the consumer-guarantee carve-out.
+- **A consent-card-linked page is a hardcoded contract.** When an app's consent card links a web page, agree the path exactly and never move it. Scope the page to ONLY what the consent needs beyond existing documents (do not repeat crisis, age-gate or data-sharing text already in the in-app card and Terms — duplication drifts out of sync), state the points are additional to the Terms and Privacy Policy with links, and keep it unlisted, noindexed and beacon-free when the audience is patients.
+- **Content standards target conduct towards others, never honest self-expression.** For a journalling or mental-health app, cover abusive, discriminatory or hateful, sexually explicit, impersonating and spam conduct, with an explicit carve-out ("this is not a restriction on honest journalling") — raw language in a private or shared entry is the product working, and a profanity ban would prohibit exactly that. Pair the standards with a "we may remove or hide content, acting reasonably" right; benchmarks: Headspace has the fullest conduct list, and Recovery Record (the established eating-disorder app) deliberately has no illness-specific content bans.
+- **Integrate a benchmarking review by mapping, not rewriting.** Map every spec item against the current document first — most asks usually exist already, and the job is add-what-is-missing without duplication. Grep-verify the REMOVE list rather than trusting memory (HIPAA, GDPR machinery, "including but not limited to", fixed retention years), and add the OAIC-favoured layered structure by prepending a short plain-language "In Short" summary to the full policy rather than restructuring it.
+- **Factual infrastructure claims come from the actual configuration, not the vendor's nationality.** A review spec asserted a crash-reporting region was the United States while the deployed config was deliberately EU (the ingest endpoint hostname proves the region), and the claim flip-flopped in print within a day. When an upstream review contradicts the current document on a fact you cannot verify, apply-and-flag loudly for confirmation; the accurate disclosure pattern is "hosted in <region>; the provider is <country>-based and its authorised support personnel may access systems from <country>".
+- **Disclose sub-processors by purpose and country, as a maintained list.** Name each material provider with its PURPOSE and COUNTRY, mark the list "current as at the last-updated date" so it reads as maintained rather than stale, exclude app stores as distribution-not-processors of user data, distinguish hosting region from provider nationality where they differ, and describe substitutable categories (push-notification delivery) by function rather than freezing vendor names.
+- **A Last-updated bump does not automatically mean re-acceptance work.** First check whether the platform's acceptance is version-pinned or timestamp-only — a `terms_accepted_at` with no version column has no re-acceptance flow to trigger. If timestamp-only and pre-launch with few accepted users, record the new date as the future version-pinning baseline (in the deferred issue) instead of building re-acceptance reactively.
 
 ## Process
 
@@ -44,7 +54,8 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 4. **Insurance pass** — read the Certificate of Currency's Insured Business and sub-limits; request full policy wording from the broker; set the liability cap below cover; record the broker's answer on contractual liability.
 5. **Design the acceptance record** — `terms_version` (effective date), `accepted_at`, configurable terms URL, re-acceptance on version bump.
 6. **Build the flow behind a flag** — explicit acceptance UI with links, terms + fees at checkout, links reachable post-onboarding.
-7. **Publish** — remove banner/flags/noindex, add to sitemap and nav, set the effective date, flip the feature flag.
+7. **Finalise in place** — remove banner and confirm-flags, set Effective and Last-updated dates, notify acceptance-flow owners of the new `terms_version`; keep noindex/out-of-nav while only apps link the page.
+8. **Launch publicly** (when intended) — lift noindex, add to sitemap and nav, flip the feature flag; on any later revision bump Last-updated and `terms_version` and re-notify.
 
 ## Output format
 
@@ -62,6 +73,11 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 - [ ] Acceptance stores `terms_version` (effective date) + `accepted_at`; re-acceptance on version change
 - [ ] Terms/Privacy links reachable after onboarding; fees + terms shown at checkout
 - [ ] Acceptance flow behind a feature flag until publication
+- [ ] Liability cap uses the greater-of form, under a "to the extent permitted by law" preamble and expressly subject to the ACL carve-out; any indemnity breach-scoped, reasonableness-limited, fault-excluded
+- [ ] No draft banner remains on any page the app links; in-app-linked pages are in effect
+- [ ] Sub-processor list names purpose + country per provider and is marked "current as at" the last-updated date
+- [ ] Consent-card-linked page path agreed and frozen; page scoped to consent-only additions
+- [ ] Content standards conduct-scoped with an honest-journalling carve-out (where applicable)
 
 ## Avoid
 
@@ -71,6 +87,11 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 - Setting the liability cap at or above insurance limits
 - Shipping `terms_accepted = true` with no version or timestamp
 - Publishing the pages before the acceptance flow exists, or vice versa — flag-gate and flip together
+- Leaving a draft banner on a Terms page the app already links — legal gap and store-review rejection trigger
+- An unqualified liability cap or a broad "any claim arising from your use" indemnity in an Australian consumer contract
+- Repeating in-app consent-card or Terms text on a consent page — duplicated text drifts out of sync
+- Copying a review spec's factual claims (hosting regions) without checking the deployed configuration
+- Building a re-acceptance flow reactively when acceptance is timestamp-only — record the baseline and defer
 
 ## Example usage
 

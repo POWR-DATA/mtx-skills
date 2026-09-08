@@ -28,6 +28,7 @@ Guides the Android signing and Google Play Store publication process for any And
 | `README.md` | This file |
 | `example-input.md` | Example input for this skill |
 | `example-output.md` | Example output produced by this skill |
+| `reference.md` | Load-on-demand excerpts — keystore/signed-build/upload workflows, screenshot capture settings |
 
 ## How to use
 
