@@ -104,6 +104,7 @@ All core files must be complete and free of placeholder text before submission. 
 - Follow the folder naming convention: lowercase, hyphen-separated.
 - Include YAML frontmatter at the top of `SKILL.md` (required for Skillfish compatibility — see the [skill template](templates/skill-template/SKILL.template.md) for the correct format).
 - Write a short description in your pull request explaining the skill, the target user, and the intended use case.
+- Merge with **Delete branch** (`gh pr merge <n> --merge --delete-branch`). A PR whose base is another feature branch only retargets to `main` if that base branch is deleted when it merges — otherwise it lands on the stale branch, not `main`. Avoid stacking PRs where you can; if you must, merge and delete the base first.
 
 > **Note:** Skill contributions go under `skills/`. The `commands/` directory contains Claude Code slash commands — repo workflow tools, not library skills. Do not add library skills there.
 

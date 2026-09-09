@@ -33,6 +33,7 @@ contribute/CONTRIBUTING.md        # the full contribution standard (+ install.sh
 
 - **Skills are built from real project experience, not invented.** The path is: run `/mtx capture` during project work → run `/mtx update <path>` in this repo to route captured discoveries into skills. See [docs/contributors/contributing-skills.md](docs/contributors/contributing-skills.md).
 - **Never push to `main` directly.** Branch (`feat/`, `fix/`, `docs/`), commit, push the branch, open a PR for review. Branch protection enforces this.
+- **Merge with "Delete branch"** (`gh pr merge <n> --merge --delete-branch`). Merged branches are noise, and a PR stacked on another branch only retargets to `main` when its base branch is deleted at merge — otherwise it merges into the stale branch and never reaches `main`. Prefer not to stack; if you must, merge the base PR first, delete its branch, then merge the stacked one.
 - **CI** validates that every skill folder has `SKILL.md` + `README.md` and is listed in the root `README.md`. Run `/mtx validate <skill>` before raising a PR.
 
 ## Pointers
