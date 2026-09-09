@@ -2,7 +2,7 @@
 name: flet-aca-deploy
 description: Deploy a Flet web app to Azure Container Apps — covers all pitfalls: container startup, WebSocket transport, GHCR auth, ACA provisioning, revision forcing, and health diagnosis
 author: POWR-DATA
-version: 2.1.0
+version: 2.2.0
 license: MIT
 ---
 
@@ -43,6 +43,7 @@ After the Flet web Docker image is building and pushing to GHCR successfully (se
 - **Force a new revision on every deploy.** `az containerapp update --image ...:latest` may reuse a revision if the tag is unchanged; add `--revision-suffix r${{ github.run_number }}`. Use `az containerapp update` directly rather than `container-apps-deploy-action@v2`, which does not support revision suffixes.
 - **`az containerapp create --yaml <file>` still requires `-n` and `-g` on the command line** even though the YAML carries name and resource group; without them the extension prints usage and exits 2.
 - **A custom domain with a managed certificate can bind but stay `bindingType: Disabled`.** `az containerapp hostname bind` with a managed certificate can leave the binding Disabled after the certificate has issued (TLS still not serving 30 minutes later despite the "up to 20 minutes" note). Fix: confirm `az containerapp env certificate list --managed-certificates-only` shows the cert `Succeeded`, then re-run `hostname bind ... --certificate <managed-cert-name>`; `bindingType` flips to `SniEnabled` and TLS serves within minutes. Working order overall: publish CNAME plus `asuid.<host>` TXT, verify both via DoH and soak about 15 minutes, `hostname add`, `hostname bind`, poll the cert, re-bind with the cert name, then prove with `openssl s_client -servername <host>` showing `CN=<host>`. See *Custom domain* in `reference.md`.
+- **Never pass a multiline secret value as a CLI argument.** `az containerapp secret set` mangled a multiline Caddyfile, and the next revision went ActivationFailed while holding 100% traffic — serving 504s on a live host. Set multiline secrets by PATCHing the containerApps resource with `az rest` and a JSON file body (newlines survive as `\n`; `ConvertTo-Json` builds it safely), then roll a fresh `--revision-suffix`; a revision restart is not enough on its own. After ANY config change, verify the new revision shows Running with traffic AND curl the actual routes before declaring success.
 - **Script all provisioning in `infra/setup-azure.sh`.** Register `Microsoft.App` and `Microsoft.OperationalInsights` before creating the environment; build the SP credentials JSON manually (`--sdk-auth` is deprecated in CLI 2.37+); prefix `az` calls passing `/subscriptions/...` paths in Git bash with `MSYS_NO_PATHCONV=1`.
 
 ---
@@ -104,6 +105,7 @@ Present the deployment as:
 - `az containerapp update --image ...:latest` without `--revision-suffix` — may not create a new revision
 - `container-apps-deploy-action@v2` for forced revisions — no `--revision-suffix` support
 - Min replicas 0 — WebSocket cold-start breaks the UI
+- Multiline secret values as CLI arguments — they mangle and can take down the live revision; PATCH via `az rest` with a JSON file body and roll a fresh revision
 - `--sdk-auth` with `az ad sp create-for-rbac` — deprecated in CLI 2.37+
 - Unix-style paths in `az` from Git bash without `MSYS_NO_PATHCONV=1`
 - `az containerapp create --yaml` without `-n`/`-g` — prints usage and exits 2

@@ -2,7 +2,7 @@
 name: google-play-listing
 description: Sign and publish an Android app (AAB) to the Google Play Store — covers keystore generation, Play Console setup, store listing content, App Content declarations, and CI automation
 author: POWR-DATA
-version: 1.4.0
+version: 1.5.0
 aliases: [flet-store-submission]
 license: MIT
 ---
@@ -43,52 +43,24 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
 - **Chrome DevTools device emulation produces store-ready screenshots without a physical device.** Set a custom device using CSS pixel dimensions (not physical pixels) and a DPR that multiplies up to the required output resolution, then Ctrl+Shift+P → "Capture screenshot" exports at full physical resolution. Setting the viewport to physical pixels at DPR 1 renders content tiny — CSS pixels × DPR = physical output is the rule.
 - **Promoting Internal Testing → Production reuses the tested bundle — no re-upload.** The "Create production release" page pre-populates with the tested bundle. Countries/regions are configured at the track level (Production → Countries/regions), not per release — the release page errors if no countries are set at track level.
 - **The `r0adkll/upload-google-play` action requires a `whatsNewDirectory`.** Point it at a directory containing release-notes files (e.g. `whatsnew/whatsnew-en-AU`). If the directory does not exist, the deploy job fails — create it with at least one locale file before the first deploy.
-- **The 512×512 store-listing icon must be a flat square with no pre-applied rounded corners.** Google applies its own shaping; baked-in rounded corners produce a visible double-rounding gap. Export a flat square version for the store listing — the adaptive icon layers (foreground/background) are separate and handled differently.
+- **The 512×512 store-listing icon must be full-bleed square art with no baked rounding, bevel or shadow.** Google Play applies its OWN corner-rounding mask, so artwork with a baked rounded tile renders as an icon-within-an-icon. If only the tiled artwork exists, composite it full-bleed on a solid ground and zoom (~1.25x) so the baked corner/shadow edges fall outside the frame; the adaptive icon layers (foreground/background) are separate and handled differently.
+- **The 1024×500 feature graphic is a REQUIRED store-listing asset** (the listing won't complete without it) even though Play only displays it when the app is featured/promoted. A simple programmatic composition — brand gradient, app icon tile, wordmark, tagline matching the short description — is perfectly acceptable and can be generated in minutes rather than commissioned.
+- **Play phone screenshots must be 16:9 or 9:16 (sides 320–3840px)** — modern tall-phone captures (19.5:9) and 3:4 tablet-ish captures don't qualify, and promotion eligibility additionally needs at least 4 shots at 1080px+. Capture exact 1080×1920 from a web build with Chrome DevTools at CSS dimensions = target ÷ DPR, picking a DPR that preserves PHONE density — 540×960@2 renders airy/tablet-like; 360×640@3 or 432×768@2.5 look like a real phone.
+- **Label AI-generated imagery per asset in the review step's AI declaration.** Label every listing asset containing photorealistic AI-generated imagery — including AI-generated photos APPEARING INSIDE otherwise-genuine UI screenshots — while plain UI captures with no photographic content need no label. Over-labelling has no user-visible penalty; under-labelling risks a mislabelling flag during review, so when provenance is uncertain, label.
+- **For a sensitive-health app, keep condition-specific language out of store assets** even when it appears in-app: frame/crop screenshots so UI naming the condition stays out of shot, keep the supportive-tool disclaimer and a crisis line in the description, and keep listing copy to the neutral framing — this serves claim/regulatory discipline AND user privacy (a store listing is shoulder-surfable). Store screenshots come from seeded demo data, never real accounts.
+- **"Send app for review" stays locked until a release is SAVED on a reviewable track with at least one country selected.** For a new app, Publishing overview shows "complete the required steps in the app dashboard" until then — internal-testing uploads don't count, and a draft release left on an error (e.g. no countries) keeps the lock on. Once saved, submission bundles the release, listing and all App Content declarations into one review package, preceded by ~15 min of automatic "quick checks".
+- **Turn Managed publishing ON before submitting a release queued to "Start full rollout".** With it off, Google's approval auto-publishes to the store; with it on, the approved release parks under "Changes ready to publish" until you click — Play's equivalent of Apple's "Manually release this version" for holding go-live behind sign-off.
+- **Promote an uploaded AAB via "Add from library", never re-upload.** An AAB uploaded to any track lives in the app's bundle library; re-uploading the same version code is rejected as a duplicate. The "no deobfuscation file" warning on a first Expo/EAS bundle is advisory only, not a submission blocker.
 
 ## Process
 
 ### Android signing setup
 
 1. Generate the upload keystore in CI to avoid requiring Java/keytool locally. Add `ANDROID_STORE_PASSWORD` and `ANDROID_KEY_PASSWORD` as repo secrets first, then run a one-time `workflow_dispatch` workflow:
-   ```yaml
-   # .github/workflows/generate-keystore.yml (delete after use)
-   name: Generate Android Keystore
-   on:
-     workflow_dispatch:
-   jobs:
-     generate-keystore:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/setup-java@v4
-           with:
-             distribution: temurin
-             java-version: "17"
-         - name: Generate and encode keystore
-           run: |
-             keytool -genkey -v -keystore release.keystore \
-               -alias upload -keyalg RSA -keysize 2048 -validity 10000 \
-               -storepass "${{ secrets.ANDROID_STORE_PASSWORD }}" \
-               -keypass "${{ secrets.ANDROID_KEY_PASSWORD }}" \
-               -dname "CN=<AppName>, OU=Mobile, O=<OrgName>, L=<City>, S=<State>, C=<CountryCode>"
-             echo "==== COPY THIS ===="
-             base64 -w 0 release.keystore
-             echo "==== END ===="
-   ```
+   See *Generate-keystore workflow* in [`reference.md`](reference.md).
    Copy the base64 output → add as `ANDROID_KEYSTORE_BASE64` secret. Also add `ANDROID_KEY_ALIAS` (e.g. `upload`). Store all four secrets in a password manager before closing the browser tab. Delete the workflow file from the repo after use.
 
-2. Decode the keystore and pass signing env vars in the release workflow:
-   ```yaml
-   - name: Decode keystore
-     run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
-   - name: Build signed AAB
-     if: github.event_name == 'workflow_dispatch'
-     run: <your-build-command> appbundle
-     env:
-       ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/release.keystore
-       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-   ```
+2. Decode the keystore and pass signing env vars in the release workflow — see *Signed-build step* in `reference.md`.
 
 ### Google Play Console setup
 
@@ -124,16 +96,7 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
    - In Play Console → **Setup → API access**, link a Google Cloud project and create a service account with "Release manager" role. Download the JSON key file.
    - Add the JSON as `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` in GitHub Secrets.
    - Grant the service account email access in Play Console under Users and permissions with "Release apps to testing tracks" permission at minimum.
-   ```yaml
-   - name: Upload to Google Play
-     uses: r0adkll/upload-google-play@v1
-     with:
-       serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-       packageName: com.yourorg.yourapp
-       releaseFiles: build/<your-app>.aab
-       track: internal
-       status: completed
-   ```
+   Workflow step: see *Upload-to-Play step* in `reference.md`.
    `track` accepts `internal`, `alpha`, `beta`, or `production`. `status: completed` makes it live immediately; `status: draft` requires manual promotion in Play Console.
 
 ---
@@ -159,6 +122,10 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
 - [ ] Reviewer credentials are for a dedicated account, not a real user account
 - [ ] Internal Testing opt-in URL shared with testers before expecting them to see the app
 - [ ] Service account email granted access in Play Console before CI automation runs
+- [ ] Store icon is full-bleed square (no baked rounding/shadow); screenshots 16:9/9:16 with 4+ at 1080px+
+- [ ] AI-generated imagery labelled per asset in the AI declaration; health-condition language kept out of store assets
+- [ ] Release SAVED on a reviewable track with countries selected before expecting "Send app for review" to unlock
+- [ ] Managed publishing ON before submitting when go-live needs sign-off
 
 ## Avoid
 
@@ -174,7 +141,11 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
 - Resetting the upload key right before a release — the ~2 day server-enforced validation wait blocks all uploads until it passes
 - Panicking at a −100% device support figure on an empty draft release — it is an artefact of comparing against zero devices; attach a valid AAB
 - Configuring an `r0adkll/upload-google-play` deploy without a `whatsNewDirectory` and locale file — the job fails
-- Uploading a store-listing icon with baked-in rounded corners — Google double-rounds it; use a flat square 512×512
+- Uploading a store-listing icon with baked-in rounded corners — Google double-rounds it into an icon-within-an-icon; use full-bleed square 512×512
+- Submitting 19.5:9 tall-phone or 3:4 captures as phone screenshots — Play requires 16:9 / 9:16
+- Leaving Managed publishing off on a full-rollout release that still needs sign-off — approval auto-publishes
+- Re-uploading an AAB to promote it across tracks — use "Add from library"; the same version code is rejected
+- Blocking a submission on the "no deobfuscation file" warning — it is advisory only
 
 ## Example usage
 

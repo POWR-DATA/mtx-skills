@@ -13,6 +13,7 @@ These skills cover the full delivery lifecycle for Python-based multi-platform a
 | [Flet ACA Deploy](flet-aca-deploy/) | Deploy a Flet web app to Azure Container Apps | — |
 | [App Icon Asset Generation](app-icon-asset-generation/) | Generate a consistent application icon asset set from an approved high-resolution logo | — |
 | [Supabase Marketing Backend](supabase-marketing-backend/) | Supabase as the backend for a static marketing site — insert-only public forms on the anon key with RLS, a privacy-tiered page-hit beacon, reader roles, and the RLS/view leaks that bite | Excel Power Query Postgres (data) |
+| [Resend Email Sending](resend-email-sending/) | Resend as an application's email provider — API key and domain scoping, marketing vs transactional stream separation, Svix-signed delivery webhooks with suppression | Marketing Email Campaign (web) |
 
 ## Suggested delivery sequence
 

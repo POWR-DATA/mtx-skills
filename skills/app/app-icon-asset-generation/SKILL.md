@@ -1,8 +1,8 @@
-﻿---
+---
 name: app-icon-asset-generation
 description: Generate a consistent application icon asset set from an approved high-resolution logo, including large app assets, small UI icons, favicons, transparent PNGs, and SVG micro icons
 author: POWR-DATA
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -38,8 +38,7 @@ Provide as many of the following as available. Partial inputs are acceptable. Th
 - Transparent source logo if available
 - Existing app icon, splash image, favicon, or micro icon attempts
 - Target platforms, such as Android, iOS, Flutter, Flet, web, desktop, or PWA
-- Required output sizes
-- Required output formats, such as PNG, SVG, ICO, or WebP
+- Required output sizes and formats, such as PNG, SVG, ICO, or WebP
 - Background colours where the assets will be displayed
 - Whether the logo should have transparent background or fixed background
 - Whether small icons should be detailed or simplified
@@ -52,8 +51,7 @@ Provide as many of the following as available. Partial inputs are acceptable. Th
 - Treat the approved high-resolution logo as the source of truth.
 - Do not redesign the brand unless the user explicitly asks.
 - Preserve consistency between large assets and small assets.
-- Use transparent PNGs where possible so assets blend cleanly across backgrounds.
-- A file can be RGBA and still not be truly transparent. Confirm that background pixels have alpha=0.
+- Use transparent PNGs where possible so assets blend cleanly across backgrounds — and remember a file can be RGBA and still not be truly transparent: confirm background pixels have alpha=0.
 - Do not create separate background-coloured variants unless there is a strong reason. Transparent assets are usually safer.
 - Small icons are not simply large logos scaled down. They may need simplified shapes to remain readable.
 - Generate a micro icon as a simplified interpretation of the main logo, not as a new unrelated logo.
@@ -66,6 +64,8 @@ Provide as many of the following as available. Partial inputs are acceptable. Th
 - Always provide separate download links for each final file.
 - Do not provide one combined contact sheet as the only deliverable.
 - Make the exported files directly usable in the project.
+- For an AI-generated icon set: prompt for separate square images (never a sprite sheet), transparent background, no text, consistent thin-line style with exact hex colours, and attach the brand reference document to the generation prompt.
+- Post-process every AI-generated icon with an auto-crop (scan pixel bounds where alpha exceeds a threshold, pad about 8%, centre in a square) before resizing — generators leave large inconsistent margins that make icons render tiny at UI size; name each file for its destination slot (`icon-meal-logging.png`), never the generator's output name.
 
 ## Process
 

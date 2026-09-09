@@ -2,7 +2,7 @@
 name: website-seo-and-indexing
 description: Prepare a static website for search engine indexing and submit it to Google Search Console
 author: PowerData
-version: 1.6.0
+version: 1.7.0
 license: MIT
 ---
 
@@ -48,6 +48,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - When one `.html` URL duplicate is found in GSC, check all pages for the same pattern. If `index.html` creates a duplicate on one page, it almost certainly exists across the whole site.
 - OG image must use a solid background and be exactly 1200×630px and under 600KB. Transparent PNGs appear invisible or broken on social share cards — platforms render cards on varying backgrounds. WhatsApp in particular rejects oversized or transparent images. This failure only surfaces when a URL is actually shared, not during local testing.
 - `width` and `height` attributes on `<img>` elements serve aspect ratio reservation for CLS prevention, not display sizing. The browser uses them to pre-allocate space before the image loads. The ratio matters; exact pixel values do not need to match CSS dimensions.
+- In the Page indexing report, apex/http/non-canonical variants listed as "not indexed" ("Page with redirect", "Alternative page with proper canonical tag", "Duplicate without user-selected canonical") are canonicalisation working, not defects; the number to watch is indexed pages matching the sitemap. Do not press "Validate fix" on them — nothing is broken, and the recrawl just returns a "Failed" badge on a correct state. Variants keep stale classifications from their last-crawled date until Google recrawls, so a URL that 301s today may still display its old reason.
 - "Discovered – currently not indexed" in Search Console is not a technical error — it means Google knows the page exists but has not yet crawled it. The fix is URL Inspection → Request Indexing, not Validate Fix. Validate Fix is only for confirmed code changes that resolved a prior error.
 - The Google Indexing API requires OAuth Desktop app credentials, not a service account, when the Search Console property is a Domain property — Domain properties reject service account emails with "email not found". Either create a URL-prefix property (`https://www.<domain>/`) alongside the Domain property and add the service account as Owner there, or use OAuth with the Google account that owns the property.
 - The OAuth flow for the Indexing API saves access and refresh tokens to `token.json` after first browser login; subsequent runs refresh silently. Both `oauth-client.json` and `token.json` must be gitignored — they grant write access to your Search Console property.

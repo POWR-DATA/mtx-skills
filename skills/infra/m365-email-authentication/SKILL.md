@@ -2,7 +2,7 @@
 name: m365-email-authentication
 description: Enable DKIM, SPF and DMARC for a Microsoft 365 custom domain — the Defender portal path, per-domain CNAME values, negative-cache delays, and cross-resolver DNS verification
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -32,6 +32,8 @@ Whenever a new domain is stood up or DNS is being touched for a site launch: aud
 - **Click the domain name itself to create the keys.** Custom domains show `NoDKIMKeys` until you click the domain name (not its checkbox) to open the panel and create the keys, which then displays two CNAMEs; in current tenants the targets are `selectorN-<domain-dashed>._domainkey.<tenant>.<shard>-v1.dkim.mail.microsoft`, not the older `.onmicrosoft.com` form. The `<tenant>.onmicrosoft.com` row needs nothing from you.
 - **Never predict the second domain's CNAMEs from the first.** The DKIM shard letter differs per domain inside one tenant (`n-v1` for one domain, `r-v1` for the next); a predicted record "verified" against its own prediction for ten hours. Always copy the values from the Defender panel, and prove the chain end to end by resolving your CNAME and then the target TXT until you see `v=DKIM1; k=rsa; p=...`.
 - **The enable toggle can fail "CNAME record does not exist" for 30–60+ minutes after correct records are public** because Microsoft's resolvers negative-cache the earlier miss (the dialog's "up to 4 days" is boilerplate); it succeeded hours later with no DNS change. Enable the domain Microsoft has never looked up first, and retry the other one later rather than touching DNS again.
+- **DMARC aggregate reports are the audit trail and the tightening evidence.** Reports arrive daily at the `rua` mailbox from each provider that handled your mail (Microsoft and Google within days of the record existing); reports predating DKIM enablement show SPF-only passes, so keep them as the audit trail and use the post-enablement run as the evidence for moving `p=none` to `p=quarantine`. An inbox rule shunting them to a subfolder keeps a shared mailbox usable.
+- **A shared mailbox's display name is the sender name recipients see.** Audit it against brand rules when working in a tenant — one mailbox display-named with the domain-style name leaked off-brand naming into every email it sent; fix under admin.microsoft.com → Teams & groups → Shared mailboxes.
 - **Cross-check two public resolvers before declaring a record missing.** Google DoH (`dns.google/resolve`) can keep serving a stale negative answer from your own earlier lookup while Cloudflare DoH (`cloudflare-dns.com/dns-query` with `accept: application/dns-json`) already shows the record. See *DoH checks* in [`reference.md`](reference.md).
 
 ## Process
@@ -42,7 +44,8 @@ Whenever a new domain is stood up or DNS is being touched for a site launch: aud
 4. **Publish the CNAMEs** at the domain's DNS host; do not reuse another domain's shard letter.
 5. **Verify the chain** — resolve `selector1._domainkey.<domain>` → CNAME target → TXT `v=DKIM1; k=rsa; p=…` on two DoH resolvers.
 6. **Enable** — toggle DKIM on; on "CNAME record does not exist", wait (30–60+ min) and retry without changing DNS; enable never-looked-up domains first.
-7. **Tighten** — once DKIM signs and DMARC reports look clean, move `p=none` → `quarantine` → `reject`.
+7. **Tighten** — once DKIM signs and the post-enablement DMARC aggregate reports look clean, move `p=none` → `quarantine` → `reject`; add an inbox rule filing the daily reports to a subfolder.
+8. **Audit sender display names** — check each shared mailbox's display name against brand rules while in the tenant.
 
 ## Output format
 

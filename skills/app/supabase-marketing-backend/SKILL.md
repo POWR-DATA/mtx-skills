@@ -2,7 +2,7 @@
 name: supabase-marketing-backend
 description: Use Supabase as the backend for a static marketing site — insert-only public forms on the anon key with RLS, a privacy-tiered first-party page-hit beacon, reader roles for Excel, and the RLS/view leaks that bite
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -40,6 +40,9 @@ Partial inputs are acceptable — infer defaults and state them.
 - **Give the beacon a schema-lag fallback.** Post the enriched payload and on a 400 (columns not yet migrated) retry with the minimal payload, so the JS can deploy before the SQL migration runs and starts recording richer rows the moment it does.
 - **Bot friction that worked for a public anon-key insert endpoint:** a honeypot field, a 3-second minimum time-to-submit gate, server-side email and name check constraints, per-email uniqueness and a hard per-campaign row-cap trigger; the real safeguard is that incentives are granted manually, with Turnstile inside an Edge Function as the escalation path if abuse appears.
 - **`hidden` is defeated by any CSS `display` rule on the same element** (a `display:flex` success card showed on load); add `[hidden] { display: none !important; }` to the stylesheet.
+- **Read registrations as attribution ground truth and page hits as directional volume only.** Hits and form registrations are separate, deliberately unjoinable records (hits carry no identifiers), so their counts drift: an ad-blocker can swallow the fire-and-forget beacon while the essential form insert succeeds, and a return visit without the `?src` query logs as direct. A registration's source stamp reflects the query string at submit time, and a binary qr/url mapping means "url" covers every non-QR arrival.
+- **Campaign open/close lives in an anon-readable config table** (`campaign`, `closes_at`, `active`, `max_registrations`, `fallback_url`) that the page reads on load to swap the form for a closed panel — with the client FAIL-OPEN (a fetch blip never closes an open campaign) because the real close is enforced server-side by rejecting inserts; the submit handler catches the "have closed" rejection and shows the closed panel too. One registrations table serves every campaign via a `campaign` column, and printed or emailed short links never 404 after close — they redirect onward.
+- **Verify the beacon tag exists on every page you expect to measure before trusting analytics** (`git log -S` proves whether it was ever added): a campaign page recording zero campaign-tagged hits while its own form records registrations means missing instrumentation, not ad-blockers or user behaviour.
 
 ## Process
 
@@ -47,7 +50,7 @@ Partial inputs are acceptable — infer defaults and state them.
 2. **Write the policies** — RLS on; anon insert-only on both tables; SELECT policy per reader role; no anon SELECT anywhere.
 3. **Create views last and revoke** — any summary view gets `revoke select … from anon, authenticated` in the same migration.
 4. **Verify with curl** — 201 / 409 / `[]` / 400 as above, using only the anon key.
-5. **Wire the front end** — form JS with honeypot + 3 s gate + 409 → "already on the list"; beacon on all marketing pages + 404, minimal-payload fallback; `[hidden]` CSS rule; Supabase host in CSP `connect-src`.
+5. **Wire the front end** — form JS with honeypot + 3 s gate + 409 → "already on the list"; beacon on all marketing pages + 404 (verify the tag is actually on each page), minimal-payload fallback; `[hidden]` CSS rule; Supabase host in CSP `connect-src`; campaign page reads the config table on load, fail-open.
 6. **Add readers** — role with a strong password (no `%`), `GRANT` + `SELECT` policies, session-pooler connection details handed over (see `excel-power-query-postgres` for the Excel side).
 7. **Publish the privacy note** and record which fields are collected and why.
 
@@ -68,6 +71,8 @@ Partial inputs are acceptable — infer defaults and state them.
 - [ ] Reader roles have SELECT policies, not just GRANTs; pooler username carries `.<project-ref>`
 - [ ] Beacon: no IP/UA stored, region from timezone, on 404 page, not on auth pages, host in CSP `connect-src`, minimal-payload fallback on 400
 - [ ] Honeypot + time-to-submit gate + server constraints in place; incentives granted manually
+- [ ] Campaign close enforced server-side; client fail-open; post-close links redirect, never 404
+- [ ] Beacon tag verified present on every measured page; registrations treated as attribution ground truth
 - [ ] `[hidden] { display: none !important; }` in the stylesheet; privacy-policy section published
 
 ## Avoid

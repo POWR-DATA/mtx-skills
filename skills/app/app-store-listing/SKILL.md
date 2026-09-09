@@ -2,7 +2,7 @@
 name: app-store-listing
 description: Prepare and submit an iOS app to the App Store — App Store Connect setup, screenshot dimensions, App Privacy, TestFlight, review submission, and ASC API key
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -36,7 +36,12 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 - **Apple burns the build number even on a failed submission.** If `eas submit` (or any upload) fails mid-upload, Apple still registers that build number as used. Re-submitting the same build ID fails immediately with "build number already used". The fix is a fresh build with `autoIncrement: true` in `eas.json` so the next number is assigned automatically.
 - **TestFlight internal testing needs a group, testers, and an assigned build.** Create a group under TestFlight → Internal Testing, add testers by Apple ID email, and assign a build via the Builds tab. Internal testers receive no email invitation — the app appears directly in TestFlight once a build is assigned. Builds must be in "Ready to Test" status before they can be installed.
 - **The screenshot DPR is the mechanism, not the viewport size.** Setting the DevTools viewport to the physical pixel dimensions at DPR 1 renders content tiny. The correct approach is always CSS pixels × DPR = required physical output.
-- **In-app account deletion is mandatory for any app with account creation.** Apple has required it since June 2022. An external web form does **not** satisfy the requirement — the deletion path must be reachable from inside the app itself, or review rejects the submission.
+- **In-app account deletion is mandatory for any app with account creation.** Apple has required it since June 2022 (Guideline 5.1.1(v)). An external web form does **not** satisfy the requirement — verify before "Add for Review" that the app has a real in-app deletion flow whose delete action actually deletes, not just a link to a web delete page. In the same pass, check that any in-app Terms/Privacy links resolve to real, in-effect pages — a visible "DRAFT / not yet in effect" banner on a linked legal page is a rejection trigger.
+- **Provision reviewer credentials in the PRODUCTION backend the release build points at.** Store-review demo sign-in and any sign-up/invite code must exist in prod, not just dev — a prod build carrying a dev-only reviewer account fails App Review sign-in and gets rejected. Verify or seed them against prod as a submission-prep step whenever the store build targets prod.
+- **Select "Manually release this version" before submitting.** On approval the build sits in "Pending Developer Release" until you click, so you can bank Apple's review (the slow long-pole) ahead of legal/clinical sign-off without going public. Submitting for review is NOT the same as going live when manual release is set.
+- **There is no manual 1024 app-icon upload on iOS.** The App Icon populates on the version page only after you attach a build in the Build section — the icon ships inside the binary. Contrast Google Play, which DOES have a manual 512×512 icon upload; don't hunt for an iOS icon field.
+- **Pre-answer export compliance and IDFA to make the submit dialog prompt-free.** Set `ITSAppUsesNonExemptEncryption: false` in the build's Info.plist so export-compliance auto-resolves with no prompt, and answer the IDFA question "No" for an app with no ads/tracking.
+- **A "Guideline 2.1 — Information Needed" is an info-request, not a rejection.** Resolve it by REPLYING in the Resolution Center (answers + screen recordings), which re-activates the review — the "Resubmit to App Review" button staying greyed for a metadata info-request is normal, not a bug. Record requested demo videos on a throwaway production account minted for the purpose and deleted in-app at the end.
 
 ## Process
 

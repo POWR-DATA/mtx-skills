@@ -45,6 +45,14 @@ Load-on-demand excerpts for [`SKILL.md`](SKILL.md). Illustrative — load-bearin
 
 Hidden files: wildcards match only at the end of a route, so list root files exactly. Verify live: `curl -sI https://<host>/OPERATIONS.md` → `404`, body not served.
 
+To mask hidden paths as the branded 404 page instead (a bare `statusCode` + `rewrite` on a route fails config validation), gate with roles and map the 401:
+
+```json
+{ "route": "/docs/*", "allowedRoles": ["administrator"] },
+...
+"responseOverrides": { "401": { "rewrite": "/404.html", "statusCode": 404 } }
+```
+
 ## Per-route CSP for a hosted Supabase auth page
 
 ```json

@@ -2,7 +2,7 @@
 name: supabase-edge-functions
 description: Write, deploy, and debug Supabase Edge Functions — Deno import constraints, CLI auth, LLM provider integration, and cache invalidation patterns
 author: PowerData
-version: 1.3.0
+version: 1.4.0
 license: MIT
 ---
 
@@ -34,6 +34,7 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 - **Client-side caches will serve bad data even after the edge function is fixed — delete the bad row.** When an edge function writes incorrect data to a database cache table, the client will keep reading the bad row because stale checks typically only trigger when no row exists for the expected key. Delete the affected row directly in the Supabase SQL Editor to force a fresh fetch.
 - **New-format Supabase PATs (`sbp_v0_…`) are rejected by older CLI versions.** PATs issued in 2026 start with `sbp_v0_`, and the Supabase CLI (v2.101.0) rejects them with "Invalid access token format". There is no CLI workaround — set Edge Function secrets directly via the Supabase dashboard (Edge Functions → function → Secrets) instead.
 - **On Windows, `supabase login` stores credentials in Windows Credential Manager, not `~/.supabase/credentials`.** The token is saved under `LegacyGeneric:target=Supabase CLI:supabase` and can conflict with the `SUPABASE_ACCESS_TOKEN` environment variable or carry restricted permissions for management API operations. Remove it with `cmdkey /delete:"Supabase CLI:supabase"` if it causes auth conflicts.
+- **Updating a secret does not refresh already-warm function instances.** `supabase secrets set NAME=... --project-ref <ref>` leaves warm instances reading the stale value — redeploy the function (`supabase functions deploy <fn>`) so new instances boot with the new secret.
 - **The functions gateway rejects non-JWT bearer tokens before your code runs.** Any bearer that is not a JWT fails at the gateway with `UNAUTHORIZED_INVALID_JWT_FORMAT`. A function that must accept a non-JWT shared secret (a system or cron caller) has to set `verify_jwt = false` in `supabase/config.toml` and do its own authorization inside. Keep `verify_jwt = true` for functions only ever called with a real user JWT (e.g. a signed-in user submitting feedback); flip it to false only when a trusted non-JWT caller is involved.
 - **Never pass `--no-verify-jwt` to `supabase functions deploy`.** It turns OFF the gateway JWT check for that function (a silent security regression); deploy WITHOUT the flag to keep the default `verify_jwt=true`, which the CLI takes from `config.toml` where only the intentionally-public functions are listed as `false`. Verify the live state empirically: an unauthenticated POST returns the gateway body `{"code":"UNAUTHORIZED_NO_AUTH_HEADER"}` (401) when `verify_jwt=true`, versus the function's own JSON when it is off.
 - **Schedule server-side invocation with `pg_cron` + `pg_net` + a Vault secret.** A `pg_cron` job calls a `dispatch_*()` SQL function that fires due rows at the edge function via `pg_net`, authenticated with a Vault secret (`vault.create_secret`) that must equal the function's env-var secret. Because that bearer is not a JWT, the target function needs `verify_jwt = false`. Verify delivery by checking `net._http_response` for a `200`.
