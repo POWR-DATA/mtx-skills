@@ -30,6 +30,18 @@ npx skillfish add POWR-DATA/mtx-skills
 
 This detects which AI coding agents are installed on your machine and copies the skills into the appropriate directory for each one.
 
+### Update skills you already have
+
+Skills are **copies**, not links — once the library gains a new version, your installed copy stays on the old one until you re-install. Use `--force` to update:
+
+```bash
+npx skillfish add POWR-DATA/mtx-skills --all --force --yes --global
+```
+
+`--force` is the important flag: without it Skillfish reports existing skills as "already installed" and skips them, so a skill that has moved from v1.0.0 to v2.2.0 silently stays on v1.0.0. `--all` skips the selection prompt, `--yes` skips confirmations, and `--global` pins the install to your home directory rather than the current project.
+
+Run this whenever the library has been updated.
+
 ### Install Skillfish globally (optional)
 
 If you use Skillfish regularly, install it globally:

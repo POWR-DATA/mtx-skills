@@ -320,9 +320,23 @@ _Last refreshed: YYYY-MM-DDTHH:MM:SS_
 
 Group skills by category folder. Use the correct user-home path for the platform (Windows: `C:\Users\<username>\.claude\`, macOS/Linux: `~/.claude/`). This file is read by the capture workflow in other projects to identify existing skills before routing discoveries.
 
-#### Step 7: Report
+#### Step 7: Sync the installed skills
 
-List every skill updated, every skill created, and the final state of the captures file (entries remaining, entries deleted).
+The library is the source of truth, but AI agents read skills from their own directories — Claude Code from `<user-home>/.claude/skills/`, Cursor from `~/.cursor/skills/`, Codex from `~/.codex/skills/`, GitHub Copilot from `~/.copilot/skills/`. Those are **copies**, so every merged update leaves them stale until they are re-installed.
+
+Remind the user to re-sync once this run's PR is merged to `main`:
+
+```bash
+npx skillfish add POWR-DATA/mtx-skills --all --force --yes --global
+```
+
+`--force` is essential — without it Skillfish reports existing skills as "already installed" and silently skips them, so updated skills keep their old version. `--all` skips the selection prompt, `--yes` skips confirmations, `--global` pins the install to the home directory rather than the current project.
+
+Do not run the sync before the PR is merged: it installs from the remote `main` branch, not the working tree.
+
+#### Step 8: Report
+
+List every skill updated, every skill created, and the final state of the captures file (entries remaining, entries deleted). Close with the re-sync command from Step 7.
 
 ---
 
@@ -396,9 +410,13 @@ Entries for other skills that were not part of this run remain untouched.
 
 After all edits are complete, regenerate `<user-home>/.claude/mtx-catalog.md` using the same format and rules as capture-centric Step 6. Read descriptions from all `skills/*/SKILL.md` files and write the catalog grouped by category. This keeps the catalog current even when only a single skill was updated.
 
-#### Step 9: Report
+#### Step 9: Sync the installed skills
 
-List every file changed and what was modified. Note the old and new version number.
+Remind the user to re-sync their installed copies once the PR is merged, using the command and reasoning in capture-centric Step 7.
+
+#### Step 10: Report
+
+List every file changed and what was modified. Note the old and new version number. Close with the re-sync command from Step 9.
 
 ---
 
