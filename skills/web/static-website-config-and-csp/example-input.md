@@ -18,5 +18,6 @@ A five-page static HTML marketing site (no build step, no templating) is live on
 3. Move `/reset-password.html` to `/account/reset-password` — the mobile app deep-links to the old URL
 4. Introduce a CSP with `script-src 'self'` — there are a couple of `onclick=""` attributes and one inline `<script>` on the contact page
 5. Serve a `team/jane-citizen.vcf` contact card and the `/.well-known/apple-app-site-association` file correctly
+6. Reuse a partner site's logo currently hotlinked from `https://partner.example.com/logo.svg` — keep `img-src 'self'`
 
 **Constraint:** users reported seeing "the old JavaScript" for an hour after the last deploy.

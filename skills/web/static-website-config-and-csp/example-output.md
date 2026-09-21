@@ -51,6 +51,7 @@ Notes: headers moved from `/*` to `globalHeaders` (they were missing on CSS/JS/i
 | Verify | open every page, DevTools Console shows zero CSP report violations |
 | Enforce | rename header to `Content-Security-Policy`; deploy |
 | Later | extract inline styles, then drop `'unsafe-inline'` from `style-src` in a second Report-Only pass |
+| Assets | partner logo: copy into `/assets/partner-logo.svg` and point `src` at that same-origin path — `img-src 'self'` blocks the hotlink; do not widen `img-src` for an asset you intend to serve |
 
 ## 3. Page change list
 
@@ -58,6 +59,7 @@ Notes: headers moved from `/*` to `globalHeaders` (they were missing on CSS/JS/i
 - **`/scripts.js`** — `var y = document.getElementById('year'); if (y) …`; contact form wiring null-guarded (`if (form) form.addEventListener(…)`) so it no longer throws on the other four pages.
 - **`/account/reset-password.html`** — moved; `styles.css` → `/styles.css`, `assets/logo.svg` → `/assets/logo.svg`; supabase-js `<script>` kept on the jsDelivr CDN under its per-route CSP. App-side follow-up logged: update the intent-filter path and the Supabase redirect URL to `/account/reset-password` (assetlinks unchanged — domain-wide).
 - **`/team/jane-citizen.vcf`** — added; served as `text/vcard`.
+- **Partner logo** — copied into `/assets/partner-logo.svg`; all `src` attributes now same-origin (the previous `https://partner.example.com/logo.svg` hotlink would be blocked by `img-src 'self'`).
 
 ## 4. Live verification
 

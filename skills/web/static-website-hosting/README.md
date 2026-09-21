@@ -13,6 +13,7 @@ This skill guides an AI through standing up a production-ready static website: A
 - Auditing an existing setup for missing IaC or CI hygiene
 - Rebuilding or moving a site to a new resource group with CAF naming
 - Adding a second SWA (e.g. `go.<domain>` or an authenticated portal subdomain) from a subfolder of the same repo
+- Previewing a no-build static site whose pages use root-absolute asset paths (`/styles.css`, `/components.js`)
 
 ## Example use cases
 
@@ -20,6 +21,7 @@ This skill guides an AI through standing up a production-ready static website: A
 - Migrate a manually deployed static site to Bicep + GitHub Actions
 - Deploy a subfolder as its own SWA, gated in CI until the resource is provisioned
 - Decide where an authenticated Supabase portal should live relative to the marketing site
+- Serve the repo root with `python -m http.server` so root-absolute assets resolve, then confirm redirects and CSP only after SWA deploy
 
 ## Files in this folder
 
