@@ -2,7 +2,7 @@
 name: static-website-config-and-csp
 description: Configure and safely change a live static site on Azure Static Web Apps — staticwebapp.config.json routes, headers, caching and MIME types, Content Security Policy, and the front-end gotchas of editing a static HTML site in production
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -18,6 +18,7 @@ After the site is live (see `static-website-hosting`), whenever you:
 
 - Add or change headers, cache rules, MIME types, redirects, or rewrites in `staticwebapp.config.json`
 - Introduce or tighten a CSP, or add JavaScript/CSS to a CSP-protected site
+- Reuse another site's icons or images under `img-src 'self'` — copy the files into the repo; do not hotlink
 - Reorganise pages into subfolders, add a mobile menu, or edit shared markup across pages
 - Need to hide committed internal files, serve unusual file types (`.vcf`, extensionless well-known files), or host an auth page on the static site
 
@@ -40,6 +41,7 @@ Partial inputs are fine — infer from the repo and ask only where needed.
 - **Everything under `app_location` is public unless a route hides it.** A committed doc, script or infra file is fetchable; a route with `"statusCode": 404` and no rewrite/redirect returns 404 without serving the body (verified live). Wildcards match only at the END of a route (`/docs/*`), so `/*.md` is unreliable — block directories plus exact-match root files (`/OPERATIONS.md`, `/.gitignore`). Dot-path routes work (`/.github/*`); the built-in `/.well-known/assetlinks.json` route proves it. See *Hiding internal files* in [`reference.md`](reference.md).
 - **SWA rejects `statusCode` combined with `rewrite` on a route** ("Status code cannot be specified for a rule with Rewrite") — the deploy fails config validation in about 30 seconds and the site keeps serving the previous version. To mask blocked paths as a branded 404 page, put `"allowedRoles": ["administrator"]` on the routes plus a `"401": { "rewrite": "/404.html", "statusCode": 404 }` responseOverride — `statusCode` plus `rewrite` IS allowed inside `responseOverrides`.
 - **An `<iframe srcDoc=...>` (about:srcdoc) inherits the EMBEDDING page's CSP**, so images/fonts loaded inside the iframe from an external host (e.g. an email preview pulling template images from the marketing site) are blocked unless the parent page's `img-src` allows that host — widen the global CSP `img-src`, not anything on the iframe.
+- **A strict `img-src 'self'` CSP blocks hotlinking any cross-origin image**, so to reuse another site's icons or images you must copy the asset files into the repo and reference them same-origin. Widening `img-src` (the iframe case above) is for hosts that must load at runtime — not a substitute for copying assets you intend to serve.
 - **Register MIME types explicitly** — `.xml application/xml`, `.txt text/plain` (crawlers), `.json`, `.vcf text/vcard` (iOS/Android "add to contacts" is unreliable on octet-stream). Extensionless files such as `apple-app-site-association` are served with the wrong content type unless an explicit route sets `Content-Type: application/json`.
 - **A static `redirect` route drops the query string** (`/x?a=1` → bare target). Fine for a QR encoding a bare path; revisit if a link needs UTM pass-through.
 - **`script-src 'self'` silently blocks inline `<script>` blocks *and* inline handler attributes (`onclick`, `onchange`).** They work locally (`file://` has no CSP) and fail on the live site. All JS lives in external same-origin `.js` files; attach handlers with `addEventListener`.
@@ -57,7 +59,7 @@ Partial inputs are fine — infer from the repo and ask only where needed.
 1. **Read the current config and CSP**, and list every page and its shared components (nav, footer, scripts).
 2. **Headers & cache** — security headers in `globalHeaders`; global short cache; per-asset routes before `/*`.
 3. **MIME & routes** — sitemap/robots/well-known/`.vcf` entries; 404 routes for internal files (directory + exact-match); redirects/rewrites for moved pages.
-4. **CSP** — externalise scripts and handlers, then styles; deploy Report-Only, clear violations, enforce; per-route CSP for pages that need CDN/Supabase.
+4. **CSP** — externalise scripts and handlers, then styles; copy reused third-party images into the repo (same-origin) rather than hotlinking under `img-src 'self'`; deploy Report-Only, clear violations, enforce; per-route CSP for pages that need CDN/Supabase.
 5. **Front-end edits** — inspect each page's markup, place mobile nav in `<header>`, replace stale media rules, null-guard shared scripts, root-absolute assets on moved pages, bump `?v=`.
 6. **Deploy and verify live** — fetch the live URL for headers, 404s on hidden files, redirects, CSP console; hard refresh for cached JS/CSS.
 
@@ -75,6 +77,7 @@ Partial inputs are fine — infer from the repo and ask only where needed.
 - [ ] Internal files return 404 live via directory + exact-match routes (no `/*.md` wildcards)
 - [ ] `sitemap.xml`, `robots.txt`, extensionless well-known files, and `.vcf` served with correct `Content-Type`
 - [ ] No inline `<script>` blocks or `onclick`-style attributes on a CSP site; new CSP deployed Report-Only first, console clean
+- [ ] Reused third-party images/icons copied into the repo and referenced same-origin — not hotlinked under `img-src 'self'`
 - [ ] Shared-script DOM lookups null-guarded
 - [ ] Relocated pages: 301/302 redirects from old URLs, rewrite for the folder URL, root-absolute asset paths
 - [ ] Mobile nav inside `<header>`; stale mobile media rules replaced
@@ -86,6 +89,7 @@ Partial inputs are fine — infer from the repo and ask only where needed.
 - Hiding files with `/*.md`-style wildcards — wildcards match only at the end of a route
 - Combining `statusCode` with `rewrite` on a route — config validation rejects it and the deploy fails; that combination lives in `responseOverrides` only
 - Adding CSP directives to an `<iframe srcDoc>` — it inherits the parent page's policy; fix the parent's `img-src`
+- Hotlinking a cross-origin image on an `img-src 'self'` site — copy the file into the repo and reference it same-origin
 - Assuming a `redirect` route forwards the query string — it drops it
 - Adding inline scripts or handler attributes to a `script-src 'self'` site — they pass locally and fail live
 - Dropping `'unsafe-inline'` from `style-src` before every inline style is extracted

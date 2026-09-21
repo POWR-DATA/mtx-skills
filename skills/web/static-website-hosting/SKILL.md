@@ -2,7 +2,7 @@
 name: static-website-hosting
 description: Provision and deploy a static website on Azure Static Web Apps with Bicep IaC, GitHub Actions CI/CD, deploy tokens, region choice, and multi-site layouts
 author: PowerData
-version: 2.1.0
+version: 2.2.0
 license: MIT
 ---
 
@@ -20,7 +20,7 @@ Use this skill when setting up a new static website, migrating one from click-op
 - Automated deployment on push to main, including sites whose Azure resource does not exist yet
 - Clear operator documentation for future maintenance
 
-Also useful when auditing an existing deployment for gaps in IaC coverage or CI hygiene.
+Also useful when auditing an existing deployment for gaps in IaC coverage or CI hygiene, or when previewing a no-build site whose pages use root-absolute assets (`/styles.css`) — those paths do not resolve from `file://`.
 
 ## Inputs expected
 
@@ -49,6 +49,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - Custom domains are a separate lifecycle from provisioning: publish DNS, bind and prove TLS with `azure-swa-custom-domains` after this skill's deploy is green.
 - In a multi-environment system NEVER deploy a change straight to prod — always deploy to DEV first, validate there, then promote the SAME validated build to prod as a deliberate, separately-approved step. Prod sitting behind dev (dev has validated fixes prod doesn't yet) is the correct state, not drift to "fix" by pushing untested code to prod.
 - For a no-build static site whose dev/prod backend switch is a single config file, keep the repo copy permanently prod and serve local dev from a staged scratch COPY (robocopy to temp excluding `.git`, overwrite the config with dev values, `npx serve` the copy): dev credentials become impossible to commit or deploy, and "local = dev, deployed = prod" is structural rather than a discipline.
+- Preview a static site whose pages use root-absolute assets (`/styles.css`, `/components.js`) by serving the repo ROOT over HTTP — `python -m http.server <port> --directory <root>` — those paths do not resolve from `file://`. The plain server does NOT apply the SWA `staticwebapp.config.json` (clean-URL rewrites, redirects, CSP), so preview via `.html`/trailing-slash paths and confirm redirect/CSP/clean-URL behaviour only after deploy.
 - Deploy a Vite SPA to a SEPARATE prod SWA by building with prod env overrides via a temporary gitignored `.env.production.local` (Vite loads `.local` over `.env.production`) that you DELETE right after, so an ordinary `npm run build` stays on dev config; swap a `staticwebapp.prod.config.json` (prod CSP/routes) over `dist/staticwebapp.config.json` before uploading. Deploy with `npx @azure/static-web-apps-cli deploy ./dist --deployment-token <t> --env production`, fetching the token via `az staticwebapp secrets list --name <swa> --resource-group <rg> --query properties.apiKey -o tsv`.
 
 ## Process
@@ -76,11 +77,13 @@ Provide as many of the following as available. Partial inputs are acceptable —
    - Not yet provisioned? `if: vars.<FLAG> == 'true'` on the job; set the variable after Bicep succeeds
    - Second SWA from a subfolder: separate workflow, `app_location: <subfolder>`, `skip_app_build: true`, its own token secret, `paths:` filter
 
-8. **Deploy and confirm** — Bicep `--what-if` then deploy; push; `gh run watch`; fetch `https://<defaultHostname>/`
+8. **Preview locally** — serve the repo root over HTTP (`python -m http.server <port> --directory <root>`) so root-absolute assets resolve; they do not from `file://`. Preview via `.html`/trailing-slash paths — the plain server does not apply `staticwebapp.config.json`. Confirm redirects, CSP and clean URLs only after deploy.
 
-9. **Hand off** — custom domains, DNS and TLS → `azure-swa-custom-domains`; routing, caching, CSP, hidden files → `static-website-config-and-csp`
+9. **Deploy and confirm** — Bicep `--what-if` then deploy; push; `gh run watch`; fetch `https://<defaultHostname>/`
 
-10. **Document the deployment** — SWA name(s), default hostname(s), secret and variable names, workflow files, subfolder layout
+10. **Hand off** — custom domains, DNS and TLS → `azure-swa-custom-domains`; routing, caching, CSP, hidden files → `static-website-config-and-csp`
+
+11. **Document the deployment** — SWA name(s), default hostname(s), secret and variable names, workflow files, subfolder layout
 
 ## Output format
 
@@ -106,6 +109,7 @@ The AI should produce:
 - [ ] Baseline config: security headers via `globalHeaders`, MIME types, `/sitemap.xml` route
 - [ ] No deployment running (`gh run list`) before pushing
 - [ ] Changes deployed to dev first and validated; prod promotion is a separate approved step; any `.env.production.local` deleted right after a prod build
+- [ ] Root-absolute assets previewed by serving the repo root over HTTP (`python -m http.server --directory <root>`), not via `file://`; SWA-only behaviour (redirects, CSP, clean URLs) confirmed after deploy
 - [ ] Site reachable on the default hostname; hand-off items listed
 
 ## Avoid
@@ -122,6 +126,8 @@ The AI should produce:
 - Do not push while an Azure SWA deployment is still running — the cancelled run reports a spurious failure; check `gh run list --limit 3` first
 - Do not deploy straight to prod in a multi-env setup, or "fix" prod-behind-dev by pushing untested code — promote the validated build instead
 - Do not keep dev values in the repo copy of a config-switched static site — dev lives in a scratch copy; the repo stays prod
+- Do not open a site that uses root-absolute asset paths via `file://` — `/styles.css` will not resolve; serve the repo root over HTTP
+- Do not treat `python -m http.server` as a SWA preview — it does not apply `staticwebapp.config.json`; confirm redirects, CSP and clean URLs after deploy
 
 ## Example usage
 

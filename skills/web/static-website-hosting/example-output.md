@@ -126,6 +126,7 @@ Token: `$t = (az staticwebapp secrets list -n stapp-example-prod -g rg-example-p
 
 ## Post-deployment checklist
 
+- [ ] Local preview served from the repo root over HTTP (`python -m http.server 8080 --directory .`) — root-absolute `/styles.css` resolved; redirects/CSP/clean URLs not judged from this server
 - [ ] Bicep deployed successfully, SWA resource exists in `rg-example-prod`
 - [ ] GitHub Actions workflow running on push to `main`
 - [ ] Site returns 200 on `https://<swa-default-hostname>.azurestaticapps.net/`

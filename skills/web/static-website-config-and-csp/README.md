@@ -13,6 +13,7 @@ Covers everything that happens to a static site *after* it is provisioned and de
 - Moving pages into subfolders, adding a hamburger menu, or touching shared nav/footer markup
 - Repo files such as `docs/`, `infra/`, or `OPERATIONS.md` are fetchable on the live site
 - A `.vcf`, `apple-app-site-association`, or `sitemap.xml` is served with the wrong content type
+- Reusing another site's icons or images on a site with `img-src 'self'` — copy the files in rather than hotlinking
 
 ## Example use cases
 
@@ -20,6 +21,7 @@ Covers everything that happens to a static site *after* it is provisioned and de
 - Hide `docs/*` and root-level `.md` files with 404 routes and prove it live
 - Reorganise `/reset-password.html` into `/account/` with 302s, a folder rewrite and root-absolute assets
 - Add per-asset cache headers and a `?v=` bump so a JS change actually reaches users
+- Copy another site's icons into `/assets/` and reference them same-origin instead of hotlinking under `img-src 'self'`
 
 ## Files in this folder
 

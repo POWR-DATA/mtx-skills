@@ -34,3 +34,5 @@ A solo consultant is setting up a new professional website. They have purchased 
 **Other files at root:** `sitemap.xml`, `robots.txt`
 
 **Existing infrastructure:** None — this is a greenfield setup.
+
+**Local preview:** Pages already use root-absolute `/styles.css` and `/components.js`. They want a local HTTP preview before the first deploy, not `file://`.
