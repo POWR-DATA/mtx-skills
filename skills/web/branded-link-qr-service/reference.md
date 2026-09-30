@@ -119,3 +119,18 @@ template: {
 ```
 
 Custom-domain binding on ACA (managed cert, `bindingType Disabled` re-bind fix): see `flet-aca-deploy` *Custom domain*.
+
+## Zero-downtime ACA rollout
+
+Validate first, pin traffic to the current revision, then PATCH in a new one. Build the body from a fresh GET, carrying every configuration key over, stripping `ingress.fqdn` and keeping `customDomains`.
+
+```powershell
+az containerapp revision set-mode -g <rg> -n <app> --mode multiple
+az containerapp ingress traffic set -g <rg> -n <app> --revision-weight "<app>--<current>=100"
+az rest --method PATCH --uri "https://management.azure.com/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.App/containerApps/<app>?api-version=2024-03-01" --body "@patch-body.json" --headers "Content-Type=application/json"
+# test https://<app>--<new-suffix>.<env-id>.<region>.azurecontainerapps.io/<route>
+az containerapp ingress traffic set -g <rg> -n <app> --revision-weight "<app>--<new-suffix>=100" "<app>--<current>=0"
+az containerapp revision set-mode -g <rg> -n <app> --mode single
+```
+
+Secrets are app-level: an old revision re-reads the new secret on its next cold start, so local `caddy validate` plus route testing — not the old revision — is the real rollback protection.

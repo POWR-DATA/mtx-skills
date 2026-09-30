@@ -2,7 +2,7 @@
 name: app-store-listing
 description: Prepare and submit an iOS app to the App Store — App Store Connect setup, screenshot dimensions, App Privacy, TestFlight, review submission, and ASC API key
 author: PowerData
-version: 1.2.0
+version: 1.3.0
 license: MIT
 ---
 
@@ -42,6 +42,9 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 - **There is no manual 1024 app-icon upload on iOS.** The App Icon populates on the version page only after you attach a build in the Build section — the icon ships inside the binary. Contrast Google Play, which DOES have a manual 512×512 icon upload; don't hunt for an iOS icon field.
 - **Pre-answer export compliance and IDFA to make the submit dialog prompt-free.** Set `ITSAppUsesNonExemptEncryption: false` in the build's Info.plist so export-compliance auto-resolves with no prompt, and answer the IDFA question "No" for an app with no ads/tracking.
 - **A "Guideline 2.1 — Information Needed" is an info-request, not a rejection.** Resolve it by REPLYING in the Resolution Center (answers + screen recordings), which re-activates the review — the "Resubmit to App Review" button staying greyed for a metadata info-request is normal, not a bug. Record requested demo videos on a throwaway production account minted for the purpose and deleted in-app at the end.
+- **An App Store URL without a storefront segment 404s for a single-country app.** `https://apps.apple.com/app/id<ID>` returns 404 when the app is published in one country; only the storefront form (`https://apps.apple.com/au/app/id<ID>`) works. Test the exact URL before staging it anywhere, and check the forced-update prompt and rate-this-app links inside the app — they commonly carry the same broken form.
+- **Never restyle a store badge.** Apple and Google both prohibit altering their badge artwork, so a live badge must not carry "coming soon" treatment such as opacity or grayscale. Put the dimming on a modifier class used only for stores where the app is not yet published, leave the base badge class untouched, and keep clear space of a quarter of the badge height around each badge.
+- **Audit what the App Store actually serves from `application/ld+json`.** Read the description out of that block in the apps.apple.com page source rather than a web-fetch summary, which paraphrased the text and invented a duplicated opening sentence. The served App Store copy carried drafting typos the Play listing did not, so compare the two listings side by side before each release.
 
 ## Process
 
@@ -74,6 +77,9 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 - [ ] Privacy policy URL is live and publicly accessible
 - [ ] A fresh build with `autoIncrement: true` is used after any failed submission
 - [ ] If the app supports account creation, an in-app account-deletion path exists (not just a web form)
+- [ ] Every App Store link uses the storefront form and has been fetched; in-app update/rate links checked too
+- [ ] Live store badges unmodified; any "coming soon" dimming confined to a modifier class for unpublished stores
+- [ ] Served listing copy read from `application/ld+json` and compared against the Play listing
 
 ## Avoid
 
@@ -86,6 +92,9 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 - Re-submitting the same build number after a failed upload — Apple has already burned it; build fresh with `autoIncrement: true`
 - Expecting TestFlight internal testers to get an email invite — the app simply appears once a "Ready to Test" build is assigned
 - Relying on an external web form for account deletion — Apple requires the deletion path to be reachable inside the app for any app with account creation
+- Staging a storefront-less `apps.apple.com/app/id...` URL — it 404s for a single-country app
+- Applying opacity or grayscale to a live store badge, or crowding it below a quarter-badge-height of clear space
+- Trusting a summarised fetch of the store page when auditing listing copy
 
 ## Example usage
 

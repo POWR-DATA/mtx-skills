@@ -2,7 +2,7 @@
 name: github-org-repository-setup
 description: Set up a new GitHub repository in an organisation with correct access, security, and baseline branch protection
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -34,6 +34,7 @@ Create and baseline a new organisation-owned GitHub repository without access su
 - **Use minimal branch protection first.** For labs and PoCs, start with a default-branch ruleset that blocks deletion and force pushes, then layer stricter controls later if needed.
 - **Record manual decisions.** Capture repo-level choices in a learning log so future repos follow repeatable standards.
 - **Separate transient registry errors from real findings in an `npm audit` CI step.** `npm audit` conflates transient npm-registry errors (503/502/ETIMEDOUT/"audit endpoint returned an error") with real vulnerability findings — both exit non-zero — so a naive step emails false "workflow failed" alerts whenever npm's registry blips. Grep the step output for transient-error signatures and retry-then-warn-and-pass on those (a registry outage must not fail the build) while a genuine findings exit still fails, and gate the workflow trigger on dependency-manifest paths (`package.json`/`package-lock.json`) so it doesn't run on unrelated code pushes (Dependabot's bump PRs re-trigger it).
+- **A brand-new repo has no required status checks, so `gh pr merge` can land a PR before CI registers.** Straight after `gh pr create` the merge succeeded with "no checks reported on the branch", and `gh pr checks --watch` returns immediately when no checks exist yet. Either make the CI jobs required checks in branch protection, or wait until the checks appear *and* pass before merging.
 
 ## Process
 
@@ -44,6 +45,7 @@ Create and baseline a new organisation-owned GitHub repository without access su
 5. **Review security settings safely.** Check dependency visibility and Dependabot alerts, but avoid enabling billed security products unless approved.
 6. **Apply a minimum default-branch ruleset.** Target the default branch, block branch deletion, and block force pushes.
 7. **Document configuration outcomes.** Add a short setup note to the repo learning log with what was enabled, skipped, and why.
+8. **Make CI a required check.** Once a workflow exists, add it to the default-branch ruleset as a required status check so a PR cannot merge before it reports.
 
 ## Output format
 
@@ -61,6 +63,7 @@ Create and baseline a new organisation-owned GitHub repository without access su
 - [ ] Dependency graph and alert settings were reviewed intentionally
 - [ ] Default branch ruleset blocks deletion and force pushes
 - [ ] Setup decisions were recorded in a repo learning log
+- [ ] CI jobs registered as required status checks, or merges deliberately gated on checks appearing and passing
 
 ## Avoid
 
@@ -69,6 +72,7 @@ Create and baseline a new organisation-owned GitHub repository without access su
 - Adding strict PR/status/signed-commit policies too early for single-owner PoCs.
 - Leaving branch deletion and force-push open on the default branch once the repo stabilises.
 - Letting an `npm audit` step fail the build on npm-registry outages — transient errors and real findings both exit non-zero; distinguish them.
+- Running `gh pr merge` immediately after `gh pr create` on a repo with no required checks — it merges before CI reports, and `gh pr checks --watch` returns instantly rather than waiting.
 
 ## Example usage
 

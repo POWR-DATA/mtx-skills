@@ -2,7 +2,7 @@
 name: website-seo-and-indexing
 description: Prepare a static website for search engine indexing and submit it to Google Search Console
 author: PowerData
-version: 1.7.0
+version: 1.8.0
 license: MIT
 ---
 
@@ -37,85 +37,37 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - `robots.txt` must be a static file at the root. Do not route it through a SPA fallback. The `Sitemap:` directive in `robots.txt` should reference the full absolute URL.
 - Use a **Domain property** in Google Search Console, not a URL-prefix property. A Domain property tracks all variants (http, https, www, apex) in a single view and requires a DNS TXT verification record.
 - Submit the sitemap in GSC after verification. Use the URL Inspection tool to check individual pages after submission. "Invalid sitemap address" when the URL is correct means you are inside the wrong property (check the property selector top-left) — a sitemap can only be submitted inside a property that covers its host, so create or switch to the Domain property for that domain first.
-- Domain-property verification is per Google account: a user added via Users and permissions shows Owner but not Verified and only works while a verified owner still exists. To make a business account self-standing, sign in as it, go Settings → Ownership verification → DNS record, and publish its second, different `google-site-verification` TXT token at the apex alongside the first (both coexist permanently). Add the business account as Owner on every company property, not just the new one.
-- Search Console living on a personal Google account is low-risk because Domain-property ownership is anchored to DNS and can be re-verified by anyone controlling the zone — but Play Console and Apple Developer accounts should be organisation accounts owned by the company from day one, because those are painful or impossible to migrate later.
-- Confirm the `google-site-verification` TXT via a public DoH resolver before pressing Verify, then still expect Google's own check to lag: a record visible worldwide within seconds of saving at the registrar failed the first Verify click and passed about an hour later with no change. Sitemap status flips to Success the same day but the Performance and Indexing panels show "processing data" for a day or more — normal for a new property.
+- Domain-property verification is **per Google account** and anchored to DNS, so ownership survives account changes and a second account simply publishes its own TXT token alongside the first. Expect Google's own check to lag behind public DNS. See *Search Console ownership and verification* in [`reference.md`](reference.md).
 - `lastmod` dates in `sitemap.xml` should reflect actual content changes. Do not set future dates. Priority values (0.0–1.0) are relative — the homepage is typically 1.0.
 - Avoid duplicate indexing by ensuring the non-canonical URL (apex, http) redirects to the canonical before Google crawls it. On Azure SWA, the apex → www redirect is automatic but takes 20–30 minutes to activate after domain validation.
 - GSC shows a robots.txt entry for every URL variant it has crawled. Only the canonical (HTTPS www) needs to return a valid response. A 404 on the HTTP non-www variant is harmless if the HTTPS www version shows "Fetched".
-- Audit existing canonical tags before adding new ones. The tag may already exist and be correct — if it is, the redirect and internal links are the more likely cause of any GSC duplicate signal, not a missing canonical.
-- A 301 redirect on `/index.html → /` is only half the fix for a GSC duplicate. Googlebot follows internal links before encountering redirects — if navigation or anchor links still reference `index.html`, the duplicate persists. The redirect and internal link cleanup are required together.
-- When one `.html` URL duplicate is found in GSC, check all pages for the same pattern. If `index.html` creates a duplicate on one page, it almost certainly exists across the whole site.
+- A GSC duplicate is usually internal links, not a missing canonical: audit the existing tag first, fix the `.html` links as well as the redirect, and check every page for the same pattern once you find one. See *Diagnosing a GSC duplicate* in `reference.md`.
 - OG image must use a solid background and be exactly 1200×630px and under 600KB. Transparent PNGs appear invisible or broken on social share cards — platforms render cards on varying backgrounds. WhatsApp in particular rejects oversized or transparent images. This failure only surfaces when a URL is actually shared, not during local testing.
 - `width` and `height` attributes on `<img>` elements serve aspect ratio reservation for CLS prevention, not display sizing. The browser uses them to pre-allocate space before the image loads. The ratio matters; exact pixel values do not need to match CSS dimensions.
 - In the Page indexing report, apex/http/non-canonical variants listed as "not indexed" ("Page with redirect", "Alternative page with proper canonical tag", "Duplicate without user-selected canonical") are canonicalisation working, not defects; the number to watch is indexed pages matching the sitemap. Do not press "Validate fix" on them — nothing is broken, and the recrawl just returns a "Failed" badge on a correct state. Variants keep stale classifications from their last-crawled date until Google recrawls, so a URL that 301s today may still display its old reason.
 - "Discovered – currently not indexed" in Search Console is not a technical error — it means Google knows the page exists but has not yet crawled it. The fix is URL Inspection → Request Indexing, not Validate Fix. Validate Fix is only for confirmed code changes that resolved a prior error.
-- The Google Indexing API requires OAuth Desktop app credentials, not a service account, when the Search Console property is a Domain property — Domain properties reject service account emails with "email not found". Either create a URL-prefix property (`https://www.<domain>/`) alongside the Domain property and add the service account as Owner there, or use OAuth with the Google account that owns the property.
-- The OAuth flow for the Indexing API saves access and refresh tokens to `token.json` after first browser login; subsequent runs refresh silently. Both `oauth-client.json` and `token.json` must be gitignored — they grant write access to your Search Console property.
+- Indexing API credentials depend on the property type: a **Domain** property rejects service-account emails ("email not found"), so use OAuth Desktop credentials, or add a URL-prefix property alongside it and make the service account an Owner there. Whichever route, the credential files (`oauth-client.json`, `token.json`, or the SA key) grant write access to the property and must be gitignored. See *Indexing API credentials* in [`reference.md`](reference.md).
 - For a folder that mixes public landing pages with noindex auth/utility pages, do not blanket-noindex the folder. Apply `X-Robots-Tag: noindex` per auth route only, and keep `robots.txt` crawlable (do not `Disallow` the path) — Google must be able to fetch the page to read the noindex directive.
 - Automate indexing on deploy with a post-deploy CI job that submits every `sitemap.xml` URL to the Google Indexing API using a service-account key (stored as a secret), making the sitemap the single source of truth for what gets submitted. Guard the job to no-op when the secret is absent so it never blocks a deploy, and never fail the build on per-URL errors. See *Post-deploy Indexing API CI job* in [`reference.md`](reference.md).
-- For the Indexing API via a service account, the account must be added as an **Owner** of the Search Console property (Full/Restricted permissions do not work), and the Web Search Indexing API must be enabled **in the same Google Cloud project that owns the service account** — API calls are attributed to the SA's project, so enabling it in a different project silently fails.
-- Load the service-account JSON into a GitHub Actions secret with `gh secret set NAME < key.json` (uploads encrypted, never printed or committed). Extract only the non-secret `client_email` for the Search Console owner step; never `cat` the whole key or place it in the repo. See *reference.md*.
+- A service account needs **Owner** on the property (Full/Restricted do not work) and the Web Search Indexing API enabled **in the project that owns the service account** — calls are attributed to the SA's project, so enabling it elsewhere silently fails. Load the key with `gh secret set NAME < key.json` and extract only `client_email` for the owner step. See *reference.md*.
+
+- `noindex` never makes a page private — anyone with the URL can read it. It only keeps a binding public document such as the terms out of search results.
+- An unlisted public page needs **three** separate exclusions: a `noindex` robots meta tag, omission from the sitemap and navigation, and removal from any automated indexing-submission script's route list. Missing the third submits the page to search engines despite the noindex.
+- Making an unlisted page discoverable means undoing all of them: remove `noindex` from **both** the route's `X-Robots-Tag` header and the page's `<meta name="robots">` (both are commonly in force), add it to the sitemap, and link it from the navigation or footer.
 
 ## Process
 
-1. **Confirm the canonical base URL** — the primary domain, protocol, and www/apex decision. This is used in all canonical tags and the sitemap.
-
-2. **Audit existing pages**
-   - List all public HTML pages
-   - Check each for `<link rel="canonical">`, `<title>`, and `<meta name="description">`
-   - Check OG tags: `og:title`, `og:description`, `og:image` — note any missing or using a transparent image
-   - Check for `.html` URL variants (e.g. `/index.html`, `/page.html`) that could create GSC duplicate entries
-   - Check that `<title>` tags are unique across all pages and use the correct brand name — these are invisible in browser UI and inconsistencies persist without an explicit audit
-
-3. **Audit internal links for `.html` references**
-   - If redirects exist for `.html` → clean URL paths, check that navigation and anchor links do not reference the `.html` form
-   - Googlebot follows links before encountering redirects — internal links pointing to `index.html` will direct Googlebot to the duplicate regardless of the redirect
-
-4. **Add or verify canonical tags**
-   - Add `<link rel="canonical" href="https://www.<domain>/<path>" />` to the `<head>` of every HTML page
-   - Homepage: `https://www.<domain>/`
-   - Other pages: `https://www.<domain>/<slug>` (no trailing slash for non-root pages)
-
-5. **Write `sitemap.xml`**
-   - Include one `<url>` block per public page
-   - Fields: `<loc>`, `<lastmod>` (YYYY-MM-DD format), `<changefreq>`, `<priority>`
-   - Homepage priority: 1.0; other pages: 0.7–0.9 depending on importance
-   - Place at the site root (`/sitemap.xml`)
-
-6. **Write `robots.txt`**
-   - Allow all crawlers: `User-agent: *` / `Allow: /`
-   - Add `Sitemap: https://www.<domain>/sitemap.xml`
-   - Place at the site root (`/robots.txt`)
-
-7. **Verify static file serving**
-   - Confirm `sitemap.xml` is served with `Content-Type: application/xml`
-   - Confirm `robots.txt` is served with `Content-Type: text/plain`
-   - On Azure SWA: add explicit route for `/sitemap.xml` in `staticwebapp.config.json` and register `.xml` MIME type
-
-8. **Check per-page meta tags**
-   - Each page should have a unique `<title>` and `<meta name="description">`
-   - Title: 50–60 characters; description: 120–160 characters
-   - Avoid identical titles or descriptions across pages
-
-9. **Add a favicon**
-   - Place `favicon.png` or `favicon.ico` at the site root
-   - Add `<link rel="icon" type="image/png" href="favicon.png" />` to each page's `<head>`
-
-10. **Set up Google Search Console**
-   - Go to [Google Search Console](https://search.google.com/search-console)
-   - Create a **Domain property** for `<domain>` (without protocol or www)
-   - Add the provided DNS TXT verification record to the domain's DNS at the registrar or DNS host
-   - Confirm the TXT via a public DoH resolver, click **Verify**; if it fails, wait ~1 h and retry without changing DNS
-   - Verify the business Google account as a second owner (its own TXT token) so ownership does not hinge on one personal account
-
-11. **Submit the sitemap**
-    - In GSC: go to **Sitemaps** → enter `sitemap.xml` → **Submit**
-    - Wait 24–72 hours for initial crawl
-
-12. **Inspect URLs**
-    - Use the **URL Inspection** tool in GSC on the homepage and key pages
-    - Check that Google can render the page and that the canonical reported by Google matches the intended canonical
+1. **Confirm the canonical base URL** — primary domain, protocol, and the www/apex decision. Everything else derives from it.
+2. **Audit existing pages** — canonical tag, `<title>`, `<meta name="description">`, OG tags, and any `.html` URL variants. Titles are invisible in browser UI, so brand-name inconsistencies survive indefinitely without a deliberate pass.
+3. **Audit internal links for `.html` references** — Googlebot follows links before it meets redirects, so a nav pointing at `index.html` recreates the duplicate whatever the redirect does.
+4. **Add or verify canonical tags** on every page, absolute and pointing at the canonical host.
+5. **Write `sitemap.xml` and `robots.txt`** as real static files at the root, with the `Sitemap:` directive absolute. See *Sitemap and robots.txt* in [`reference.md`](reference.md).
+6. **Verify static file serving** — `sitemap.xml` as `application/xml`, `robots.txt` as `text/plain`; on Azure SWA that needs an explicit route and MIME registration.
+7. **Check per-page meta tags** — unique title (50–60 chars) and description (120–160 chars) on every page.
+8. **Add a favicon** at the root and link it from every `<head>`.
+9. **Set up Google Search Console** — Domain property, DNS TXT verification confirmed via DoH before pressing Verify, and a second owner account with its own token. See *Search Console ownership and verification* in `reference.md`.
+10. **Submit the sitemap** and allow 24–72 hours for the initial crawl.
+11. **Inspect URLs** — confirm Google renders the page and reports the canonical you intended.
 
 ## Output format
 
@@ -145,6 +97,8 @@ The AI should produce:
 - [ ] OG image uses a solid background — no transparency, exactly 1200×630px, under 600KB
 - [ ] All `<title>` tags are unique and use the correct brand name, including secondary pages
 - [ ] "Discovered – currently not indexed" pages actioned via URL Inspection → Request Indexing, not Validate Fix
+- [ ] Unlisted pages excluded three ways: `noindex`, out of sitemap/nav, and out of the indexing script's route list
+- [ ] A page being made discoverable has `noindex` removed from the `X-Robots-Tag` header *and* the meta tag
 - [ ] If using the Indexing API manually: OAuth credentials with `oauth-client.json` and `token.json` gitignored
 - [ ] If automating via CI: service account added as **Owner** of the Search Console property, Web Search Indexing API enabled in the SA's own GCP project, key stored as a secret via `gh secret set`
 - [ ] Post-deploy index job no-ops when the secret is absent and never fails the build on per-URL errors
@@ -171,6 +125,8 @@ The AI should produce:
 - Do not `cat` or commit the service-account key — load it with `gh secret set NAME < key.json` and extract only `client_email` for the owner step
 - Do not blanket-`noindex` a folder that mixes public and auth pages, and do not `Disallow` it in robots.txt — apply `X-Robots-Tag: noindex` per route and keep the path crawlable so Google can read the directive
 - Do not commit `oauth-client.json` or `token.json` — they grant write access to your Search Console property
+- Do not treat `noindex` as privacy — the page is still readable by anyone with the URL
+- Do not leave an unlisted page in the indexing script's route list, or remove only one of the two `noindex` mechanisms when publishing it
 
 ## Example usage
 

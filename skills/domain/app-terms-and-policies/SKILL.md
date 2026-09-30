@@ -2,7 +2,7 @@
 name: app-terms-and-policies
 description: Draft and publish Terms of Service and policy pages for a subscription app — unlisted preview publishing, billing wording that survives price changes, insurance-aware liability terms, and versioned in-app acceptance flows
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -45,6 +45,10 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 - **Factual infrastructure claims come from the actual configuration, not the vendor's nationality.** A review spec asserted a crash-reporting region was the United States while the deployed config was deliberately EU (the ingest endpoint hostname proves the region), and the claim flip-flopped in print within a day. When an upstream review contradicts the current document on a fact you cannot verify, apply-and-flag loudly for confirmation; the accurate disclosure pattern is "hosted in <region>; the provider is <country>-based and its authorised support personnel may access systems from <country>".
 - **Disclose sub-processors by purpose and country, as a maintained list.** Name each material provider with its PURPOSE and COUNTRY, mark the list "current as at the last-updated date" so it reads as maintained rather than stale, exclude app stores as distribution-not-processors of user data, distinguish hosting region from provider nationality where they differ, and describe substitutable categories (push-notification delivery) by function rather than freezing vendor names.
 - **A Last-updated bump does not automatically mean re-acceptance work.** First check whether the platform's acceptance is version-pinned or timestamp-only — a `terms_accepted_at` with no version column has no re-acceptance flow to trigger. If timestamp-only and pre-launch with few accepted users, record the new date as the future version-pinning baseline (in the deferred issue) instead of building re-acceptance reactively.
+- **Diff a returned review section by section, and cherry-pick.** When a reviewer sends a legal document back as pasted plain text, strip the live HTML to prose and compare section by section, bucketing changes as substantive, wording or trivial, and checking renumbering and cross-references. One clinical reviewer's rewrite contained six load-bearing errors: an unqualified data-location claim contradicting the privacy policy, a registration requirement naming only one regulator (excluding a whole profession), an incoherent "limited to the greater of, at our option" consumer-law remedy, a reversed description of which records a practitioner can see, an unevidenced "independent security testing" claim, and a self-contradiction on third-party collection. Take the genuine improvements into the existing structure rather than adopting a compressed rewrite that drops required disclosures.
+- **A new kind of personal information means a privacy-policy update in the same cycle.** When the platform started collecting professional registration numbers as sign-up opened beyond one profession, the policy's inventory had to be updated and its Last updated date bumped, or it under-describes collection (APP 5). Ask the platform side to tell the website side whenever onboarding fields change.
+- **Never describe a verification or approval step that does not exist.** While practitioner sign-up was self-declared, invitation gating could only be framed publicly as "the trial is invitation-limited". Watch for sentences stated as fact about users — "practitioners who use the app are registered health professionals" reads as an assurance the operator checks. Put the requirement in an obligation bullet instead.
+- **Keep research-study vocabulary off a product-trial page.** "Participate", "your role in the trial", "entirely voluntary" and "study" make an early product release read like a formal clinical study, implying ethics approval and participant information statements. Use product-beta language: "take part", "your part", "always your choice".
 
 ## Process
 
@@ -56,6 +60,8 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 6. **Build the flow behind a flag** — explicit acceptance UI with links, terms + fees at checkout, links reachable post-onboarding.
 7. **Finalise in place** — remove banner and confirm-flags, set Effective and Last-updated dates, notify acceptance-flow owners of the new `terms_version`; keep noindex/out-of-nav while only apps link the page.
 8. **Launch publicly** (when intended) — lift noindex, add to sitemap and nav, flip the feature flag; on any later revision bump Last-updated and `terms_version` and re-notify.
+8. **Process a returned review** by diffing prose section by section, bucketing each change, and verifying cross-references and numbering before accepting anything.
+9. **Re-check the collection inventory** whenever onboarding fields change, and bump Last updated in the same cycle.
 
 ## Output format
 
@@ -78,6 +84,10 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 - [ ] Sub-processor list names purpose + country per provider and is marked "current as at" the last-updated date
 - [ ] Consent-card-linked page path agreed and frozen; page scoped to consent-only additions
 - [ ] Content standards conduct-scoped with an honest-journalling carve-out (where applicable)
+- [ ] Returned reviews diffed section by section; each change bucketed; renumbering and cross-references checked
+- [ ] No claim of a verification, approval or testing step the operator does not actually perform
+- [ ] Privacy-policy inventory covers every field onboarding now collects, with Last updated bumped
+- [ ] Trial pages use product-beta language, not research-study vocabulary
 
 ## Avoid
 
@@ -92,6 +102,10 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 - Repeating in-app consent-card or Terms text on a consent page — duplicated text drifts out of sync
 - Copying a review spec's factual claims (hosting regions) without checking the deployed configuration
 - Building a re-acceptance flow reactively when acceptance is timestamp-only — record the baseline and defer
+- Adopting a reviewer's compressed rewrite wholesale — it can drop required disclosures and contradict the privacy policy
+- Stating as fact something about users that the operator does not verify — put it in an obligation bullet
+- Letting onboarding add a new data field without updating the policy inventory and its date
+- Research-study vocabulary on a product-trial page — it implies ethics approval the product does not have
 
 ## Example usage
 

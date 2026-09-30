@@ -2,7 +2,7 @@
 name: google-play-listing
 description: Sign and publish an Android app (AAB) to the Google Play Store — covers keystore generation, Play Console setup, store listing content, App Content declarations, and CI automation
 author: POWR-DATA
-version: 1.5.0
+version: 1.6.0
 aliases: [flet-store-submission]
 license: MIT
 ---
@@ -51,6 +51,8 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
 - **"Send app for review" stays locked until a release is SAVED on a reviewable track with at least one country selected.** For a new app, Publishing overview shows "complete the required steps in the app dashboard" until then — internal-testing uploads don't count, and a draft release left on an error (e.g. no countries) keeps the lock on. Once saved, submission bundles the release, listing and all App Content declarations into one review package, preceded by ~15 min of automatic "quick checks".
 - **Turn Managed publishing ON before submitting a release queued to "Start full rollout".** With it off, Google's approval auto-publishes to the store; with it on, the approved release parks under "Changes ready to publish" until you click — Play's equivalent of Apple's "Manually release this version" for holding go-live behind sign-off.
 - **Promote an uploaded AAB via "Add from library", never re-upload.** An AAB uploaded to any track lives in the app's bundle library; re-uploading the same version code is rejected as a duplicate. The "no deobfuscation file" warning on a first Expo/EAS bundle is advisory only, not a submission blocker.
+- **Data Safety's optional "Delete data URL" must document partial deletion, not just account closure.** The page it points at has to state the steps for deleting *some* data without closing the account, so filing the account-deletion page there means that page must cover both paths (in-app per-entry deletion and an email route). Word partial deletion as removed from the user's records and the practitioner's view immediately, without promising instant permanent erasure — under-claim rather than over-claim where the page cannot back an answer.
+- **Audit the live listing from raw HTML, not a web-fetch summary.** The full Play description sits in the page's `data-g-id="description"` element and can be extracted from the raw HTML fetched with `hl=en_AU&gl=AU`; the web-fetch tool truncated the page and returned nothing.
 
 ## Process
 
@@ -126,6 +128,8 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
 - [ ] AI-generated imagery labelled per asset in the AI declaration; health-condition language kept out of store assets
 - [ ] Release SAVED on a reviewable track with countries selected before expecting "Send app for review" to unlock
 - [ ] Managed publishing ON before submitting when go-live needs sign-off
+- [ ] Any Data Safety "Delete data URL" page documents partial deletion as well as account deletion, in wording the product can back
+- [ ] Listing copy audited from the raw `data-g-id="description"` HTML, not a summarised fetch
 
 ## Avoid
 
@@ -146,6 +150,8 @@ After the app builds successfully and produces an unsigned APK or AAB. Apply whe
 - Leaving Managed publishing off on a full-rollout release that still needs sign-off — approval auto-publishes
 - Re-uploading an AAB to promote it across tracks — use "Add from library"; the same version code is rejected
 - Blocking a submission on the "no deobfuscation file" warning — it is advisory only
+- Pointing the Data Safety deletion URL at a page that only covers closing the account — it must also cover deleting some data
+- Auditing store copy through a summarising web fetch — pull the raw HTML element instead
 
 ## Example usage
 

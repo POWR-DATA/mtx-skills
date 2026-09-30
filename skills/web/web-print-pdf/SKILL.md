@@ -2,7 +2,7 @@
 name: web-print-pdf
 description: Produce reliable print and PDF output from an HTML page with print-specific CSS — pagination, image cropping, equal columns, running footers, and colour
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -36,6 +36,9 @@ When a web page must also produce a polished PDF or printout (invoices, reports,
 - **Always include both the modern and legacy break properties.** Print CSS support is uneven across engines; write `break-inside`/`break-before` *and* their `page-break-*` equivalents together so the layout holds in Chrome, Firefox, and Safari print.
 - **Reorder content across CSS grid cells on mobile with `display: contents`, not duplicated markup.** Set the grid's column wrappers to `display: contents` (flattening their children into the grid's flow), then apply flex `order` to those now-direct children. One copy of the markup serves screen, mobile, and print.
 - **Scope every mobile/responsive reorder rule to `@media screen and (max-width: N)` so it can never reach print** — print media never matches a `screen` query. Add explicit `@media print` resets (`order: 0`, `display: block`, re-assert the grid, hide any new interactive buttons) as belt-and-suspenders against browsers leaking screen rules.
+- **CSS cannot target "the bottom of the last printed page" — pin it with flex.** Make the main container a flex column with `min-height: calc(N * <printable page height> - K)` and give the element `margin-top: auto`. K absorbs the space lost at page breaks and must be tuned by rendering: too small and the document gains an extra page, too large and the element floats mid-page. Re-tune K whenever content changes the page count or break positions. See *Last-page pin* in [`reference.md`](reference.md).
+- **Print CSS that strips a link's colour and underline does not stop it being clickable.** Chromium's print-to-PDF keeps anchors live, so styling links as plain text for print costs you nothing — and wrapping a print-only logo or QR image in an anchor makes that image a clickable link in the PDF too.
+- **Generate and verify PDFs headlessly, not by eye.** Render with `--headless=new --disable-gpu --no-pdf-header-footer --run-all-compositor-stages-before-draw --virtual-time-budget=8000 --print-to-pdf=<out>`, then check page count and rasterise pages programmatically (pymupdf) rather than trusting a visual preview. Every layout change that could move a page break needs a re-render and a page-count check.
 
 ## Process
 
@@ -47,6 +50,7 @@ When a web page must also produce a polished PDF or printout (invoices, reports,
 6. **Preserve colour** — add `print-color-adjust: exact` to elements whose backgrounds must survive.
 7. **Isolate screen-only rules** — scope responsive reorders (`display: contents` + `order`) to `@media screen and (max-width: N)`, then add `@media print` resets (`order: 0`, `display: block`, grid re-asserted, screen-only buttons hidden).
 8. **Verify in the print dialog** — Ctrl+P → Save as PDF, checking every page boundary, crop, and background.
+8. **Render headlessly and verify** — produce the PDF with the headless flags above, assert the page count, and rasterise the pages to confirm breaks and pinned elements landed where intended.
 
 ## Output format
 
@@ -66,6 +70,8 @@ When a web page must also produce a polished PDF or printout (invoices, reports,
 - [ ] Colour-critical elements set `-webkit-print-color-adjust: exact; print-color-adjust: exact`
 - [ ] Responsive reorder rules scoped to `@media screen and (...)`, with `@media print` resets (`order: 0`, `display: block`, grid re-asserted, screen-only buttons hidden)
 - [ ] Output verified in Ctrl+P → Save as PDF, every page checked
+- [ ] Any bottom-of-last-page element pinned with the flex + `min-height: calc(...)` + `margin-top: auto` pattern, with K re-tuned after content changes
+- [ ] Page count and rendered pages verified programmatically after every layout change, not from a preview
 
 ## Avoid
 
@@ -77,6 +83,9 @@ When a web page must also produce a polished PDF or printout (invoices, reports,
 - Judging print output from the screen view — always verify in the actual print/PDF dialog
 - Putting mobile reorder rules in a bare `@media (max-width: N)` query — it also matches print; write `@media screen and (max-width: N)` and add print resets
 - Duplicating markup to reorder columns on mobile — use `display: contents` on the wrappers plus `order` on the children
+- Trying to target the last printed page with CSS selectors — pin the element with the flex/min-height pattern instead
+- Removing link styling for print out of fear of losing clickability — Chromium keeps anchors live in the PDF
+- Signing off a PDF from a visual preview — assert the page count and rasterise the pages
 
 ## Example usage
 

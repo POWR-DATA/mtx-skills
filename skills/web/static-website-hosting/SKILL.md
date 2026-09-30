@@ -2,7 +2,7 @@
 name: static-website-hosting
 description: Provision and deploy a static website on Azure Static Web Apps with Bicep IaC, GitHub Actions CI/CD, deploy tokens, region choice, and multi-site layouts
 author: PowerData
-version: 2.2.0
+version: 2.3.0
 license: MIT
 ---
 
@@ -51,6 +51,8 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - For a no-build static site whose dev/prod backend switch is a single config file, keep the repo copy permanently prod and serve local dev from a staged scratch COPY (robocopy to temp excluding `.git`, overwrite the config with dev values, `npx serve` the copy): dev credentials become impossible to commit or deploy, and "local = dev, deployed = prod" is structural rather than a discipline.
 - Preview a static site whose pages use root-absolute assets (`/styles.css`, `/components.js`) by serving the repo ROOT over HTTP — `python -m http.server <port> --directory <root>` — those paths do not resolve from `file://`. The plain server does NOT apply the SWA `staticwebapp.config.json` (clean-URL rewrites, redirects, CSP), so preview via `.html`/trailing-slash paths and confirm redirect/CSP/clean-URL behaviour only after deploy.
 - Deploy a Vite SPA to a SEPARATE prod SWA by building with prod env overrides via a temporary gitignored `.env.production.local` (Vite loads `.local` over `.env.production`) that you DELETE right after, so an ordinary `npm run build` stays on dev config; swap a `staticwebapp.prod.config.json` (prod CSP/routes) over `dist/staticwebapp.config.json` before uploading. Deploy with `npx @azure/static-web-apps-cli deploy ./dist --deployment-token <t> --env production`, fetching the token via `az staticwebapp secrets list --name <swa> --resource-group <rg> --query properties.apiKey -o tsv`.
+- **A green workflow run is not proof a change is live on prod.** When the deploy workflow is bound only to the dev Static Web App and prod is promoted by a separate manual script, merging to `main` never reaches prod and prod can silently lag for weeks. Verify by fetching the live site, following every code-split chunk the entry file references, and grepping for a marker string — and note that URLs built from template literals never appear as one string in a minified bundle, so search for the fragments.
+- **Pass production build variables to the build process only, never to your shell.** Vite lets process environment variables override the committed `.env.production`, so a prod build is done by exporting the prod `VITE_*` values — but in PowerShell `$env:` persists for the rest of the terminal session, so the next `npm run dev` silently talks to the production backend. Set them for a child process and restore the caller's values in a `finally` block, and add a dev-server guard that refuses to start when it sees the production URL.
 
 ## Process
 
@@ -84,6 +86,7 @@ Provide as many of the following as available. Partial inputs are acceptable —
 10. **Hand off** — custom domains, DNS and TLS → `azure-swa-custom-domains`; routing, caching, CSP, hidden files → `static-website-config-and-csp`
 
 11. **Document the deployment** — SWA name(s), default hostname(s), secret and variable names, workflow files, subfolder layout
+11. **Prove the change is live on the environment you meant.** Fetch the deployed site (not the workflow status), follow its code-split chunks, and grep for a marker; for a separately-promoted prod app, run the promotion script and re-verify.
 
 ## Output format
 
@@ -111,6 +114,8 @@ The AI should produce:
 - [ ] Changes deployed to dev first and validated; prod promotion is a separate approved step; any `.env.production.local` deleted right after a prod build
 - [ ] Root-absolute assets previewed by serving the repo root over HTTP (`python -m http.server --directory <root>`), not via `file://`; SWA-only behaviour (redirects, CSP, clean URLs) confirmed after deploy
 - [ ] Site reachable on the default hostname; hand-off items listed
+- [ ] Live-site verification done by fetching prod and grepping chunks for a marker — not by a green workflow run
+- [ ] Prod build variables scoped to the build child process and restored afterwards; dev server guards against the production URL
 
 ## Avoid
 
@@ -128,6 +133,8 @@ The AI should produce:
 - Do not keep dev values in the repo copy of a config-switched static site — dev lives in a scratch copy; the repo stays prod
 - Do not open a site that uses root-absolute asset paths via `file://` — `/styles.css` will not resolve; serve the repo root over HTTP
 - Do not treat `python -m http.server` as a SWA preview — it does not apply `staticwebapp.config.json`; confirm redirects, CSP and clean URLs after deploy
+- Treating a green deploy workflow as proof prod is current when prod is promoted separately — fetch the live site and grep its chunks
+- Exporting prod `VITE_*` values into the interactive PowerShell session — the next `npm run dev` then points at production
 
 ## Example usage
 

@@ -2,7 +2,7 @@
 name: supabase-marketing-backend
 description: Use Supabase as the backend for a static marketing site — insert-only public forms on the anon key with RLS, a privacy-tiered first-party page-hit beacon, reader roles for Excel, and the RLS/view leaks that bite
 author: PowerData
-version: 1.2.0
+version: 1.3.0
 license: MIT
 ---
 
@@ -43,6 +43,11 @@ Partial inputs are acceptable — infer defaults and state them.
 - **Read registrations as attribution ground truth and page hits as directional volume only.** Hits and form registrations are separate, deliberately unjoinable records (hits carry no identifiers), so their counts drift: an ad-blocker can swallow the fire-and-forget beacon while the essential form insert succeeds, and a return visit without the `?src` query logs as direct. A registration's source stamp reflects the query string at submit time, and a binary qr/url mapping means "url" covers every non-QR arrival.
 - **Campaign open/close lives in an anon-readable config table** (`campaign`, `closes_at`, `active`, `max_registrations`, `fallback_url`) that the page reads on load to swap the form for a closed panel — with the client FAIL-OPEN (a fetch blip never closes an open campaign) because the real close is enforced server-side by rejecting inserts; the submit handler catches the "have closed" rejection and shows the closed panel too. One registrations table serves every campaign via a `campaign` column, and printed or emailed short links never 404 after close — they redirect onward.
 - **Verify the beacon tag exists on every page you expect to measure before trusting analytics** (`git log -S` proves whether it was ever added): a campaign page recording zero campaign-tagged hits while its own form records registrations means missing instrumentation, not ad-blockers or user behaviour.
+- **Every window-rejection message must contain the keyword the page watches for.** When a public page decides what to show by matching a keyword in a `BEFORE INSERT` trigger's rejection text, each "no longer accepting" branch — past close date, cap reached, switched off — has to carry it. Only the date branch said "closed", so a full cap or a disabled campaign would have shown a generic error instead of the closed panel. Add the keyword while keeping the old wording inside each message so anything already matching the old text still matches. A duplicate sign-up is a different failure (unique index, 23505 / HTTP 409) and needs its own "already registered" handling, not the closed panel.
+- **Prove every trigger rejection path on production without leaving rows.** Run a `DO` block whose inner `BEGIN ... EXCEPTION` sub-block does the setup `UPDATE` plus the `INSERT` — the handler rolls back to its savepoint — then `RAISE` the captured `SQLERRM` from the outer block so the whole statement aborts and returns the message. Verify afterwards that the config row is unchanged and no probe rows exist. See *Rolled-back trigger probe* in [`reference.md`](reference.md).
+- **A single global row cap on a shared page-hit table stops logging for every campaign at once.** One successful push (social posts, QR codes) can exhaust a 20,000-row limit shared across all campaigns while registrations keep working, because they have their own per-campaign cap. Check the current count before a large promotional push, and flag the shared cap whenever a new high-traffic campaign is added.
+- **Each new campaign needs its own `campaign_windows` row, owned by the platform side.** Hand them a spec with the confirmed values and ask for dev and prod in one migration to save a round trip. A prod row set active before the page is published is harmless, because nothing can reach the form until the page ships.
+- **Test the form end to end by driving the real page.** Use puppeteer-core against the installed Edge (`PUPPETEER_SKIP_DOWNLOAD=true`) and submit twice with the same email: an insert-only anon key cannot read rows back, but the second submit's 409 proves the first row landed in that campaign. Test every closed-panel path with `setRequestInterception` faking the `campaign_windows` response and the rejected insert so nothing touches a database, and block the hit beacon when checking production so the tests do not pollute visit metrics.
 
 ## Process
 
@@ -53,6 +58,8 @@ Partial inputs are acceptable — infer defaults and state them.
 5. **Wire the front end** — form JS with honeypot + 3 s gate + 409 → "already on the list"; beacon on all marketing pages + 404 (verify the tag is actually on each page), minimal-payload fallback; `[hidden]` CSS rule; Supabase host in CSP `connect-src`; campaign page reads the config table on load, fail-open.
 6. **Add readers** — role with a strong password (no `%`), `GRANT` + `SELECT` policies, session-pooler connection details handed over (see `excel-power-query-postgres` for the Excel side).
 7. **Publish the privacy note** and record which fields are collected and why.
+8. **Probe every rejection path** with the rolled-back `DO` block, then confirm no probe rows or config changes remain.
+9. **Drive the real page end to end** with puppeteer-core — double submit for the 409, intercepted responses for the closed-panel paths, beacon blocked against production.
 
 ## Output format
 
@@ -74,6 +81,11 @@ Partial inputs are acceptable — infer defaults and state them.
 - [ ] Campaign close enforced server-side; client fail-open; post-close links redirect, never 404
 - [ ] Beacon tag verified present on every measured page; registrations treated as attribution ground truth
 - [ ] `[hidden] { display: none !important; }` in the stylesheet; privacy-policy section published
+- [ ] Every window-rejection branch contains the keyword the page matches on; duplicates handled separately as 409
+- [ ] All rejection paths probed on production with a rolled-back `DO` block; no probe rows left behind
+- [ ] Shared `page_hits` cap headroom checked before a promotional push
+- [ ] New campaign's `campaign_windows` row requested for dev and prod in one migration
+- [ ] End-to-end run done against the real page, with the beacon blocked in production
 
 ## Avoid
 
@@ -86,6 +98,11 @@ Partial inputs are acceptable — infer defaults and state them.
 - Relying on a `hidden` attribute where the element also has a CSS `display` rule
 - Typing the pooler username without the `.<project-ref>` suffix
 - Putting a `%` in a role password created through the SQL editor — role creation broke
+- Keying the closed panel on a keyword that only one rejection branch contains
+- Showing the closed panel for a duplicate email — that is a 23505/409, not a closed campaign
+- Testing trigger paths by inserting real probe rows, or by pointing tests at a database at all when interception will do
+- Launching a high-traffic campaign without checking the shared `page_hits` cap
+- Leaving the hit beacon live while testing production — it pollutes visit metrics
 
 ## Example usage
 
