@@ -13,6 +13,8 @@ These skills cover the delivery lifecycle for static websites: infrastructure se
 | [Static Website Config and CSP](static-website-config-and-csp/) | Configure and safely change a live static site — staticwebapp.config.json routes, headers, caching, MIME types, CSP, production front-end gotchas | Website SEO and Indexing |
 | [Website SEO and Indexing](website-seo-and-indexing/) | Prepare a static website for search engine indexing and submit it to Google Search Console | — |
 | [Web Print PDF](web-print-pdf/) | Produce reliable print and PDF output from an HTML page with print-specific CSS | — |
+| [Web Filter Recategorisation](web-filter-recategorisation/) | Diagnose and fix a corporate web filter blocking a young domain — prove it is the filter, then request a category from each vendor | — |
+| [Screen Recording Web Guides](screen-recording-web-guides/) | Publish screen-recorded walkthroughs safely — frame-by-frame redaction, provable blurring, portable ffmpeg encoding, WCAG text alternative | Demo Seed Data (app) |
 | [Branded Link QR Service](branded-link-qr-service/) | Build a permanent branded short-link and QR code service on a static host — 302 indirection, link registry, CI drift checks, validated QR generation | — |
 | [Marketing Email Campaign](marketing-email-campaign/) | Design, test and send a marketing email campaign — template, seed-test protocol, Spam Act compliance, scanner-safe unsubscribe, deliverability forensics, warm-up batching | Resend Email Sending (app) |
 | [Email Address Obfuscation](email-address-obfuscation/) | Protect published email addresses from scrapers — JavaScript-assembled mailto links, accessible fallbacks, CSP-clean implementation, payload verification | — |
