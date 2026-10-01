@@ -76,3 +76,21 @@ CSP: `connect-src 'self' https://<ref>.supabase.co`. Include on the 404 page; ex
 ```css
 [hidden] { display: none !important; }
 ```
+
+## Rolled-back trigger probe
+
+Exercises a rejection path on production and leaves nothing behind: the inner handler rolls back to its savepoint, and the outer `RAISE` aborts the statement while returning the captured message.
+
+```sql
+do $$ declare msg text := 'ACCEPTED'; begin
+  begin
+    update public.campaign_windows set active = false where campaign = '<campaign>';
+    insert into public.interest_registrations (full_name, email, campaign)
+      values ('Window Probe', 'probe@<your-domain>', '<campaign>');
+    raise exception 'ROLLBACK_OK';
+  exception when others then msg := sqlerrm; end;
+  raise exception 'PROBE: %', msg;
+end $$;
+```
+
+Afterwards confirm the config row is unchanged and no probe rows exist.

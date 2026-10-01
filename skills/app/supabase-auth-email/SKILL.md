@@ -2,7 +2,7 @@
 name: supabase-auth-email
 description: Configure Supabase transactional auth email — custom SMTP, branded templates via the Management API, and reliable confirm/reset flows
 author: PowerData
-version: 1.2.0
+version: 1.3.0
 license: MIT
 ---
 
@@ -42,6 +42,8 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 - **Verify the sending domain in DNS, and expect a warm-up period.** Resend needs DKIM on `resend._domainkey`, MX + SPF on a `send` subdomain, and DMARC on `_dmarc`, added at the domain's actual DNS host (which may differ from the registrar or web host). These sit on different hostnames than existing Microsoft 365 mail records, so they don't conflict. A brand-new sending domain has no reputation, so early emails often land in spam even when SPF/DKIM pass — expected, and it improves as the domain sends legitimate mail.
 - **The Supabase CLI login token is not a Management API token.** It lives in Windows Credential Manager (LegacyGeneric target "Supabase CLI:supabase") and cannot be reused for the Management API, which needs a personal access token (optionally at `%USERPROFILE%\.supabase\access-token`); ask the project owner for a token rather than trying to extract vault credentials. `supabase projects list` prints "Cannot find project ref. Have you run supabase link?" to stderr yet still lists every project, and truncating its output (`Select-Object -First N`) hid the production row and produced a wrong "different org" conclusion — filter noise instead of truncating.
 - **From PowerShell 5.1, send the Management API body as UTF-8 bytes.** The default string encoding is Latin-1, which mangles UTF-8 and returns 400 errors. Encode the JSON with `[System.Text.Encoding]::UTF8.GetBytes($json)` and read template files with `[System.IO.File]::ReadAllText($path,[Text.Encoding]::UTF8)`. See *reference.md*.
+- **Create demo and video accounts on a subdomain you control.** Never a made-up Gmail address (a real person receives the confirmation and any later reset) and never `example.com`, which fails at sign-up with "Error sending confirmation email" once custom SMTP is configured. Use `demo.<your-domain>`, then confirm the account server-side by setting `auth.users.email_confirmed_at` and `email_verified: true` in the email identity's `identity_data` — scoped to an allow-listed address that is still unconfirmed and was created in the last 24 hours, so the email-confirmed audit trigger still fires.
+- **Leaked-password protection rejects famous quotes.** With it enabled, plain-form quotes are in the breach corpus and fail at sign-up ("ThereIsNoSpoon" had 193 hits, "FollowTheWhiteRabbit" 124). Check any demo password against the Have I Been Pwned range API first — k-anonymity means only the first five SHA-1 characters leave the machine — and expect hyphenated variants with a number ("There-Is-No-Spoon-1999") to return zero hits.
 
 ## Process
 
@@ -52,6 +54,7 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 5. **Switch confirmation to a client-side `verifyOtp` page** so Safe Links cannot consume the link — hosted statically, config from `auth-config.js`, pinned+SRI supabase-js, `persistSession: false`, no `redirect_to`, and excluded from app deep-link scopes.
 6. **Handle the unconfirmed state in the app** — a "confirm then sign in" screen with resend, and treat an empty `identities` array on sign-up as "already registered".
 7. **Test sign-up and reset**; on a 500, read `auth_logs` for the real SMTP error.
+8. **Provision demo accounts deliberately** — address on a controlled subdomain, password pre-checked against HIBP, confirmation applied server-side under the allow-list/recency guard.
 
 ## Output format
 
@@ -74,6 +77,8 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 - [ ] App shows "confirm then sign in" + resend for unconfirmed accounts; empty `identities` on sign-up surfaced as already-registered
 - [ ] Sending domain DKIM/SPF/MX/DMARC verified; spam warm-up expected
 - [ ] Sign-up/reset tested; `auth_logs` checked on any HTTP 500
+- [ ] Demo/video accounts use `demo.<your-domain>` addresses, never invented Gmail or `example.com`
+- [ ] Demo passwords checked against the HIBP range API before being filmed or handed out
 
 ## Avoid
 
@@ -89,6 +94,8 @@ When setting up or debugging Supabase auth emails: sign-up confirmation, passwor
 - Sending the Management API body as a default PowerShell string — encode as UTF-8 bytes or get 400s
 - Treating early spam-foldering on a new domain as a misconfiguration — it is reputation warm-up
 - Treating a sign-up response with an empty `identities` array as a fresh account — the email is already registered; anti-enumeration hides the error
+- Signing demo accounts up on `example.com` or an invented Gmail address — one fails at send, the other mails a real stranger
+- Handing out a memorable quote as a demo password without a HIBP check — leaked-password protection rejects it at sign-up
 
 ## Example usage
 

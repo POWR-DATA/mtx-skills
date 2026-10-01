@@ -2,7 +2,7 @@
 name: resend-email-sending
 description: Operate Resend as an application's email provider — API key and domain scoping, marketing vs transactional stream separation, and Svix-signed delivery webhooks with automatic suppression
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -34,6 +34,7 @@ Partial inputs are fine.
 - **Resend delivery webhooks are Svix-signed — verify them properly.** Compute HMAC-SHA256 over `${svix-id}.${svix-timestamp}.${rawBody}` using the base64-decoded secret (strip the `whsec_` prefix), base64-compare against each `v1,<sig>` entry in the `svix-signature` header, and reject events older than ~5 minutes.
 - **Deploy the webhook function with `verify_jwt = false`** — Resend sends no JWT, so a Supabase edge function behind the JWT gateway never receives the event; the Svix signature is the authentication.
 - **Auto-suppress on `email.bounced` and `email.complained`.** Write the address to the suppression list the moment the event verifies, and enforce the list at send time — a clean list is the cheapest deliverability asset.
+- **Do not name a single country for overseas processing.** Resend delivered an Australian project's mail through Amazon SES in `ap-northeast-1` (Tokyo), not the US — visible in the reverse DNS of every sending IP in the DMARC reports. Word a privacy policy's overseas-processing line as "the United States and other countries" rather than naming one, and read the reverse DNS if you need to know where mail actually egresses.
 
 ## Process
 
@@ -43,6 +44,7 @@ Partial inputs are fine.
 4. **Stand up the webhook** — endpoint (e.g. edge function) with `verify_jwt = false`; implement Svix verification exactly (id.timestamp.rawBody, decoded secret, v1 comparison, 5-minute window).
 5. **Wire suppression** — on verified `email.bounced`/`email.complained`, insert into the suppression list; enforce it in every send path.
 6. **Test end to end** — a send from each domain with each key (expect the 403 on any mis-scoped key), a webhook event verified and suppressed, and a suppressed address refused at send time.
+6. **Confirm the real egress region** from reverse DNS on the sending IPs in DMARC aggregate reports before writing any data-residency claim.
 
 ## Output format
 
@@ -60,6 +62,7 @@ Partial inputs are fine.
 - [ ] Webhook verifies the Svix signature over `id.timestamp.rawBody` with the decoded secret and rejects stale events
 - [ ] Webhook function deployed with `verify_jwt = false`
 - [ ] Bounces and complaints auto-suppress; suppression enforced at send time
+- [ ] Privacy-policy wording for overseas processing is provider-accurate ("the United States and other countries"), not a guessed single country
 
 ## Avoid
 
@@ -69,6 +72,7 @@ Partial inputs are fine.
 - Adding a per-subdomain DMARC record "to be safe" — the org-domain fallback already covers it
 - Trusting webhook payloads without Svix verification, or verifying with the raw `whsec_` string undecoded
 - Leaving the webhook behind the JWT gateway — Resend sends no JWT and every event bounces at the gate
+- Assuming a US-headquartered email provider sends from the US — check the sending IPs' reverse DNS before making a data-residency claim
 
 ## Example usage
 

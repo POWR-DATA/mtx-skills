@@ -2,7 +2,7 @@
 name: marketing-email-campaign
 description: Design, test and send a marketing email campaign — bulletproof HTML template, seed-test protocol, Spam Act compliance, scanner-safe unsubscribe, deliverability forensics, and warm-up batching
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -39,6 +39,9 @@ Partial inputs are fine — state assumptions.
 - **Read Microsoft's placement header before blaming content.** `X-Microsoft-Antispam-Mailbox-Delivery` states WHY placement happened: `dest:I` vs `dest:J` plus an OFR reason, where `TrustedSenderList` means the recipient's own Not-Junk click whitelisted that one mailbox (global SCL can still be 5) and `SpamFilterAuthJ` means authenticated-but-junked on reputation. Third-party filtering gateways (relay MX in front of a tenant) break SPF by forwarding, but an aligned DKIM signature keeps DMARC passing, so mail lands junk-but-deliverable instead of rejected; gateways also stamp bulk classification and shared-IP ratings you cannot fix. For high-value targets, a personal one-to-one email from the normal org mailbox carries none of the bulk fingerprints and bypasses that entire classification path.
 - **Warm up in small sector-aware batches with a human on the button.** Batches of 20–30 per day, warmest recipients first; audience sector maps directly to gateway risk (private practices sit on consumer domains that accept early sends; public-sector bodies share one strictly-filtered domain — cap around 5 recipients per email domain per batch and let the batch fill from the next group). Watch three signals between batches: replies (answer them, they build reputation), bounces (a cluster means pause), and complaints (report-spam via feedback loop — the single most damaging signal, which frictionless unsubscribe exists to divert). Prefer a manual send-next-batch button plus a run sheet over automated scheduling until reputation is established and auto-pause guardrails exist.
 - **A stakeholder-operable send tool needs exactly this shape:** a vendored template whose header/footer are not editable in the UI; compose limited to subject, preheader, constrained rich-text body and 0–2 CTA pill buttons (label plus URL restricted to https on owned domains); recipient groups from CSV with validation, case-insensitive dedupe and visible counts; `[TEST]`-prefixed test sends to configurable addresses before an explicit confirmed real send; a per-recipient delivery audit storing the exact rendered email; and open/click tracking disabled when the published privacy stance is no tracking.
+- **Point the footer unsubscribe at the branded page on the sender's own domain.** A backend-function link inside an email from your domain looks less trustworthy and is a small spam signal. Keep `List-Unsubscribe` / `List-Unsubscribe-Post` pointing at the function for one-click POST, and keep the function's GET 302 to the branded page so older emails still work. Note that a mailer's TEST sends may deliberately link the function with a harmless demo flag while real sends use the branded page — audit the body link from a real send or a saved rendered copy, or you will chase a fix that is not needed.
+- **Ramp warm-up volume; a flat rate does not finish.** 20–30 sends a day takes 33–50 days for a 1,000-contact list, and a per-domain cap of 5 a day means a single 251-contact institutional domain alone needs 51 sending days. Hold the rate for the first few sends, then roughly double it while bounces stay low, and raise the per-domain cap in steps (5, 10, 20) for large institutional domains once results are clean.
+- **Settle the consent basis before a bulk send to a compiled list.** The Spam Act's inferred-consent route generally covers addresses conspicuously published in a work capacity, so a list that is 47% personal Gmail, Hotmail and Bigpond addresses needs its basis established per contact first — how those people came to be in the sender's contacts is the question that gets asked after a complaint.
 
 ## Process
 
@@ -50,6 +53,7 @@ Partial inputs are fine — state assumptions.
 6. **Plan the warm-up** — batch sizes, sector caps, run sheet, the three watch signals, manual send button.
 7. **Send and watch** — advance batches only after replies/bounces/complaints review; divert complaints with frictionless unsubscribe.
 8. **Audit** — per-recipient record of the exact rendered email; placement notes (headers) for any junked seed or report.
+10. **Establish the consent basis per contact** for any compiled list before the first bulk send, separating work-published addresses from personal ones.
 
 ## Output format
 
@@ -72,6 +76,10 @@ Partial inputs are fine — state assumptions.
 - [ ] Exactly one subject, one greeting; preheader independent; blank-name rendering checked
 - [ ] Warm-up batched 20–30/day with per-domain caps; manual advance; replies/bounces/complaints reviewed between batches
 - [ ] Tracking disabled if the published privacy stance is no tracking
+- [ ] Footer unsubscribe points at the branded page on the sending domain; headers keep one-click POST on the function
+- [ ] Body link audited from a real send, not a TEST send
+- [ ] Warm-up plan ramps volume and per-domain caps rather than holding a flat rate
+- [ ] Consent basis recorded per contact for compiled lists, with personal addresses separated from work-published ones
 
 ## Avoid
 
@@ -83,6 +91,10 @@ Partial inputs are fine — state assumptions.
 - Automated warm-up scheduling before reputation and auto-pause guardrails exist
 - Letting stakeholders edit header/footer or paste arbitrary URLs in the send tool
 - Removing unsubscribe from a repeatable sending tool, whatever a one-off direction said
+- Linking the raw backend function from the visible footer — use the branded page and keep the function for the header POST
+- Judging the unsubscribe link from a TEST send, which may deliberately differ from a real one
+- Planning warm-up as a flat daily number — it never clears a large list, and one institutional domain can dominate the schedule
+- Bulk-sending a compiled list before the consent basis for its personal addresses is settled
 
 ## Example usage
 

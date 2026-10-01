@@ -2,7 +2,7 @@
 name: branded-link-qr-service
 description: Build a permanent branded short-link and QR code service on a static host — 302 indirection, a source-controlled link registry, generated redirect config with CI drift checks, and validated QR generation
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -45,6 +45,12 @@ Partial inputs are fine — infer sensible defaults and state them.
 - **Encode bare paths.** A static `redirect` route on Azure SWA does not forward the query string, so put any UTM/tracking on the destination side of the registry, never in the printed URL.
 - **Only green-light print when a fresh `curl` of the exact encoded URL returns the redirect over a valid certificate** (and `openssl s_client -servername` shows the right CN); until then layout work can proceed on the final artwork but nothing goes to the printer. A phone scan showing an "unsecure"/certificate warning right after adding the CNAME is `ERR_CERT_COMMON_NAME_INVALID`: DNS already reaches the edge but the hostname is not yet bound — expected, not a DNS mistake.
 - **Azure Container Apps is a working escape hatch when Static Web Apps domain binding is broken.** It validates domains through its own `asuid.<host>` TXT plus CNAME, issues free managed certificates, offers Australia East, and scales to zero for near-zero cost. Running the official `caddy` image with the Caddyfile injected through a Secret-type volume means no custom image, no registry and no build step; a whole rescue took about 90 minutes. Trade-off vs SWA: Caddyfile routing, real logs and region choice, at the cost of a cold start on the first scan after idle, image-version upkeep, and routing config living outside `staticwebapp.config.json` (mitigate by embedding the Caddyfile in the Bicep so routes stay in source control). See *ACA escape hatch* in [`reference.md`](reference.md).
+- **Extend the route convention to profile variants, with the same permanence rule.** Alongside `/card/<person-slug>` for business cards, use `/profile/<person-slug>-<variant>` for alternate profile pages. A QR printed on a PDF carries exactly the same contract as one printed on a card: the go-link never changes, only its registry destination. A variant that carries a QR must be a public (unlisted, `noindex`) page — a 404-blocked private page cannot be a QR destination.
+- **Keep `minReplicas: 1` on any redirect host.** With `minReplicas: 0` the container scaled to zero after about five idle minutes and the next visitor waited roughly 10 seconds on a blank screen (system log: replica scheduled, image pulled in 3 s, container started about 10 s after the request), which made a first social-media click look broken. It costs a few dollars a month at idle rates; measure cold starts with `az containerapp logs show --type system`.
+- **Caddy `redir /early ...` matches the exact path only.** `/early-adopters`, `/earlybird` and `/qr/early/extra` correctly fall through to the catch-all — but test those near-miss paths whenever a new short path shares a prefix with an existing one. Before editing, confirm the live Caddyfile matches the committed one and that the new path is currently unclaimed (it should hit the catch-all).
+- **Roll a redirect-config change through a pinned revision, not in place.** Diff the live secret against the committed Caddyfile, `caddy validate` it and run it locally testing every route, then switch to Multiple revision mode and pin 100% traffic to the current revision before PATCHing in a new one. Secrets are app-level, so an old revision re-reads the new secret on its next cold start — the pre-validation, not the old revision, is what actually protects rollback. See *Zero-downtime ACA rollout* in [`reference.md`](reference.md).
+- **After returning to Single revision mode, Container Apps deactivates the old revision itself** within about a minute, so an explicit `revision deactivate` straight after returns `RevisionAlreadyInRequestedState`. That is harmless — check `revision list --all` rather than treating the error as a failure.
+- **Decode generated QR artwork independently, with a control.** Decode the PNG with a separate library (`jsqr` plus `pngjs` in Node), assert it equals the exact encoded URL, and decode an existing known-good code alongside it as a control. Then follow the full chain on production from the decoded URL through the 302 to the landing page, rather than trusting the generator's input.
 
 ## Process
 
@@ -57,6 +63,8 @@ Partial inputs are fine — infer sensible defaults and state them.
 7. **Validate** — decode each artefact and assert exact-URL match; grep the SVG/PNG for the destination string and assert absence; record results.
 8. **Deploy and verify live** — confirm `302` + correct `Location` for every path, including aliases, over a valid certificate (`openssl s_client` CN); test-scan a printed proof.
 9. **Operate** — to move a destination, edit the registry, regenerate, deploy. Never touch a printed path.
+10. **Roll config changes safely** — validate locally, pin traffic to the current revision, PATCH a new `revisionSuffix`, test it on its own FQDN, shift traffic, test the live domain twice, then return to Single mode.
+11. **Verify artwork by decoding it**, with a known-good control, and follow the redirect chain on production before print sign-off.
 
 ## Output format
 
@@ -81,6 +89,12 @@ Partial inputs are fine — infer sensible defaults and state them.
 - [ ] Printed URLs are bare paths (no query strings); `/qr/<x>` and `/<x>` carry `?src=qr` / `?src=url` on the destination side
 - [ ] Live `302` + `Location` verified over a valid certificate for every path and alias, and a proof test-scanned, before print sign-off
 - [ ] If SWA domain binding is wedged, the host is served from ACA + Caddy with routes embedded in Bicep
+- [ ] `minReplicas: 1` on the redirect host; cold-start behaviour checked in system logs
+- [ ] Near-miss paths tested for every new short path that shares a prefix
+- [ ] Live secret diffed against the committed Caddyfile and `caddy validate`d before any rollout
+- [ ] New revision tested on its own FQDN before traffic shifts; live domain tested twice after
+- [ ] QR artwork decoded independently against a control and the production chain followed end to end
+- [ ] Any QR-carrying profile variant is a public unlisted `noindex` page, not a blocked one
 
 ## Avoid
 
@@ -93,6 +107,12 @@ Partial inputs are fine — infer sensible defaults and state them.
 - Putting UTM/query parameters in the printed URL — a static redirect drops them; attach them to the destination
 - Printing before the live redirect returns `302` with the right `Location` over a valid certificate — a post-CNAME `ERR_CERT_COMMON_NAME_INVALID` means the hostname is not yet bound, not that DNS is wrong
 - Repurposing a printed route when terminology changes — add the new path as an alias and keep the old one live
+- Leaving `minReplicas: 0` on a short-link host — the first click after idle looks broken
+- Assuming a prefix collision: `redir` matches exact paths, but test the near misses anyway
+- Editing the live secret in place without validating and pinning traffic first
+- Treating `RevisionAlreadyInRequestedState` after returning to Single mode as a failure
+- Pointing a printed QR at a page that is 404-blocked to the public
+- Trusting the generator's input instead of decoding the artwork you are about to print
 
 ## Example usage
 

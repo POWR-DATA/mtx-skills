@@ -29,6 +29,7 @@ Guides the `@media print` CSS needed to turn a web page into clean PDF/print out
 | `README.md` | This file |
 | `example-input.md` | Example input for this skill |
 | `example-output.md` | Example output produced by this skill |
+| `reference.md` | Load-on-demand excerpts — last-page pin CSS, headless render flags, programmatic page-count verification |
 
 ## How to use
 

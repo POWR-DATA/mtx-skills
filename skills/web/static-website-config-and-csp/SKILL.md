@@ -2,7 +2,7 @@
 name: static-website-config-and-csp
 description: Configure and safely change a live static site on Azure Static Web Apps — staticwebapp.config.json routes, headers, caching and MIME types, Content Security Policy, and the front-end gotchas of editing a static HTML site in production
 author: PowerData
-version: 1.2.0
+version: 1.3.0
 license: MIT
 ---
 
@@ -53,6 +53,13 @@ Partial inputs are fine — infer from the repo and ask only where needed.
 - **Reorganising into subfolders: redirect every old URL** — 301 for public/SEO pages, 302 for transient/auth pages — so links and app deep-links keep working. SWA serves `index.html` for a directory and `foo.html` for `/foo`; add an explicit `rewrite` for the no-trailing-slash folder URL to pin the canonical. Convert relative asset references (`styles.css`, `assets/…`) to root-absolute (`/styles.css`) on any relocated page — they otherwise 404.
 - **A static page can double as a Supabase auth page** (password reset): read the recovery token from the URL hash, load supabase-js from a CDN, `setSession` then `updateUser`; give its route a `rewrite` to the `.html` and a per-route CSP allowing `connect-src https://<project-ref>.supabase.co` and `script-src … https://cdn.jsdelivr.net`. See `supabase-auth-email` for hardening those pages.
 - **A page that is an App Link / Universal Link target is verified domain-wide by `.well-known/assetlinks.json`** (`handle_all_urls`) — moving its URL needs no assetlinks edit, but the app's intent-filter paths and any auth redirect URLs must be updated app-side.
+- **The SWA edge serves the previous HTML for a minute or two after a successful deploy.** A check run straight after `gh run watch` showed five of seven pages still on old content and looked like a partial deploy. Verify with a cache-busting query string plus a `Cache-Control: no-cache` request header before concluding anything failed.
+- **Scope every bulk edit to its own block.** A site's nav and footer can contain the same link pairs, so a regex meant to add a footer link also rewrote the nav and put a fifth item in the main nav on seven pages — pages whose nav link carried `aria-current` escaped only by accident. Anchor the edit inside `<nav ...>...</nav>` or the footer `<div>`, and afterwards verify the nav's exact item list rather than checking the new link exists somewhere on the page.
+- **Specificity turns a span into a nav link the moment you make it an anchor.** `.site-nav a` (0,1,1) beats a bare `.nav-pill` (0,1,0), so a pill silently adopts the nav link's padding, radius and colour; carry both selectors (`.nav-pill, .site-nav a.nav-pill`). For a two-row mobile header, put the login link outside `<nav>` as a sibling of the brand, give the header wrapper `flex-wrap: wrap`, let `.brand { margin-right: auto }` push the login link right on row one with the nav at `width: 100%` on row two, and swap `order` at desktop widths so the login link sits furthest right.
+- **A shortened link label must still appear in its `aria-label`.** WCAG 2.5.3 (Label in Name) means voice-control users saying "click Login" match nothing if the accessible name says "Practitioner portal". Changing a visible label from "Portal" to "Login" therefore also means changing `aria-label="Practitioner portal"` to `aria-label="Practitioner login"`.
+- **Self-hosted MP4s need an explicit MIME mapping to stream.** Map `.mp4` to `video/mp4` in `mimeTypes` and byte-range requests return 206; set CSS `aspect-ratio` to the encoded dimensions so the player reserves its space before the poster loads. Because `/assets/*` carries a long cache, reference videos and posters with `?v=N` and bump it whenever a file is replaced.
+- **Check that every referenced asset actually resolves when touching a page's head.** Pages carried a `<script src="/canonical.js">` for a file that did not exist, so it 404ed on every load of three pages and left them with no canonical tag at all. Prefer a static `<link rel="canonical">` over a script-injected one.
+- **A narrow headless window is not a phone viewport.** Headless Edge with `--window-size=412,...` did not produce a true phone-width layout; rendering the page inside a 412 px-wide iframe in a larger window and cropping the column produced the real mobile layout. Use the iframe wrapper for phone screenshots when a narrow window renders oddly.
 
 ## Process
 
@@ -62,6 +69,8 @@ Partial inputs are fine — infer from the repo and ask only where needed.
 4. **CSP** — externalise scripts and handlers, then styles; copy reused third-party images into the repo (same-origin) rather than hotlinking under `img-src 'self'`; deploy Report-Only, clear violations, enforce; per-route CSP for pages that need CDN/Supabase.
 5. **Front-end edits** — inspect each page's markup, place mobile nav in `<header>`, replace stale media rules, null-guard shared scripts, root-absolute assets on moved pages, bump `?v=`.
 6. **Deploy and verify live** — fetch the live URL for headers, 404s on hidden files, redirects, CSP console; hard refresh for cached JS/CSS.
+7. **Verify the deploy past the edge cache** — cache-busting query plus `Cache-Control: no-cache`, on every page you changed, not just one.
+8. **Re-check the nav's exact item list** after any bulk markup edit, and confirm every asset referenced from a changed `<head>` resolves.
 
 ## Output format
 
@@ -82,6 +91,12 @@ Partial inputs are fine — infer from the repo and ask only where needed.
 - [ ] Relocated pages: 301/302 redirects from old URLs, rewrite for the folder URL, root-absolute asset paths
 - [ ] Mobile nav inside `<header>`; stale mobile media rules replaced
 - [ ] `?v=` bumped on changed JS/CSS and behaviour verified against the live URL
+- [ ] Post-deploy verification used a cache-busting query and `no-cache`, not a bare fetch
+- [ ] Bulk edits anchored inside their own block; nav item list verified exactly afterwards
+- [ ] New nav anchors carry both selectors so nav-link specificity does not override them
+- [ ] `aria-label` contains the visible label text (WCAG 2.5.3)
+- [ ] `.mp4` mapped in `mimeTypes`, `aspect-ratio` set, media referenced with `?v=N`
+- [ ] Every asset referenced from a changed `<head>` resolves; canonical is a static `<link>`
 
 ## Avoid
 
@@ -98,6 +113,13 @@ Partial inputs are fine — infer from the repo and ask only where needed.
 - Keeping relative asset paths when moving a page into a subfolder — they 404
 - Assuming nav markup is identical across pages, or placing a mobile menu after `</header>`
 - Judging a JS/CSS deploy from a normally-cached tab — verify the live URL or hard refresh
+- Concluding a deploy half-failed from a fetch made seconds after it completed — the edge is still serving the old HTML
+- Running a link-pair regex across a whole page when nav and footer share the same pairs
+- Styling a new nav pill with a bare class and expecting it to beat `.site-nav a`
+- Shortening a visible link label without updating its `aria-label`
+- Serving self-hosted MP4s without a `mimeTypes` entry, or replacing a cached asset without bumping `?v=`
+- Injecting the canonical tag from a script, or leaving a reference to a deleted file in `<head>`
+- Taking phone screenshots by shrinking the headless window — render in an iframe at the target width
 
 ## Example usage
 
