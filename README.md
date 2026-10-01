@@ -108,6 +108,8 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Supabase Edge Functions](skills/app/supabase-edge-functions/) | Deploy serverless functions to Supabase Edge Functions |
 | [Supabase Auth Email](skills/app/supabase-auth-email/) | Configure Supabase transactional auth email — custom SMTP, branded templates via the Management API, and reliable confirm/reset flows |
 | [Supabase Marketing Backend](skills/app/supabase-marketing-backend/) | Use Supabase as the backend for a static marketing site — insert-only public forms on the anon key with RLS, a privacy-tiered page-hit beacon, reader roles, and the RLS/view leaks that bite |
+| [Demo Seed Data](skills/app/demo-seed-data/) | Build demo and screenshot data that is safe to publish and repeatable to rebuild — reserved fictitious identifiers, curated content in the seed, recency-aware ordering |
+| [Stripe Subscription Billing](skills/app/stripe-subscription-billing/) | Run subscription pricing against Stripe from a database plan catalogue — per-environment price ids, idempotent price setup, and permanent comped access without a sentinel trial date |
 | [Resend Email Sending](skills/app/resend-email-sending/) | Operate Resend as an application's email provider — API key and domain scoping, marketing vs transactional stream separation, Svix-signed delivery webhooks with suppression |
 
 ### Web skills
@@ -119,6 +121,8 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Static Website Config and CSP](skills/web/static-website-config-and-csp/) | Configure and safely change a live static site on Azure SWA — staticwebapp.config.json routes, headers, caching, MIME types, CSP, and production front-end gotchas |
 | [Website SEO and Indexing](skills/web/website-seo-and-indexing/) | Optimise website structure and content for search engine indexing |
 | [Web Print PDF](skills/web/web-print-pdf/) | Produce reliable print and PDF output from an HTML page with print-specific CSS |
+| [Screen Recording Web Guides](skills/web/screen-recording-web-guides/) | Publish screen-recorded walkthrough videos safely — frame-by-frame redaction of real data, provable blurring, portable ffmpeg encoding, and the written text alternative |
+| [Web Filter Recategorisation](skills/web/web-filter-recategorisation/) | Diagnose and fix a corporate web filter blocking a young domain — proving it is the filter not the site, and requesting a category from each major vendor |
 | [Branded Link QR Service](skills/web/branded-link-qr-service/) | Build a permanent branded short-link and QR code service on a static host — 302 indirection, link registry, CI drift checks, validated QR generation |
 | [Marketing Email Campaign](skills/web/marketing-email-campaign/) | Design, test and send a marketing email campaign — bulletproof HTML template, seed-test protocol, Spam Act compliance, scanner-safe unsubscribe, deliverability forensics, warm-up batching |
 | [Email Address Obfuscation](skills/web/email-address-obfuscation/) | Protect published email addresses from scrapers on a static site — JavaScript-assembled mailto links, accessible fallbacks, CSP-clean implementation, payload verification |
@@ -131,6 +135,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [GitHub Org Repository Setup](skills/infra/github-org-repository-setup/) | Set up a new GitHub repository in an organisation with correct access, security, and baseline branch protection |
 | [Git Secret Remediation](skills/infra/git-secret-remediation/) | Remove committed secrets from Git history safely and verify remediations across local and remote repositories |
 | [M365 Email Authentication](skills/infra/m365-email-authentication/) | Enable DKIM, SPF and DMARC for a Microsoft 365 custom domain — Defender portal path, per-domain CNAME values, negative-cache delays, cross-resolver DNS verification |
+| [GitHub Actions Scheduled Automation](skills/infra/github-actions-scheduled-automation/) | Run time-sensitive scheduled work on GitHub Actions — external dispatch when cron slips, idempotency guards for every trigger, per-job secrets, safe comment chatops |
 | [Windows CLI Gotchas](skills/infra/windows-cli-gotchas/) | Run native CLIs reliably from PowerShell 5.1 and Git Bash on Windows — quoting, JSON payloads, stderr and exit codes, MSYS path mangling, which shell for which tool |
 
 ### Domain-specific skills
@@ -144,6 +149,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 
 | Skill | Description |
 |---|---|
+| [AI Social Content Pipeline](skills/ai/ai-social-content-pipeline/) | Build an automated LLM pipeline that drafts, fact-checks and renders social posts — validation on every edit, defensible risk classification, correct typography, image briefs and spend tracking |
 
 ---
 
