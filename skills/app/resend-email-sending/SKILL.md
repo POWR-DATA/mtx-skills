@@ -2,7 +2,7 @@
 name: resend-email-sending
 description: Operate Resend as an application's email provider — API key and domain scoping, marketing vs transactional stream separation, and Svix-signed delivery webhooks with automatic suppression
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -30,21 +30,22 @@ Partial inputs are fine.
 
 - **An API key sends only from domains verified in ITS OWN team.** A key scoped to a specific domain 403s with "This API key is not authorized to send emails from `<other-domain>`" — create an "All domains" key (or one covering every sending domain) for services that send from more than one.
 - **A sending domain can be verified in only ONE Resend account at a time.** The `resend._domainkey` DKIM value is single-valued, so consolidate all sending into one team rather than splitting dev/prod across separate accounts — the second account can never verify the same domain.
-- **Send marketing from a dedicated subdomain** (e.g. `marketing.example.com`), separate from the root domain used for transactional/auth mail, so a cold-list reputation hit can't sink password-reset or confirmation deliverability — standard stream separation (Mailgun/SendGrid/Postmark all recommend it). The org-level DMARC record at `_dmarc.example.com` automatically covers subdomains via DMARC's org-domain fallback — no per-subdomain DMARC record is needed.
+- **Send from subdomains, never the root.** Transactional/auth mail goes from a sending subdomain such as `mail.<domain>`, and marketing from its own (e.g. `marketing.<domain>`), so a cold-list reputation hit can't sink password-reset or confirmation deliverability — standard stream separation (Mailgun/SendGrid/Postmark all recommend it). The org-level DMARC record at `_dmarc.example.com` automatically covers subdomains via DMARC's org-domain fallback — no per-subdomain DMARC record is needed.
+- **A `mail.<domain>` sending subdomain needs four records at the parent zone:** one DKIM TXT at `resend._domainkey.mail`, two CNAMEs at `send.mail` and `rsend.mail` (return path and tracking, values from the Resend dashboard), and a DMARC TXT at `_dmarc` with `v=DMARC1; p=none` to start monitoring before tightening. A registrar TTL of 3600 is fine. Confirm the records resolve on a public resolver (e.g. Google DNS) before pressing verify.
 - **Resend delivery webhooks are Svix-signed — verify them properly.** Compute HMAC-SHA256 over `${svix-id}.${svix-timestamp}.${rawBody}` using the base64-decoded secret (strip the `whsec_` prefix), base64-compare against each `v1,<sig>` entry in the `svix-signature` header, and reject events older than ~5 minutes.
 - **Deploy the webhook function with `verify_jwt = false`** — Resend sends no JWT, so a Supabase edge function behind the JWT gateway never receives the event; the Svix signature is the authentication.
 - **Auto-suppress on `email.bounced` and `email.complained`.** Write the address to the suppression list the moment the event verifies, and enforce the list at send time — a clean list is the cheapest deliverability asset.
-- **Do not name a single country for overseas processing.** Resend delivered an Australian project's mail through Amazon SES in `ap-northeast-1` (Tokyo), not the US — visible in the reverse DNS of every sending IP in the DMARC reports. Word a privacy policy's overseas-processing line as "the United States and other countries" rather than naming one, and read the reverse DNS if you need to know where mail actually egresses.
+- **Pick the region deliberately, and do not name a single country for overseas processing.** Resend offers only N. Virginia, Ireland, Sao Paulo and Tokyo (no Sydney), so for Australian senders choose Tokyo as the nearest. Even so, Resend delivered an Australian project's mail through Amazon SES in `ap-northeast-1` (Tokyo), not the US — visible in the reverse DNS of every sending IP in the DMARC reports. Word a privacy policy's overseas-processing line as "the United States and other countries" rather than naming one, and read the reverse DNS if you need to know where mail actually egresses.
 
 ## Process
 
 1. **Plan the account layout** — one Resend team for all sending; list every domain/subdomain and which stream (transactional vs marketing) it carries.
-2. **Verify domains** — root (transactional/auth) and `marketing.<domain>`; confirm org-level DMARC covers the subdomain via fallback (no new `_dmarc` record).
+2. **Choose the region and verify domains** — Tokyo for Australian senders; `mail.<domain>` (transactional/auth) and `marketing.<domain>`, each with its DKIM TXT, `send`/`rsend` CNAMEs, and DMARC starting at `p=none`; confirm org-level DMARC covers the subdomain via fallback (no new `_dmarc` record).
 3. **Create keys deliberately** — an "All domains" key for multi-domain senders; note which service holds which key and what it may send from.
 4. **Stand up the webhook** — endpoint (e.g. edge function) with `verify_jwt = false`; implement Svix verification exactly (id.timestamp.rawBody, decoded secret, v1 comparison, 5-minute window).
 5. **Wire suppression** — on verified `email.bounced`/`email.complained`, insert into the suppression list; enforce it in every send path.
 6. **Test end to end** — a send from each domain with each key (expect the 403 on any mis-scoped key), a webhook event verified and suppressed, and a suppressed address refused at send time.
-6. **Confirm the real egress region** from reverse DNS on the sending IPs in DMARC aggregate reports before writing any data-residency claim.
+7. **Confirm the real egress region** from reverse DNS on the sending IPs in DMARC aggregate reports before writing any data-residency claim.
 
 ## Output format
 
@@ -57,7 +58,8 @@ Partial inputs are fine.
 ## Quality checklist
 
 - [ ] All sending consolidated in one Resend team; no domain split across accounts
-- [ ] Marketing on its own subdomain; transactional/auth on the root; DMARC fallback confirmed
+- [ ] Region chosen deliberately (Tokyo for Australian senders; there is no Sydney region)
+- [ ] Transactional/auth on `mail.<domain>`, marketing on its own subdomain; DKIM TXT, `send`/`rsend` CNAMEs and DMARC records resolve publicly; DMARC fallback confirmed
 - [ ] Keys scoped to cover every domain their holder sends from ("All domains" where needed)
 - [ ] Webhook verifies the Svix signature over `id.timestamp.rawBody` with the decoded secret and rejects stale events
 - [ ] Webhook function deployed with `verify_jwt = false`
@@ -68,6 +70,7 @@ Partial inputs are fine.
 
 - A domain-scoped key for a service that sends from two domains — it 403s on the second
 - Splitting dev/prod into separate Resend accounts sharing a domain — DKIM is single-valued; the second account cannot verify it
+- Accepting the default region without checking, or looking for a Sydney region that does not exist
 - Sending cold marketing from the domain that carries password resets — one complaint wave hits both
 - Adding a per-subdomain DMARC record "to be safe" — the org-domain fallback already covers it
 - Trusting webhook payloads without Svix verification, or verifying with the raw `whsec_` string undecoded
