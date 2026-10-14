@@ -126,6 +126,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Branded Link QR Service](skills/web/branded-link-qr-service/) | Build a permanent branded short-link and QR code service on a static host — 302 indirection, link registry, CI drift checks, validated QR generation |
 | [Marketing Email Campaign](skills/web/marketing-email-campaign/) | Design, test and send a marketing email campaign — bulletproof HTML template, seed-test protocol, Spam Act compliance, scanner-safe unsubscribe, deliverability forensics, warm-up batching |
 | [Email Address Obfuscation](skills/web/email-address-obfuscation/) | Protect published email addresses from scrapers on a static site — JavaScript-assembled mailto links, accessible fallbacks, CSP-clean implementation, payload verification |
+| [Server-Side Map Images](skills/web/server-side-map-images/) | Render static map images on the server for share cards and previews, covering tile licensing, in-house styling, full tile coverage and versioned cache keys |
 
 ### Infrastructure skills
 
