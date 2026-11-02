@@ -16,6 +16,8 @@ These skills cover the full delivery lifecycle for Python-based multi-platform a
 | [Stripe Subscription Billing](stripe-subscription-billing/) | Subscription pricing against Stripe from a database plan catalogue — per-environment price ids, idempotent price setup, permanent comped access | — |
 | [Demo Seed Data](demo-seed-data/) | Demo and screenshot data that is safe to publish and repeatable to rebuild — reserved fictitious identifiers, curated content in the seed | App Store Listing / Google Play Listing |
 | [Resend Email Sending](resend-email-sending/) | Resend as an application's email provider — API key and domain scoping, marketing vs transactional stream separation, Svix-signed delivery webhooks with suppression | Marketing Email Campaign (web) |
+| [Supabase Postgres Guardrails](supabase-postgres-guardrails/) | Supabase Postgres functions, RPCs and triggers that are safe to expose — explicit EXECUTE grants, null-safe ownership checks, server-side trust and masking, PostgREST error codes, real SQL tests in CI | Supabase Migration Promotion |
+| [Supabase Migration Promotion](supabase-migration-promotion/) | Schema changes moved between dev and production safely — checking what each project runs, single-migration promotion via the Management API, re-runnable migrations and rollbacks | — |
 
 ## Suggested delivery sequence
 

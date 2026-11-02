@@ -111,6 +111,8 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Demo Seed Data](skills/app/demo-seed-data/) | Build demo and screenshot data that is safe to publish and repeatable to rebuild — reserved fictitious identifiers, curated content in the seed, recency-aware ordering |
 | [Stripe Subscription Billing](skills/app/stripe-subscription-billing/) | Run subscription pricing against Stripe from a database plan catalogue — per-environment price ids, idempotent price setup, and permanent comped access without a sentinel trial date |
 | [Resend Email Sending](skills/app/resend-email-sending/) | Operate Resend as an application's email provider — API key and domain scoping, marketing vs transactional stream separation, Svix-signed delivery webhooks with suppression |
+| [Supabase Postgres Guardrails](skills/app/supabase-postgres-guardrails/) | Write Supabase Postgres functions, RPCs and triggers that are safe to expose — explicit EXECUTE grants, null-safe ownership checks, server-side trust and location masking, concurrency guards, PostgREST error codes, and real SQL tests in CI |
+| [Supabase Migration Promotion](skills/app/supabase-migration-promotion/) | Move Supabase schema changes between dev and production safely — checking what each project actually runs, promoting single migrations through the Management API, re-runnable migrations and rollbacks, and live function definitions as the base |
 
 ### Web skills
 
@@ -138,6 +140,8 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [M365 Email Authentication](skills/infra/m365-email-authentication/) | Enable DKIM, SPF and DMARC for a Microsoft 365 custom domain — Defender portal path, per-domain CNAME values, negative-cache delays, cross-resolver DNS verification |
 | [GitHub Actions Scheduled Automation](skills/infra/github-actions-scheduled-automation/) | Run time-sensitive scheduled work on GitHub Actions — external dispatch when cron slips, idempotency guards for every trigger, per-job secrets, safe comment chatops |
 | [Windows CLI Gotchas](skills/infra/windows-cli-gotchas/) | Run native CLIs reliably from PowerShell 5.1 and Git Bash on Windows — quoting, JSON payloads, stderr and exit codes, MSYS path mangling, which shell for which tool |
+| [Azure Encrypted Database Backups](skills/infra/azure-encrypted-database-backups/) | Run encrypted, immutable Postgres backups on Azure — a scheduled Container Apps job with Key Vault credentials, age encryption to two recipients, locked blob retention, restore rehearsal, and alerts that do not page falsely |
+| [Cloudflare R2 Static Data](skills/infra/cloudflare-r2-static-data/) | Publish large versioned static datasets on Cloudflare R2 — bulk sync by key prefix, immutable caching on versioned keys, a custom domain instead of r2.dev, and completeness checks before a release points at the data |
 
 ### Domain-specific skills
 
@@ -151,6 +155,7 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | Skill | Description |
 |---|---|
 | [AI Social Content Pipeline](skills/ai/ai-social-content-pipeline/) | Build an automated LLM pipeline that drafts, fact-checks and renders social posts — validation on every edit, defensible risk classification, correct typography, image briefs and spend tracking |
+| [Remote MCP Server](skills/ai/remote-mcp-server/) | Run a public remote MCP server for AI connector directories — a custom-domain proxy in front of the server, domain verification, tool annotations, MCP Apps widgets, output sanitisation and spoof-proof rate limits |
 
 ---
 

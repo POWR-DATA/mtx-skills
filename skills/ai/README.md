@@ -9,6 +9,7 @@ These skills cover the delivery lifecycle for AI-powered systems: agent design, 
 | Skill | Description | Typical next skill |
 |---|---|---|
 | [AI Social Content Pipeline](ai-social-content-pipeline/) | Build an automated LLM pipeline that drafts, fact-checks and renders social posts — validation on every edit, defensible risk classification, correct typography, image briefs and spend tracking | GitHub Actions Scheduled Automation (infra) |
+| [Remote MCP Server](remote-mcp-server/) | A public remote MCP server for AI connector directories — custom-domain proxy, domain verification, tool annotations, MCP Apps widgets, output sanitisation, spoof-proof rate limits | — |
 
 ## Adding a new AI skill
 
