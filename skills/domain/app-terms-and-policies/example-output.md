@@ -14,8 +14,9 @@
 ## 2. Terms clauses
 
 - **Fees & billing:** "Subscription fees, the billing frequency and any trial or promotional arrangements are as displayed at the time you subscribe. Payments are processed by Stripe." — no "$12", no "1st of the month"; survives anniversary billing and the launch discount.
+- **Billing behaviour:** a written question list went to the app team (failed payments, the launch discount ending, ending it early, cancelling and changing plan during it, tax invoices); each clause describes the answer — e.g. "cancelled and access suspended until payment is made" — not generic billing language.
 - **Liability:** cap expressed as "the fees paid in the 12 months preceding the claim" *(confirm flag: must sit below policy limits — see insurance notes)*; exclusions for indirect loss; consumer-guarantee carve-out.
-- **Effective date / versioning:** "These Terms are effective from [effective date]. When we change them we will publish a new effective date and ask you to accept the new version before continuing."
+- **Effective date / versioning:** "These Terms are effective from [effective date]. When we change them we will update the 'Last updated' date and ask you to accept the new version before continuing."
 
 ## 3. Insurance notes
 
@@ -28,9 +29,9 @@
 
 ## 4. Acceptance flow spec
 
-- **Data:** `terms_url` (configurable), `terms_version` = effective date (`YYYY-MM-DD`), `accepted_at timestamptz`; `terms_accepted` boolean retired
-- **UI:** onboarding — explicit "I accept the Terms and Privacy Policy" with both links; checkout — fees **and** terms link shown before pay; settings — Terms/Privacy links reachable after onboarding
-- **Re-acceptance:** on sign-in, if `terms_version` < current effective date → acceptance screen before proceeding
+- **Data:** `terms_url` (configurable), `terms_version` and `privacy_version` = each page's Last updated date (`YYYY-MM-DD`), `accepted_at timestamptz`; newsletter opt-in stored with its own version and time; `terms_accepted` boolean retired, and existing users' version columns left null rather than back-filled
+- **UI:** onboarding — one required tick "I accept the Terms and Privacy Policy" with both names as inline links outside the toggle area; a separate, unticked newsletter opt-in; help text "tick the required confirmations"; checkout — fees **and** terms link shown before pay; settings — Terms/Privacy links reachable after onboarding
+- **Re-acceptance:** on sign-in, if the stored version < current Last updated date → acceptance screen before proceeding
 - **Feature flag:** `terms_flow_enabled` — ships in the next build, off until publication
 
 ## 5. Publication checklist
@@ -38,5 +39,6 @@
 - [ ] Broker/insurer confirm-flag items resolved; counsel sign-off
 - [ ] Remove draft banner and confirm-flag styling; set effective date
 - [ ] Remove `X-Robots-Tag: noindex`; add `/terms` and `/privacy` to sitemap and footer nav
-- [ ] Set `terms_version` current value = effective date; flip `terms_flow_enabled` on
+- [ ] Privacy Policy covers the newsletter opt-in and the do-not-email list (marketing, retention and account-deletion sections) before the opt-in ships
+- [ ] Give the app team the exact Last updated date; ship the label migration in the same release; flip `terms_flow_enabled` on
 - [ ] Verify: onboarding, checkout and settings show the links; a pre-publication test user is prompted to re-accept

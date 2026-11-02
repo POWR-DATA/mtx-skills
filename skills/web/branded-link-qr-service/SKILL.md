@@ -2,7 +2,7 @@
 name: branded-link-qr-service
 description: Build a permanent branded short-link and QR code service on a static host — 302 indirection, a source-controlled link registry, generated redirect config with CI drift checks, and validated QR generation
 author: PowerData
-version: 1.2.0
+version: 1.3.0
 license: MIT
 ---
 
@@ -36,7 +36,7 @@ Partial inputs are fine — infer sensible defaults and state them.
 ## Guiding principles
 
 - **Indirection is the whole point — never encode the destination in the QR.** The printed QR encodes a permanent `go.<domain>/<path>` URL that 302-redirects to a CHANGEABLE destination. Never use 301 — the destination must stay movable without reprinting; a cached 301 makes the printed link permanent in the worst way. In practice printed artwork has stayed final through three failed hosting attempts and a platform switch because only the 302 target and infrastructure changed.
-- **Give the QR path and the human-typed path different routes.** `/qr/<campaign>` for the code and `/<campaign>` for what people type, redirecting with `?src=qr` and `?src=url` respectively, so scans and typed visits are distinguishable downstream.
+- **Give the QR path and the human-typed path different routes, and register both.** `/qr/<campaign>` for the code and `/<campaign>` for what people type, redirecting with `?src=qr` and `?src=url` respectively, so scans and typed visits are distinguishable downstream. A campaign registered only as `/<slug>` has no QR route: `/qr/<slug>` silently falls through to the catch-all and 302s to the home page, so an assumed QR path looks like it works. List both paths per campaign in the registry and test the exact path you plan to print.
 - **A source-controlled registry is the single source of truth.** Keep `config/branded-links.json` (or equivalent) as the only place a link is defined, generate the deployed redirect config from it with a script, and never hand-edit the generated routes.
 - **The generator needs a CI `--check` mode.** `--check` rebuilds the config in memory and compares it semantically (CRLF-safe — parse, don't diff bytes) against the committed file, so the pipeline fails if the generated config drifts from the registry.
 - **Printed routes are immutable contracts.** Use a scalable per-person convention `/card/<person-slug>` for employee business-card QRs, and keep any earlier generic `/card` as a permanent 302 compatibility alias — once printed, a route is never deleted or repurposed: change its 302 destination, and when terminology changes add the new path as an alias while keeping the old one live (e.g. `/adviser` added, `/consultant` kept).
@@ -56,12 +56,12 @@ Partial inputs are fine — infer sensible defaults and state them.
 
 1. **Choose the link host** — a `go.<domain>` subdomain, deployed as its own static site (on Azure SWA, a subfolder SWA with its own deploy token; see the `static-website-hosting` skill).
 2. **Define the route convention** — `/card/<person-slug>` for people, short nouns for campaigns, `/qr/<x>` (→ `?src=qr`) alongside `/<x>` (→ `?src=url`); list any legacy generic routes (`/card`) to retain as 302 aliases.
-3. **Create the registry** — one entry per link: `path`, `destination`, `status: 302`, `owner`, `notes`, and `aliases` where a legacy path must keep working.
+3. **Create the registry** — one entry per link: `path`, `destination`, `status: 302`, `owner`, `notes`, and `aliases` where a legacy path must keep working; every campaign lists both `/qr/<x>` and `/<x>`.
 4. **Write the generator** — reads the registry, emits the host's redirect config (e.g. `staticwebapp.config.json` `routes` with `redirect` + `statusCode: 302`); supports `--check` for CI.
 5. **Wire the CI check** — run the generator in `--check` mode on every push/PR; fail on drift.
 6. **Generate QR artefacts** — `segno` or `npx qrcode` per link, saved as SVG (print master) and PNG (proof), brand-colour and black colourways, file-named by slug; commit them.
 7. **Validate** — decode each artefact and assert exact-URL match; grep the SVG/PNG for the destination string and assert absence; record results.
-8. **Deploy and verify live** — confirm `302` + correct `Location` for every path, including aliases, over a valid certificate (`openssl s_client` CN); test-scan a printed proof.
+8. **Deploy and verify live** — confirm `302` + correct `Location` for every path, including aliases and the exact path you plan to print (a 302 to the home page means it fell through to the catch-all), over a valid certificate (`openssl s_client` CN); test-scan a printed proof.
 9. **Operate** — to move a destination, edit the registry, regenerate, deploy. Never touch a printed path.
 10. **Roll config changes safely** — validate locally, pin traffic to the current revision, PATCH a new `revisionSuffix`, test it on its own FQDN, shift traffic, test the live domain twice, then return to Single mode.
 11. **Verify artwork by decoding it**, with a known-good control, and follow the redirect chain on production before print sign-off.
@@ -86,7 +86,7 @@ Partial inputs are fine — infer sensible defaults and state them.
 - [ ] QR generated with `segno` (`error='m'`, `boost_error` left on) — deterministic and reproducible
 - [ ] Each artefact decoded independently and asserted equal to the exact branded URL
 - [ ] Destination string absent from every SVG and PNG
-- [ ] Printed URLs are bare paths (no query strings); `/qr/<x>` and `/<x>` carry `?src=qr` / `?src=url` on the destination side
+- [ ] Printed URLs are bare paths (no query strings); every campaign registers both `/qr/<x>` and `/<x>`, carrying `?src=qr` / `?src=url` on the destination side
 - [ ] Live `302` + `Location` verified over a valid certificate for every path and alias, and a proof test-scanned, before print sign-off
 - [ ] If SWA domain binding is wedged, the host is served from ACA + Caddy with routes embedded in Bicep
 - [ ] `minReplicas: 1` on the redirect host; cold-start behaviour checked in system logs
@@ -109,6 +109,7 @@ Partial inputs are fine — infer sensible defaults and state them.
 - Repurposing a printed route when terminology changes — add the new path as an alias and keep the old one live
 - Leaving `minReplicas: 0` on a short-link host — the first click after idle looks broken
 - Assuming a prefix collision: `redir` matches exact paths, but test the near misses anyway
+- Assuming `/qr/<slug>` exists because `/<slug>` does — the catch-all 302s it to the home page, which looks like success
 - Editing the live secret in place without validating and pinning traffic first
 - Treating `RevisionAlreadyInRequestedState` after returning to Single mode as a failure
 - Pointing a printed QR at a page that is 404-blocked to the public

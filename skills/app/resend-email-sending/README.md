@@ -4,7 +4,7 @@ Operate Resend as an application's email provider — API key and domain scoping
 
 ## What this skill does
 
-Sets up Resend so sends actually work and keep working: keys scoped to every domain their holder sends from, all domains consolidated in one team (DKIM only allows a domain to live in one account), marketing on its own subdomain so a cold-list reputation hit cannot sink password resets, and delivery webhooks verified the way Svix requires with bounces and complaints auto-suppressed.
+Sets up Resend so sends actually work and keep working: keys scoped to every domain their holder sends from, all domains consolidated in one team (DKIM only allows a domain to live in one account), marketing on its own subdomain so a cold-list reputation hit cannot sink password resets, delivery webhooks verified the way Svix requires with bounces and complaints auto-suppressed, and send paths that cannot double-send or be turned into a bulk mailer.
 
 ## When to use it
 
@@ -12,6 +12,7 @@ Sets up Resend so sends actually work and keep working: keys scoped to every dom
 - A send fails with "This API key is not authorized to send emails from `<domain>`"
 - Planning dev/prod or marketing/transactional domain structure
 - Adding bounce and complaint handling to keep a list clean
+- Adding a once-per-user email, a catch-up run, or an endpoint where the caller supplies the recipient
 
 ## Example use cases
 

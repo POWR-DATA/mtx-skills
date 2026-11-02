@@ -73,3 +73,31 @@ gh secret set AZURE_SWA_TOKEN --body $t          # never pipe az output straight
 ```
 
 Hidden-file routes, cache tiers, redirects and CSP: see `static-website-config-and-csp`.
+
+## SWA CLI deploy from a workstation
+
+For built output (Vite `dist`, Expo web export) deployed from a machine with no stored token. Build once in a fresh worktree; interrupted or overlapping exports left `dist` without its `public/` root files.
+
+```powershell
+'<root-file-1>', '<root-file-2>' | ForEach-Object {             # the public/ files the app needs at the site root
+    if (-not (Test-Path "dist/$_")) { throw "dist is missing $_ - rebuild cleanly" }
+}
+$env:SWA_CLI_DEPLOYMENT_TOKEN = az staticwebapp secrets list --name <swa> --resource-group <rg> --query properties.apiKey -o tsv   # never printed
+try { npx @azure/static-web-apps-cli deploy ./dist --env production }    # = swa deploy ./dist --env production
+finally { Remove-Item Env:SWA_CLI_DEPLOYMENT_TOKEN -ErrorAction SilentlyContinue }
+```
+
+Then smoke-test the live site: key assets 200, no 4xx, main canvas/content painted. Run the same test once against a build without `public/` and confirm it fails.
+
+## Publishing a held change
+
+```powershell
+# on the PR branch: final publish-prep commit — visible "Last updated" dates and sitemap <lastmod> = publish date
+gh pr ready <n>
+gh pr merge <n> --merge --delete-branch
+$sha = (gh pr view <n> --json mergeCommit | ConvertFrom-Json).mergeCommit.oid
+# poll rather than gh run watch (it once hung past ten minutes); repeat until status is completed
+gh run list --limit 5 --json headSha,status,conclusion | ConvertFrom-Json | Where-Object headSha -eq $sha
+# then, for each changed page, until the new strings appear:
+curl.exe -s "https://<host>/<page>?cb=$(Get-Random)" | Select-String -SimpleMatch '<new string>'
+```

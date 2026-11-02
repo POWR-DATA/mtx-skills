@@ -38,10 +38,12 @@ Supabase edge function `resend-events`, deployed with **`verify_jwt = false`** i
 
 Handled events: `email.bounced`, `email.complained` (suppress), `email.delivered` (audit only).
 
-## 4. Suppression flow
+## 4. Suppression flow and send guards
 
 - Verified `email.bounced` / `email.complained` → upsert `{ address, reason, event_at }` into `suppressions`.
-- Every send path (auth service and campaign tool) checks `suppressions` before dispatch; suppressed addresses are skipped and counted, never silently dropped.
+- Every send path (auth service, campaign tool, thank-you and share functions) checks `suppressions` before dispatch; suppressed addresses are skipped and counted, never silently dropped.
+- **Thank-you email:** the function claims a `sends` row for `(user_id, 'thankyou')` atomically, then calls Resend with `Idempotency-Key: thankyou-<user-id>`. The catch-up run for earlier users goes through the same function, one attempt each, so a retry cannot double-send.
+- **Share endpoint:** `to` must be exactly one address — arrays and comma lists are rejected with 400. Only after validation passes does it claim the per-course and per-sender caps atomically, so a rejected request does not use up an attempt.
 
 ## 5. Test results
 
@@ -53,3 +55,5 @@ Handled events: `email.bounced`, `email.complained` (suppress), `email.delivered
 | Simulated bounce → webhook | signature verified, row written to `suppressions` |
 | Re-send to the suppressed address | refused at send time, counted in the run report |
 | Replayed event with a 10-minute-old timestamp | rejected (stale) |
+| Thank-you function invoked twice for one user | one email delivered; second call finds the claimed row |
+| Share request with `to: "a@example.com, b@example.com"` | 400 — rejected before any cap was claimed |

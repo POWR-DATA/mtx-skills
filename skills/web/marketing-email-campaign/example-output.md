@@ -18,6 +18,7 @@
 
 - Footer carries the sender identification line ("Northwind Analytics Pty Ltd, <city>") and the unsubscribe link.
 - Unsubscribe: branded page confirms on GET, POSTs on click; endpoint idempotent, token opaque and unlogged, `Referrer-Policy: no-referrer`; RFC 8058 `List-Unsubscribe` + `List-Unsubscribe-Post` headers on every send; suppression list enforced at send time.
+- Portal opt-in and do-not-email list are one choice, synced by triggers: unsubscribe, bounce, complaint or admin entry turns the opt-in off; switching it off adds an `opt_out` entry; switching it back on lifts only `unsubscribe`/`opt_out` entries. Entries keep address and reason only and survive account deletion — the privacy policy now says so. Portal service emails (enrolment confirmations) stay factual and never read the list.
 - Cold-outreach basis noted; no tracking pixels — consistent with the published no-tracking stance.
 
 ## 4. Seed-test report

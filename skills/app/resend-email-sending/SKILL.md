@@ -2,7 +2,7 @@
 name: resend-email-sending
 description: Operate Resend as an application's email provider — API key and domain scoping, marketing vs transactional stream separation, and Svix-signed delivery webhooks with automatic suppression
 author: PowerData
-version: 1.2.0
+version: 1.3.0
 license: MIT
 ---
 
@@ -10,11 +10,11 @@ license: MIT
 
 ## Purpose
 
-Set up Resend for application email sending without the account-structure and verification traps: API keys scoped so they can actually send, domains consolidated where DKIM allows them to live, marketing separated from transactional mail so one stream cannot sink the other, and delivery webhooks verified and acted on so the list stays clean.
+Set up Resend for application email sending without the account-structure and verification traps: API keys scoped so they can actually send, domains consolidated where DKIM allows them to live, marketing separated from transactional mail so one stream cannot sink the other, delivery webhooks verified and acted on so the list stays clean, and send paths guarded against double-sends and bulk abuse.
 
 ## When to use
 
-When wiring Resend into an app for the first time, when a send returns a 403 authorisation error, when planning dev/prod or marketing/transactional domain structure, or when adding bounce/complaint handling. For Resend as Supabase auth SMTP specifically (confirm/reset emails), use `supabase-auth-email`; for campaign content and warm-up, use `marketing-email-campaign`.
+When wiring Resend into an app for the first time, when a send returns a 403 authorisation error, when planning dev/prod or marketing/transactional domain structure, when adding bounce/complaint handling, or when adding a one-off or caller-addressed send path. For Resend as Supabase auth SMTP specifically (confirm/reset emails), use `supabase-auth-email`; for campaign content and warm-up, use `marketing-email-campaign`.
 
 ## Inputs expected
 
@@ -35,6 +35,8 @@ Partial inputs are fine.
 - **Resend delivery webhooks are Svix-signed — verify them properly.** Compute HMAC-SHA256 over `${svix-id}.${svix-timestamp}.${rawBody}` using the base64-decoded secret (strip the `whsec_` prefix), base64-compare against each `v1,<sig>` entry in the `svix-signature` header, and reject events older than ~5 minutes.
 - **Deploy the webhook function with `verify_jwt = false`** — Resend sends no JWT, so a Supabase edge function behind the JWT gateway never receives the event; the Svix signature is the authentication.
 - **Auto-suppress on `email.bounced` and `email.complained`.** Write the address to the suppression list the moment the event verifies, and enforce the list at send time — a clean list is the cheapest deliverability asset.
+- **Make one-off transactional sends idempotent.** For a send that must happen once per recipient (e.g. a first-action thank-you), pass a deterministic `Idempotency-Key` per recipient (e.g. `thankyou-<user-id>`) and claim the send row atomically before calling Resend, so retries and catch-up runs cannot double-send. Run catch-ups through the normal send function path, one attempt per recipient.
+- **Validate a caller-supplied recipient as exactly one address.** Arrays or comma lists passed straight through to Resend let one request email about 50 people. Claim per-resource and per-sender send caps atomically in the database, and only after validation passes, so a refused send does not use up an attempt.
 - **Pick the region deliberately, and do not name a single country for overseas processing.** Resend offers only N. Virginia, Ireland, Sao Paulo and Tokyo (no Sydney), so for Australian senders choose Tokyo as the nearest. Even so, Resend delivered an Australian project's mail through Amazon SES in `ap-northeast-1` (Tokyo), not the US — visible in the reverse DNS of every sending IP in the DMARC reports. Word a privacy policy's overseas-processing line as "the United States and other countries" rather than naming one, and read the reverse DNS if you need to know where mail actually egresses.
 
 ## Process
@@ -44,16 +46,17 @@ Partial inputs are fine.
 3. **Create keys deliberately** — an "All domains" key for multi-domain senders; note which service holds which key and what it may send from.
 4. **Stand up the webhook** — endpoint (e.g. edge function) with `verify_jwt = false`; implement Svix verification exactly (id.timestamp.rawBody, decoded secret, v1 comparison, 5-minute window).
 5. **Wire suppression** — on verified `email.bounced`/`email.complained`, insert into the suppression list; enforce it in every send path.
-6. **Test end to end** — a send from each domain with each key (expect the 403 on any mis-scoped key), a webhook event verified and suppressed, and a suppressed address refused at send time.
-7. **Confirm the real egress region** from reverse DNS on the sending IPs in DMARC aggregate reports before writing any data-residency claim.
+6. **Guard each send path** — validate any caller-supplied recipient as a single address, then claim send caps atomically; give one-off sends a deterministic `Idempotency-Key` and an atomically claimed send row.
+7. **Test end to end** — a send from each domain with each key (expect the 403 on any mis-scoped key), a webhook event verified and suppressed, a suppressed address refused at send time, a multi-recipient request rejected, and a retried one-off send delivered once.
+8. **Confirm the real egress region** from reverse DNS on the sending IPs in DMARC aggregate reports before writing any data-residency claim.
 
 ## Output format
 
 1. **Account/domain map** — team, domains, streams, DMARC coverage note
 2. **Key register** — each key's scope, holder service, and permitted domains
 3. **Webhook implementation** — verification steps, `verify_jwt` setting, event handling
-4. **Suppression flow** — table, insert triggers, send-time enforcement
-5. **Test results** — per-domain send, 403 scoping check, verified event, suppression round-trip
+4. **Suppression flow and send guards** — table, insert triggers, send-time enforcement; recipient validation, send caps, idempotency keys
+5. **Test results** — per-domain send, 403 scoping check, verified event, suppression round-trip, guard checks
 
 ## Quality checklist
 
@@ -64,6 +67,8 @@ Partial inputs are fine.
 - [ ] Webhook verifies the Svix signature over `id.timestamp.rawBody` with the decoded secret and rejects stale events
 - [ ] Webhook function deployed with `verify_jwt = false`
 - [ ] Bounces and complaints auto-suppress; suppression enforced at send time
+- [ ] One-off sends carry a deterministic per-recipient `Idempotency-Key` and claim the send row atomically before calling Resend
+- [ ] Caller-supplied recipients validated as exactly one address; per-resource and per-sender caps claimed atomically after validation
 - [ ] Privacy-policy wording for overseas processing is provider-accurate ("the United States and other countries"), not a guessed single country
 
 ## Avoid
@@ -75,6 +80,9 @@ Partial inputs are fine.
 - Adding a per-subdomain DMARC record "to be safe" — the org-domain fallback already covers it
 - Trusting webhook payloads without Svix verification, or verifying with the raw `whsec_` string undecoded
 - Leaving the webhook behind the JWT gateway — Resend sends no JWT and every event bounces at the gate
+- Retrying or backfilling a one-off send without an idempotency key and a claimed send row — recipients get it twice
+- Passing a caller-supplied `to` straight through — an array or comma list turns one request into a bulk send
+- Charging a send cap before validation — a refused send uses up the caller's attempt
 - Assuming a US-headquartered email provider sends from the US — check the sending IPs' reverse DNS before making a data-residency claim
 
 ## Example usage

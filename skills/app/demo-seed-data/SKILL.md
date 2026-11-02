@@ -2,7 +2,7 @@
 name: demo-seed-data
 description: Build demo and screenshot data that is safe to publish and repeatable to rebuild — reserved fictitious identifiers, curated content encoded in the seed, recency-aware ordering, and the expected noise after a reseed
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -40,6 +40,8 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 - **Check invented names against the public registers before using them.** Search ABN Lookup and the relevant professional register for any invented person or practice name — a plausible name frequently belongs to a real business or practitioner.
 - **Leave professional registration numbers blank rather than inventing them.** An invented registration number may match a real practitioner, and there is no reserved range to fall back on.
 - **Make the screenshot state part of the seed, not something assembled by hand.** Encode the exact curated content — photos, threads, attachments, dates — in `seed()` and `teardown()` so every reset rebuilds the same world. Hand-built demo data cannot be reproduced after a reset, which is when it is always needed.
+- **Seed each relationship together with the record it originates from.** A connection seeded without, for example, the accepted invitation that created it is silently hidden by list views that join through that record.
+- **Remove demo accounts through the auth admin API, not only via the profile table.** Account-removal scripts keyed on a profile table miss auth users with no profile row (unfinished sign-ups), so the reset leaves them behind.
 - **Where a UI lists by recency, ordering *is* the composition.** Pin curated items as the newest records and deliberately empty out "today", or newer showcase data added later will bury exactly the content the screenshots were composed around.
 - **A reseed that recreates auth users orphans existing browser sessions.** The next page load surfaces `AuthApiError: Invalid Refresh Token: Refresh Token Not Found`. This is benign and expected: the client falls back to signed-out, and clearing site data or logging in fresh resolves it. Treat it as normal post-reseed noise, not a defect to investigate.
 - **Capture from the seeded demo account, never a real one.** Real accounts carry live codes, real contacts and real billing state into anything published — and none of it is reproducible later.
@@ -48,9 +50,9 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 
 1. **List the captures** — every screen to be shot or recorded, and what must be visible in each.
 2. **Choose safe identifiers** from the reserved ranges for the relevant jurisdiction; check invented names against the public registers; leave registration numbers blank.
-3. **Write the curated content into `seed()`** — the specific photos, threads and attachments each capture depends on.
+3. **Write the curated content into `seed()`** — the specific photos, threads and attachments each capture depends on, with every relationship seeded alongside the record it originates from.
 4. **Control the ordering** — pin curated items as the newest records, and clear anything that would occupy "today".
-5. **Write `teardown()`** so a reset is clean and the next seed is identical.
+5. **Write `teardown()`** so a reset is clean and the next seed is identical — including auth users with no profile row, removed through the auth admin API.
 6. **Reseed, then log in fresh** — expect the refresh-token error once, clear site data, continue.
 7. **Capture**, then re-run the full seed → capture cycle once to prove it reproduces.
 
@@ -69,8 +71,9 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 - [ ] ABN deliberately fails the checksum; invented names checked against ABN Lookup and professional registers
 - [ ] Professional registration numbers left blank, not invented
 - [ ] All screenshot content is created by `seed()` — nothing hand-built
+- [ ] Every seeded relationship has its originating record (e.g. the accepted invitation) seeded with it
 - [ ] Curated items pinned as newest where a list sorts by recency; "today" emptied where needed
-- [ ] `teardown()` leaves a clean state so the next seed is identical
+- [ ] `teardown()` leaves a clean state so the next seed is identical, including profile-less auth users removed via the auth admin API
 - [ ] Captures taken from the demo account only
 - [ ] Seed → capture cycle re-run once and the screenshots reproduce
 
@@ -80,6 +83,8 @@ Partial inputs are acceptable — flag what is missing rather than inventing it.
 - An ABN that passes the checksum, which means it is or could become a real business
 - Inventing professional registration numbers
 - Hand-building demo content that a reset destroys and nobody can rebuild
+- Seeding a relationship without the record it originates from — list views that join through it hide the seeded rows
+- Keying account removal on the profile table alone — auth users from unfinished sign-ups survive the reset
 - Adding showcase data later without checking it does not bury the curated items in a recency-sorted list
 - Reporting the post-reseed refresh-token error as a bug
 - Capturing screenshots or video from a real account

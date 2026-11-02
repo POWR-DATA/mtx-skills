@@ -2,7 +2,7 @@
 name: static-website-hosting
 description: Provision and deploy a static website on Azure Static Web Apps with Bicep IaC, GitHub Actions CI/CD, deploy tokens, region choice, and multi-site layouts
 author: PowerData
-version: 2.3.0
+version: 2.4.0
 license: MIT
 ---
 
@@ -50,7 +50,10 @@ Provide as many of the following as available. Partial inputs are acceptable —
 - In a multi-environment system NEVER deploy a change straight to prod — always deploy to DEV first, validate there, then promote the SAME validated build to prod as a deliberate, separately-approved step. Prod sitting behind dev (dev has validated fixes prod doesn't yet) is the correct state, not drift to "fix" by pushing untested code to prod.
 - For a no-build static site whose dev/prod backend switch is a single config file, keep the repo copy permanently prod and serve local dev from a staged scratch COPY (robocopy to temp excluding `.git`, overwrite the config with dev values, `npx serve` the copy): dev credentials become impossible to commit or deploy, and "local = dev, deployed = prod" is structural rather than a discipline.
 - Preview a static site whose pages use root-absolute assets (`/styles.css`, `/components.js`) by serving the repo ROOT over HTTP — `python -m http.server <port> --directory <root>` — those paths do not resolve from `file://`. The plain server does NOT apply the SWA `staticwebapp.config.json` (clean-URL rewrites, redirects, CSP), so preview via `.html`/trailing-slash paths and confirm redirect/CSP/clean-URL behaviour only after deploy.
-- Deploy a Vite SPA to a SEPARATE prod SWA by building with prod env overrides via a temporary gitignored `.env.production.local` (Vite loads `.local` over `.env.production`) that you DELETE right after, so an ordinary `npm run build` stays on dev config; swap a `staticwebapp.prod.config.json` (prod CSP/routes) over `dist/staticwebapp.config.json` before uploading. Deploy with `npx @azure/static-web-apps-cli deploy ./dist --deployment-token <t> --env production`, fetching the token via `az staticwebapp secrets list --name <swa> --resource-group <rg> --query properties.apiKey -o tsv`.
+- Deploy a Vite SPA to a SEPARATE prod SWA by building with prod env overrides via a temporary gitignored `.env.production.local` (Vite loads `.local` over `.env.production`) that you DELETE right after, so an ordinary `npm run build` stays on dev config; swap a `staticwebapp.prod.config.json` (prod CSP/routes) over `dist/staticwebapp.config.json` before uploading. Deploy built output (a Vite `dist`, an Expo web export) from a workstation with the SWA CLI — `swa deploy ./dist --env production` (`npx @azure/static-web-apps-cli deploy`) — and when the machine has no stored deployment token, fetch it at deploy time with `az staticwebapp secrets list --name <swa> --resource-group <rg> --query properties.apiKey -o tsv` into an environment variable, never printed. See *SWA CLI deploy from a workstation* in `reference.md`.
+- **Build once, cleanly, and smoke-test what went live.** A deploy went live with a blank map and a broken logo because overlapping, interrupted `expo export --clear` runs in one worktree left `dist` without its `public/` root files. Build once in a fresh worktree, check the required root files exist in `dist` before upload, then run a post-deploy smoke test — key assets return 200, no 4xx, main canvas/content painted — and prove it with a negative test that fails against a build without `public/`.
+- **A pull request deploys a staging site that writes to production.** With the standard SWA workflow (push to `main` plus `pull_request` triggers), a PR into `main` deploys a staging environment at `<app>-<pr-number>.<region>.azurestaticapps.net` and closing the PR deletes it; the Free tier allows three. Staging applies the same `staticwebapp.config.json` (blocked internal paths still 404) and the same production config files, so any form on it writes to the production backend — say so whenever you share the link.
+- **Hold a go-live change on its PR branch and publish it deliberately.** Add a final publish-prep commit (visible "Last updated" dates and sitemap `lastmod` set to the publish date) before `gh pr ready` and `gh pr merge --merge --delete-branch`. Verify by polling `gh run list --json headSha,status,conclusion` for the merge sha (`gh run watch` once hung past ten minutes), then fetch each changed page with a cache-buster until the new strings appear. See *Publishing a held change* in `reference.md`.
 - **A green workflow run is not proof a change is live on prod.** When the deploy workflow is bound only to the dev Static Web App and prod is promoted by a separate manual script, merging to `main` never reaches prod and prod can silently lag for weeks. Verify by fetching the live site, following every code-split chunk the entry file references, and grepping for a marker string — and note that URLs built from template literals never appear as one string in a minified bundle, so search for the fragments.
 - **Pass production build variables to the build process only, never to your shell.** Vite lets process environment variables override the committed `.env.production`, so a prod build is done by exporting the prod `VITE_*` values — but in PowerShell `$env:` persists for the rest of the terminal session, so the next `npm run dev` silently talks to the production backend. Set them for a child process and restore the caller's values in a `finally` block, and add a dev-server guard that refuses to start when it sees the production URL.
 
@@ -58,13 +61,10 @@ Provide as many of the following as available. Partial inputs are acceptable —
 
 1. **Confirm inputs** — domain, audience region, Azure subscription, GitHub repo, single vs multi-site layout. Ask for anything missing.
 
-2. **Design the resource structure**
-   - Resource group: `rg-<workload>-<env>`; SWA: `stapp-<workload>-<env>` (one per site — marketing, `go.<domain>`, portal)
-   - Region: East Asia for Australian audiences (edge-served regardless)
+2. **Design the resource structure** — resource group `rg-<workload>-<env>`; SWA `stapp-<workload>-<env>` (one per site — marketing, `go.<domain>`, portal); region East Asia for Australian audiences (edge-served regardless)
 
 3. **Write the Bicep template** (`infra/main.bicep`)
-   - Bare `Microsoft.Web/staticSites` with `sku: { name: 'Free', tier: 'Free' }`, `properties: {}` — no repository properties
-   - Optional `customDomains` child behind `if (deployCustomDomain)`, default `false`
+   - Bare `Microsoft.Web/staticSites` with `sku: { name: 'Free', tier: 'Free' }`, `properties: {}` — no repository properties; optional `customDomains` child behind `if (deployCustomDomain)`, default `false`
    - Use `existing` if the resource already exists; outputs `defaultHostname`, `siteName`, `resourceGroupName`
 
 4. **Write the parameters file** (`infra/parameters/prod.parameters.json`) — `siteName`, `location`, `skuName` (+ `deployCustomDomain`/`customDomain` if used); no secrets
@@ -81,12 +81,14 @@ Provide as many of the following as available. Partial inputs are acceptable —
 
 8. **Preview locally** — serve the repo root over HTTP (`python -m http.server <port> --directory <root>`) so root-absolute assets resolve; they do not from `file://`. Preview via `.html`/trailing-slash paths — the plain server does not apply `staticwebapp.config.json`. Confirm redirects, CSP and clean URLs only after deploy.
 
-9. **Deploy and confirm** — Bicep `--what-if` then deploy; push; `gh run watch`; fetch `https://<defaultHostname>/`
+9. **Deploy and confirm** — Bicep `--what-if` then deploy; build once in a fresh worktree and check `dist` has its root files; push; poll `gh run list --json headSha,status,conclusion` for the sha; fetch `https://<defaultHostname>/` and run the smoke test (key assets 200, no 4xx, content painted)
 
-10. **Hand off** — custom domains, DNS and TLS → `azure-swa-custom-domains`; routing, caching, CSP, hidden files → `static-website-config-and-csp`
+10. **Preview and publish through pull requests** — share PR staging links with a warning that their forms write to production; for a change held until go-live, add the publish-prep commit, then `gh pr ready` and `gh pr merge --merge --delete-branch`
 
-11. **Document the deployment** — SWA name(s), default hostname(s), secret and variable names, workflow files, subfolder layout
-11. **Prove the change is live on the environment you meant.** Fetch the deployed site (not the workflow status), follow its code-split chunks, and grep for a marker; for a separately-promoted prod app, run the promotion script and re-verify.
+11. **Hand off** — custom domains, DNS and TLS → `azure-swa-custom-domains`; routing, caching, CSP, hidden files → `static-website-config-and-csp`
+
+12. **Document the deployment** — SWA name(s), default hostname(s), secret and variable names, workflow files, subfolder layout
+13. **Prove the change is live on the environment you meant.** Fetch the deployed site (not the workflow status), follow its code-split chunks, and grep for a marker; for a separately-promoted prod app, run the promotion script and re-verify.
 
 ## Output format
 
@@ -99,13 +101,13 @@ The AI should produce:
 5. **Baseline `staticwebapp.config.json`** — headers, cache, MIME, sitemap route
 6. **GitHub Actions workflow(s)** — deploy job YAML, `vars.<FLAG>` gating, any subfolder-SWA workflow, secret/variable names
 7. **Hand-off notes** — what `azure-swa-custom-domains` and `static-website-config-and-csp` pick up next
-8. **Post-deployment checklist** — confirm each layer is live on the default hostname
+8. **Post-deployment checklist** — smoke test, and confirm each layer is live on the default hostname
 
 ## Quality checklist
 
 - [ ] Resources named using CAF conventions; region chosen deliberately (East Asia for AU audiences)
 - [ ] Bicep for a token-deployed SWA has no repository properties; any `customDomains` child gated behind a bool
-- [ ] Deployment token stored via `gh secret set --body` on a trimmed value — never piped, never in a file
+- [ ] Deployment token stored via `gh secret set --body` on a trimmed value — never piped, never in a file; workstation deploys fetch it into an env var at deploy time, never printed
 - [ ] Not-yet-provisioned deploy jobs gated with `vars.<FLAG> == 'true'`, not a secret
 - [ ] Second subfolder SWA has its own token secret and `paths:` filter
 - [ ] Authenticated SPA lives on its own subdomain/SWA, with `__Host-` cookies and no `*.domain` CSP wildcard
@@ -114,13 +116,14 @@ The AI should produce:
 - [ ] Changes deployed to dev first and validated; prod promotion is a separate approved step; any `.env.production.local` deleted right after a prod build
 - [ ] Root-absolute assets previewed by serving the repo root over HTTP (`python -m http.server --directory <root>`), not via `file://`; SWA-only behaviour (redirects, CSP, clean URLs) confirmed after deploy
 - [ ] Site reachable on the default hostname; hand-off items listed
-- [ ] Live-site verification done by fetching prod and grepping chunks for a marker — not by a green workflow run
+- [ ] Built once in a fresh worktree, `dist` root files checked before upload; post-deploy smoke test passed and proven by a negative test without `public/`
+- [ ] PR staging links shared with a warning that forms on them write to the production backend
+- [ ] Live-site verification done by polling `gh run list` for the sha, then fetching changed pages with a cache-buster and grepping chunks for a marker — not by a green workflow run; held changes carry a publish-prep commit (dates, sitemap `lastmod`)
 - [ ] Prod build variables scoped to the build child process and restored afterwards; dev server guards against the production URL
 
 ## Avoid
 
-- Do not hardcode deployment tokens, subscription IDs, or DNS passwords in any file committed to version control
-- Do not pipe `az` output straight into `gh secret set` from PowerShell — trim into a variable and use `--body`
+- Do not hardcode deployment tokens, subscription IDs, or DNS passwords in any committed file, or pipe `az` output straight into `gh secret set` from PowerShell — trim into a variable and use `--body`
 - Do not put `repositoryUrl`/`provider: 'GitHub'` in Bicep for a token-deployed SWA — without a `repositoryToken` it only adds friction
 - Do not manage the apex domain in Bicep — its validation is a separate lifecycle (see `azure-swa-custom-domains`)
 - Do not gate a job on a secret in `if:` — secrets are unavailable there; use a repository variable. Do not reuse the main site's deploy token for a second SWA
@@ -131,9 +134,10 @@ The AI should produce:
 - Do not push while an Azure SWA deployment is still running — the cancelled run reports a spurious failure; check `gh run list --limit 3` first
 - Do not deploy straight to prod in a multi-env setup, or "fix" prod-behind-dev by pushing untested code — promote the validated build instead
 - Do not keep dev values in the repo copy of a config-switched static site — dev lives in a scratch copy; the repo stays prod
-- Do not open a site that uses root-absolute asset paths via `file://` — `/styles.css` will not resolve; serve the repo root over HTTP
-- Do not treat `python -m http.server` as a SWA preview — it does not apply `staticwebapp.config.json`; confirm redirects, CSP and clean URLs after deploy
-- Treating a green deploy workflow as proof prod is current when prod is promoted separately — fetch the live site and grep its chunks
+- Do not open a site that uses root-absolute asset paths via `file://` (`/styles.css` will not resolve), or treat `python -m http.server` as a SWA preview — it does not apply `staticwebapp.config.json`; confirm redirects, CSP and clean URLs after deploy
+- Treating a green deploy workflow, or a `gh run watch` that never returns, as proof the change is live — poll `gh run list` for the sha, then fetch the live pages with a cache-buster and grep chunks for a marker
+- Uploading a `dist` left by overlapping or interrupted `expo export --clear` runs — build once in a fresh worktree and check its root files
+- Sharing a PR staging link without saying its forms write to the production backend
 - Exporting prod `VITE_*` values into the interactive PowerShell session — the next `npm run dev` then points at production
 
 ## Example usage

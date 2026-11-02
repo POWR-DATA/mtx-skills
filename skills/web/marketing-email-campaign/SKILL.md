@@ -2,7 +2,7 @@
 name: marketing-email-campaign
 description: Design, test and send a marketing email campaign — bulletproof HTML template, seed-test protocol, Spam Act compliance, scanner-safe unsubscribe, deliverability forensics, and warm-up batching
 author: PowerData
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -35,6 +35,8 @@ Partial inputs are fine — state assumptions.
 - **A preview page on the product site needs its own CSP.** A site CSP of `style-src 'self'` blocks ALL inline style attributes — the entirety of an email template's styling — so the preview renders unstyled (serif, blue links, visible preheader) while real sends are unaffected (email clients never see the site's headers). Give the preview route a CSP allowing `'unsafe-inline'` styles, mark it noindex, and keep any analytics beacon off it.
 - **The Spam Act attaches to every commercial email sent, not to having "subscribers".** Cold outreach still requires sender identification (legal entity line) and a functional opt-out — a reply-"unsubscribe" line is the minimal compliant form, and the regulator's largest fines have been for unsubscribe failures specifically. If the owner directs removing it for a one-off send, record the direction and date in the template's comments, and keep unsubscribe mandatory in any repeatable sending tool (unique signed link, suppression list enforced at send time, `List-Unsubscribe` header).
 - **The visible unsubscribe link goes to a page that only confirms on GET and acts on POST.** Mail-security scanners (Outlook Safe Links) prefetch every link with a GET and would silently unsubscribe recipients — render only a confirmation button, fire the unsubscribe POST on explicit click. Make the endpoint idempotent (200 for unknown or already-removed tokens, no info leak), treat the token as opaque and never log it, and serve the page with `Referrer-Policy: no-referrer`. The RFC 8058 `List-Unsubscribe` header keeps pointing at the endpoint directly; one-click needs no page.
+- **Keep one marketing choice per address, with two doors.** An in-app marketing opt-in and the campaign do-not-email list are the same stored choice, synced by database triggers: any suppression — the unsubscribe link, a bounce or spam complaint on a marketing email, an admin entry — turns the opt-in off; turning the opt-in off adds a suppression; turning it back on lifts only unsubscribe or opt-out entries. Self-serve opt-outs can be reversed in the app, but bounce, complaint and admin entries need the person to ask by email. See *Opt-in and suppression sync* in [`reference.md`](reference.md).
+- **The suppression entry outlives the account; service emails never read it.** Keep the entry (address and reason only) through account erasure so the address is never re-mailed from an external contact list, and say so in the privacy policy. Service emails do not consult the list and must stay factual, or they become marketing.
 - **Seed-test the exact construction before any campaign.** Send the real email through the real tool to a Gmail, an Outlook.com and a corporate-tenant address, then read the raw source for SPF/DKIM/DMARC verdicts, `multipart/alternative`, and the `List-Unsubscribe` headers. In the same pass verify content assembly: subject appears once, preheader is independent of the subject, and there is exactly one greeting — tools that prepend their own greeting mean the body copy must not include one (and check what renders when the recipient name is blank). Run a second seed after any fix so the send validates the exact construction the campaign will use.
 - **Read Microsoft's placement header before blaming content.** `X-Microsoft-Antispam-Mailbox-Delivery` states WHY placement happened: `dest:I` vs `dest:J` plus an OFR reason, where `TrustedSenderList` means the recipient's own Not-Junk click whitelisted that one mailbox (global SCL can still be 5) and `SpamFilterAuthJ` means authenticated-but-junked on reputation. Third-party filtering gateways (relay MX in front of a tenant) break SPF by forwarding, but an aligned DKIM signature keeps DMARC passing, so mail lands junk-but-deliverable instead of rejected; gateways also stamp bulk classification and shared-IP ratings you cannot fix. For high-value targets, a personal one-to-one email from the normal org mailbox carries none of the bulk fingerprints and bypasses that entire classification path.
 - **Warm up in small sector-aware batches with a human on the button.** Batches of 20–30 per day, warmest recipients first; audience sector maps directly to gateway risk (private practices sit on consumer domains that accept early sends; public-sector bodies share one strictly-filtered domain — cap around 5 recipients per email domain per batch and let the batch fill from the next group). Watch three signals between batches: replies (answer them, they build reputation), bounces (a cluster means pause), and complaints (report-spam via feedback loop — the single most damaging signal, which frictionless unsubscribe exists to divert). Prefer a manual send-next-batch button plus a run sheet over automated scheduling until reputation is established and auto-pause guardrails exist.
@@ -48,18 +50,18 @@ Partial inputs are fine — state assumptions.
 1. **Build the template** — fluid-hybrid card in an MSO ghost table, `<img>` transition strip + solid-colour text cell for the footer, programmatic header art with baked wordmark, live sublines.
 2. **Host the preview** — stable URL on the product site with its own `'unsafe-inline'`-styles CSP, noindex, no beacon.
 3. **Compliance pass** — sender identification line, functional opt-out (page + RFC 8058 header for a tool; reply-line minimum for one-offs), any owner direction recorded in template comments.
-4. **Stand up the unsubscribe endpoint** — confirm-on-GET page, act-on-POST, idempotent, opaque unlogged token, `Referrer-Policy: no-referrer`.
+4. **Stand up the unsubscribe endpoint** — confirm-on-GET page, act-on-POST, idempotent, opaque unlogged token, `Referrer-Policy: no-referrer`; sync the do-not-email list with any in-app opt-in by triggers, retained through account erasure.
 5. **Seed test** — real tool → Gmail + Outlook.com + corporate tenant; check auth verdicts, multipart, headers, single subject/greeting, independent preheader, blank-name rendering; fix and re-seed.
 6. **Plan the warm-up** — batch sizes, sector caps, run sheet, the three watch signals, manual send button.
 7. **Send and watch** — advance batches only after replies/bounces/complaints review; divert complaints with frictionless unsubscribe.
 8. **Audit** — per-recipient record of the exact rendered email; placement notes (headers) for any junked seed or report.
-10. **Establish the consent basis per contact** for any compiled list before the first bulk send, separating work-published addresses from personal ones.
+9. **Establish the consent basis per contact** for any compiled list before the first bulk send, separating work-published addresses from personal ones.
 
 ## Output format
 
 1. **Template** — the HTML with structural notes (card, ghost table, footer strip)
 2. **Preview config** — URL, route CSP, noindex confirmation
-3. **Compliance block** — sender ID line, opt-out mechanism, recorded directions
+3. **Compliance block** — sender ID line, opt-out mechanism and opt-in/suppression sync, recorded directions
 4. **Seed-test report** — per-client auth verdicts, rendering checks, fixes applied, second-seed result
 5. **Warm-up run sheet** — batches, caps, dates, watch-signal log
 6. **Send-tool spec** (when tooling is in scope) — the constrained-compose shape above
@@ -72,6 +74,8 @@ Partial inputs are fine — state assumptions.
 - [ ] Preview route has its own CSP, noindex, no beacon
 - [ ] Sender identification present; opt-out functional; any removal direction recorded with date
 - [ ] Unsubscribe page confirms on GET, acts on POST, idempotent, token never logged, `no-referrer`
+- [ ] In-app opt-in and do-not-email list synced both ways by triggers; re-opting in lifts only unsubscribe or opt-out entries
+- [ ] Suppression entries (address and reason) survive account erasure and the privacy policy says so; service emails stay factual and never read the list
 - [ ] Seed test passed on Gmail + Outlook.com + corporate tenant, re-run after fixes
 - [ ] Exactly one subject, one greeting; preheader independent; blank-name rendering checked
 - [ ] Warm-up batched 20–30/day with per-domain caps; manual advance; replies/bounces/complaints reviewed between batches
@@ -87,6 +91,9 @@ Partial inputs are fine — state assumptions.
 - Text over `background-size:cover` artwork — it collides at some width; use the strip + solid cell
 - Judging deliverability without reading `X-Microsoft-Antispam-Mailbox-Delivery` — `TrustedSenderList` and `SpamFilterAuthJ` mean different fixes
 - A GET-acting unsubscribe endpoint — Safe Links prefetch will silently unsubscribe recipients
+- An in-app opt-in kept separate from the do-not-email list — the two drift and one door re-mails an address the other suppressed
+- Letting a re-opt-in lift a bounce, complaint or admin entry, or deleting suppression entries with the account
+- Promotional content in service emails — it turns them into marketing
 - Shipping a campaign whose only test was a self-send — seed across Gmail, Outlook.com and a corporate tenant
 - Automated warm-up scheduling before reputation and auto-pause guardrails exist
 - Letting stakeholders edit header/footer or paste arbitrary URLs in the send tool

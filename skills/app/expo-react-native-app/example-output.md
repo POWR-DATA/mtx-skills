@@ -106,8 +106,17 @@ The shared bordered container with `flexDirection: 'row'` prevents an internal d
 - Error helper extracts `.message` from any object shape and maps "failed to fetch" / "network request failed" to "You're offline — try again shortly".
 - Onboarding redirect now keys off the server's `needs_onboarding` flag; the onboarding screen redirects already-onboarded users away.
 
+---
+
+## Fix 6 — Shared links and account switching
+
+- The `/shift/<id>` route only redirected to `/?shift=<id>`, and the card resolved from shifts loaded for the current viewport. It now calls the `shift_by_id` RPC, upserts the shift, flies the map to it and holds it in state.
+- The on-mount "fly to default area" effect ran after the link's fly. Explicit `lat`/`lng`, a shift id or a pending fly token now mark the opening fly as done, so the default stands down.
+- Sign-out now clears the shift cache, its per-user flags and the session id; the cache key includes the user id, so a second account on the same browser starts clean.
+
 ## Remaining work
 
 - Smoke test all icon-dependent screens on `npx expo start --web` after font preloading is added
 - Verify the shifts proxy handles API error responses and surfaces them to the client
 - Confirm dark-theme appearance on a physical Android device
+- Before the first production web deploy: export from `.env.production` only and grep the bundle for the dev backend host

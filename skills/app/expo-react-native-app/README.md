@@ -4,7 +4,7 @@ Build cross-platform React Native apps with Expo — correct setup patterns, cro
 
 ## What this skill does
 
-Guides the setup and debugging of Expo React Native apps, focusing on the class of silent failures that only appear on specific platforms: blank icons without font preloading, Metro bundler cache issues after package installs, CORS blocks on Expo web, and colour-invisible UI elements in dark mode.
+Guides the setup and debugging of Expo React Native apps, focusing on the class of silent failures that only appear on specific platforms: blank icons without font preloading, Metro bundler cache issues after package installs, CORS blocks on Expo web, and colour-invisible UI elements in dark mode. It also covers release safety: deep links that open what they name, sign-out that leaves nothing for the next account, production web builds that cannot ship dev settings, and server changes that binaries already in the stores must survive.
 
 ## When to use it
 
@@ -12,6 +12,7 @@ Guides the setup and debugging of Expo React Native apps, focusing on the class 
 - Debugging a newly installed package that fails to resolve after a plain Metro restart
 - Getting external API calls to work on both native and Expo web targets
 - Auditing interactive UI components for dark-theme rendering issues
+- Hardening shared links, sign-out and production releases (web exports, AASA timing, old store binaries)
 
 ## Example use cases
 
@@ -29,6 +30,7 @@ Guides the setup and debugging of Expo React Native apps, focusing on the class 
 | `README.md` | This file |
 | `example-input.md` | Example input for this skill |
 | `example-output.md` | Example output produced by this skill |
+| `reference.md` | Load-on-demand excerpts — deep-link opening, sign-out cleanup, production web export gate, release-proof switches |
 
 ## How to use
 

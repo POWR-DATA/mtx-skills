@@ -10,7 +10,9 @@ GardenTrack is a small subscription app (mobile + web portal) about to launch pa
 
 **Insurance:** Certificate of Currency for a professional indemnity + public liability policy; "Insured Business" reads "data and analytics consulting"; a cyber-liability sub-limit is listed; the broker has not yet been asked about contractual liability
 
-**App state:** users table has `terms_accepted boolean`; onboarding shows a checkbox with no link to the Terms; checkout shows the price but no terms; there is no way to find the Terms after onboarding
+**App state:** users table has `terms_accepted boolean`; onboarding shows a checkbox with no link to the Terms; checkout shows the price but no terms; there is no way to find the Terms after onboarding; marketing wants an optional newsletter opt-in added at sign-up
+
+**Billing behaviour:** nobody has written down what happens when a payment fails, when the launch discount ends, or when someone cancels or changes plan during it
 
 **Constraints:** pages must not be indexed or linked until publication; the acceptance flow should ship in the next app build but stay dark until the pages go live
 

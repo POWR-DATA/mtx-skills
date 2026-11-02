@@ -11,7 +11,8 @@ Guides Supabase auth email end-to-end: custom SMTP (Resend) setup, applying bran
 - Setting up custom SMTP and branded auth emails for a Supabase project
 - A sign-up returns HTTP 500 and no confirmation email arrives
 - Template editing is silently locked on a newer project
-- Confirmation links "work" but accounts never confirm (Safe Links)
+- Confirmation links "work" but accounts never confirm (Safe Links), or users see "link expired" on an account that is already confirmed
+- Confirm/reset deep links open the wrong environment's app or land in another user's session
 - Password reset ignores your `redirectTo` and falls back to Site URL
 - Users sign up but cannot log in (unconfirmed gate), or re-registering an email looks like success
 - Hosting reset/confirm pages on the static site and switching them between dev and prod Supabase projects safely
@@ -20,7 +21,7 @@ Guides Supabase auth email end-to-end: custom SMTP (Resend) setup, applying bran
 
 - Wire up Resend SMTP and push branded templates via the Management API
 - Fix a signup 500 by reading `auth_logs` for the real SMTP error
-- Replace the default confirm link with a client-side `verifyOtp` page
+- Replace the default confirm link with a tap-to-confirm client-side `verifyOtp` page that rejects login-CSRF OTP types
 - Verify a new sending domain (DKIM/SPF/DMARC) and manage spam warm-up
 
 ## Files in this folder
@@ -28,7 +29,7 @@ Guides Supabase auth email end-to-end: custom SMTP (Resend) setup, applying bran
 | File | Description |
 |---|---|
 | `SKILL.md` | Full skill definition |
-| `reference.md` | SMTP/DNS/Management-API/confirm-page templates, loaded on demand |
+| `reference.md` | SMTP/DNS/Management-API/auth-config/confirm-page templates, loaded on demand |
 | `README.md` | This file |
 | `example-input.md` | Example input for this skill |
 | `example-output.md` | Example output produced by this skill |

@@ -12,6 +12,7 @@ Covers both halves of demo data: making it safe to publish, and making it reprod
 - A demo environment is about to be rebuilt and nobody can reproduce what was there
 - Demo data contains invented phone numbers, ABNs or registration numbers
 - New showcase content has pushed the curated items out of a recency-sorted list
+- Seeded rows do not appear in a list, or a reset leaves stray auth users behind
 - A reseed produces refresh-token errors and it is unclear whether something broke
 
 ## Example use cases

@@ -18,4 +18,6 @@ A subscription app sends confirmation and password-reset email from `example.com
 
 **Webhooks:** none yet. Bounces are currently invisible. A Supabase edge function is the intended endpoint, and a `suppressions` table already exists.
 
-**Ask:** fix the 403, sort out the account/domain structure, confirm whether the subdomain needs its own DMARC record, and wire bounce/complaint handling.
+**Other send paths:** a one-off thank-you email after a user's first lesson (a catch-up run for earlier users is planned), and a "share this course" endpoint where the caller supplies the recipient address.
+
+**Ask:** fix the 403, sort out the account/domain structure, confirm whether the subdomain needs its own DMARC record, wire bounce/complaint handling, and make sure the other send paths cannot double-send or be abused.

@@ -34,9 +34,9 @@ The mobile number is the one worth dwelling on: `0419 570 156` reads as obviousl
 - 1 profile with the identifier set above
 - 3 goals, one carrying a photo thumbnail for the dashboard
 - 4 goal entries on the showcase goal, 2 with attachments committed under `seed/assets/`
-- 1 accepted connection and 1 pending invite for the sharing screen
+- 1 connection seeded together with the accepted invitation it originates from, and 1 pending invite, for the sharing screen — the sharing list joins through the invitation, so a bare connection row would not show
 
-Nothing is entered by hand. `teardown()` deletes all of it, including storage objects, so the next seed starts clean.
+Nothing is entered by hand. `teardown()` deletes all of it, including storage objects, and removes demo auth users through the auth admin API — a removal keyed on `profiles` would miss any auth user left by an unfinished sign-up — so the next seed starts clean.
 
 ## 4. Ordering strategy
 

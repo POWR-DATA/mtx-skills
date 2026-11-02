@@ -14,6 +14,8 @@ This skill guides an AI through standing up a production-ready static website: A
 - Rebuilding or moving a site to a new resource group with CAF naming
 - Adding a second SWA (e.g. `go.<domain>` or an authenticated portal subdomain) from a subfolder of the same repo
 - Previewing a no-build static site whose pages use root-absolute asset paths (`/styles.css`, `/components.js`)
+- Deploying built output (a Vite `dist`, an Expo web export) from a workstation with the SWA CLI
+- Sharing a pull-request staging site, or publishing a change held until a business go-live
 
 ## Example use cases
 
@@ -22,6 +24,7 @@ This skill guides an AI through standing up a production-ready static website: A
 - Deploy a subfolder as its own SWA, gated in CI until the resource is provisioned
 - Decide where an authenticated Supabase portal should live relative to the marketing site
 - Serve the repo root with `python -m http.server` so root-absolute assets resolve, then confirm redirects and CSP only after SWA deploy
+- Smoke-test a deploy (key assets 200, no 4xx, content painted) and prove the test fails on a build missing `public/`
 
 ## Files in this folder
 
@@ -31,7 +34,7 @@ This skill guides an AI through standing up a production-ready static website: A
 | `README.md` | Yes | Short navigation guide for this skill (this file) |
 | `example-input.md` | Optional | Example input — include when it helps users frame their request |
 | `example-output.md` | Optional | Example output — include when it sets a useful quality bar or the output is a concrete artefact |
-| `reference.md` | Optional | Load-on-demand excerpts — subfolder SWA workflow, token-deployed Bicep, deploy token into secrets, baseline config |
+| `reference.md` | Optional | Load-on-demand excerpts — subfolder SWA workflow, token-deployed Bicep, deploy token into secrets, baseline config, SWA CLI deploy from a workstation, publishing a held change |
 
 ## How to use
 
