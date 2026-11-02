@@ -12,6 +12,7 @@ Takes a campaign from template to delivered: an HTML card that holds together in
 - The email template overflows on phones, loses its backgrounds, or previews unstyled on the site
 - A send landed in junk and you need to know whether it's reputation, a gateway, or the recipient's own filters
 - Cold outreach needs to be Spam Act compliant (sender ID + functional opt-out)
+- An app's marketing opt-in has to agree with the campaign's do-not-email list
 - Speccing the tool a stakeholder will use to send campaigns themselves
 
 ## Example use cases
@@ -29,7 +30,7 @@ Takes a campaign from template to delivered: an HTML card that holds together in
 | `README.md` | This file |
 | `example-input.md` | Example input for this skill |
 | `example-output.md` | Example output produced by this skill |
-| `reference.md` | Load-on-demand excerpts — fluid-hybrid card, footer strip, unsubscribe headers, antispam-header decode, run-sheet shape |
+| `reference.md` | Load-on-demand excerpts — fluid-hybrid card, footer strip, unsubscribe headers, opt-in/suppression sync, antispam-header decode, run-sheet shape |
 
 ## How to use
 

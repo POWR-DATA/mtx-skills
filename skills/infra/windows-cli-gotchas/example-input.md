@@ -16,5 +16,7 @@ An AI agent is helping a consultant deploy a small Azure Container App and test 
 4. Bash tool — `python3 /c/Users/<user>/repo/scripts/build_links.py` → `can't open file 'C:/Program Files/Git/c/Users/<user>/repo/scripts/build_links.py'`
 5. Bash tool — `git status` succeeds but the output ends with `bash: line 1: /c/Users/<user>/AppData/Local/Temp/claude-1a2b-cwd: No such file or directory` and exit code 1
 6. PowerShell — `gh run list --json headSha,databaseId --jq ".[] | \(.headSha[0:7])"` → `.headSha : The term '.headSha' is not recognized`; the agent needs the run id for the commit it just pushed so it can `gh run watch` before curling a new file
+7. PowerShell — `$env:SERVICE_KEY = '<key>'; node scripts/seed.mjs` worked, but the key is now in the console history and still set for every later command in the window
+8. PowerShell — `./deploy.ps1` (with `$ErrorActionPreference = 'Stop'`) stopped on `az` progress output and never reached its own smoke-test step; the agent is about to re-run the whole deploy
 
 **Ask:** corrected commands and a rule for each so the agent stops tripping on them.

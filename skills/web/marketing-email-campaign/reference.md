@@ -37,6 +37,21 @@ List-Unsubscribe-Post: List-Unsubscribe=One-Click
 
 The visible link points at the confirm-on-GET page; these headers point at the endpoint directly.
 
+## Opt-in and suppression sync
+
+One stored choice per address; database triggers keep the two doors in step.
+
+| Event | Do-not-email list | In-app opt-in |
+|---|---|---|
+| Unsubscribe link | adds `unsubscribe` entry | off |
+| Bounce or spam complaint on a marketing email | adds `bounce` / `complaint` entry | off |
+| Admin entry | adds `admin` entry | off |
+| Opt-in turned off in the app | adds `opt_out` entry | off |
+| Opt-in turned back on in the app | lifts `unsubscribe` / `opt_out` entries only | on |
+| Bounce, complaint or admin entry | lifted only when the person asks by email | — |
+| Account erased | entry kept — address and reason only | removed with the account |
+| Service email sent | not read | not read |
+
 ## Decoding X-Microsoft-Antispam-Mailbox-Delivery
 
 | Fragment | Meaning |

@@ -101,15 +101,15 @@ Skills are written in Markdown and are designed to be copied into AI tools, refe
 | [Flet ACA Deploy](skills/app/flet-aca-deploy/) | Deploy Flet web apps to Azure Container Apps |
 | [Expo React Native App](skills/app/expo-react-native-app/) | Scaffold and configure a React Native project using Expo |
 | [Expo iOS Deployment](skills/app/expo-ios-deployment/) | Build and deploy Expo apps to Apple TestFlight and the App Store |
-| [EAS Build + Submit](skills/app/eas-build-submit/) | Build and submit Expo apps using EAS services |
+| [EAS Build + Submit](skills/app/eas-build-submit/) | Build and submit Expo apps to Google Play and the App Store using EAS, and publish OTA updates safely — credential setup, eas.json configuration, CI/CD integration, and the EAS CLI submission and update workflow |
 | [App Store Listing](skills/app/app-store-listing/) | Create effective app store listings for iOS and Google Play |
 | [Google Play Listing](skills/app/google-play-listing/) | Create effective Google Play Console listings |
 | [App Icon Asset Generation](skills/app/app-icon-asset-generation/) | Generate app icons and adaptive icon assets for iOS and Android |
-| [Supabase Edge Functions](skills/app/supabase-edge-functions/) | Deploy serverless functions to Supabase Edge Functions |
+| [Supabase Edge Functions](skills/app/supabase-edge-functions/) | Write, deploy, secure, and debug Supabase Edge Functions — Deno import constraints, CLI auth, gateway JWT, CORS and shared secrets, monitored pg_cron jobs, LLM provider integration, and cache invalidation |
 | [Supabase Auth Email](skills/app/supabase-auth-email/) | Configure Supabase transactional auth email — custom SMTP, branded templates via the Management API, and reliable confirm/reset flows |
 | [Supabase Marketing Backend](skills/app/supabase-marketing-backend/) | Use Supabase as the backend for a static marketing site — insert-only public forms on the anon key with RLS, a privacy-tiered page-hit beacon, reader roles, and the RLS/view leaks that bite |
 | [Demo Seed Data](skills/app/demo-seed-data/) | Build demo and screenshot data that is safe to publish and repeatable to rebuild — reserved fictitious identifiers, curated content in the seed, recency-aware ordering |
-| [Stripe Subscription Billing](skills/app/stripe-subscription-billing/) | Run subscription pricing against Stripe from a database plan catalogue — per-environment price ids, idempotent price setup, and permanent comped access without a sentinel trial date |
+| [Stripe Subscription Billing](skills/app/stripe-subscription-billing/) | Run subscription billing against Stripe from a database plan catalogue — idempotent per-environment price setup, webhook mirroring, guarded Checkout and upgrades, race-safe plan limits, complimentary access and how it ends, failed-payment suspension, Australian tax invoices, and Customer Portal settings |
 | [Resend Email Sending](skills/app/resend-email-sending/) | Operate Resend as an application's email provider — API key and domain scoping, marketing vs transactional stream separation, Svix-signed delivery webhooks with suppression |
 
 ### Web skills

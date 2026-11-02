@@ -51,12 +51,40 @@ Invoke-RestMethod -Method Patch -Uri $uri -Headers $headers -Body $bytes
 $tpl = [System.IO.File]::ReadAllText($path, [Text.Encoding]::UTF8)
 ```
 
-## Client-side confirm page (avoids Safe Links consuming the link)
+## Per-environment `auth-config.js`
 
-Point the sign-up template at a hosted page instead of `{{ .ConfirmationURL }}`; the page completes confirmation client-side, then deep-links into the app:
+One file per environment; a CI config check fails the build if a page carries another environment's scheme or project ref:
 
 ```js
-const { token_hash, type } = Object.fromEntries(new URLSearchParams(location.search));
-const { error } = await supabase.auth.verifyOtp({ token_hash, type }); // type: 'signup'
-if (!error) location.href = "<app-deep-link>";
+window.<APP>_AUTH = {
+  supabaseUrl: "https://<dev-project-ref>.supabase.co",
+  anonKey: "<dev-anon-key>",          // anon/publishable key only
+  appScheme: "<app>-dev",             // never the store app's scheme on DEV pages
+};
 ```
+
+## Client-side confirm page (avoids Safe Links consuming the link)
+
+Point the sign-up template at a hosted page instead of `{{ .ConfirmationURL }}`. The page does nothing on load (scanners open it too), allow-lists the OTP type, verifies on a button tap, then deep-links into the app:
+
+```js
+const cfg = window.<APP>_AUTH;
+const p = new URLSearchParams(location.search);
+const token_hash = p.get("token_hash"), type = p.get("type");
+if (!token_hash || !["signup", "email"].includes(type)) showError(); // login-CSRF guard
+confirmButton.onclick = async () => {
+  const { data, error } = await supabase.auth.verifyOtp({ token_hash, type });
+  if (error) return showRefused();
+  localStorage.setItem("<app>-confirmed", "1");
+  showSignedInAs(data.user.email);                    // which account is now signed in
+  location.href = `${cfg.appScheme}://<path>`;
+};
+async function showRefused() {                         // otp_expired / not found / invalid
+  const { data } = await supabase.auth.getSession();
+  const confirmed = data.session?.user?.email_confirmed_at || localStorage.getItem("<app>-confirmed");
+  confirmed ? show("Already confirmed? Sign in")
+            : show("This link was already used or has expired", ["Sign in", "Send a new link"]);
+}
+```
+
+The password-reset page follows the same tap-to-continue pattern; word its instructions to what the live recovery email contains.

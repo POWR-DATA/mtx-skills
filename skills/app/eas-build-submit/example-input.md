@@ -7,5 +7,6 @@ Current state:
 - No Google Service Account set up yet — unclear what credential type EAS Submit needs
 - Play Console developer account exists, app created, but API access not yet configured
 - Submission target: internal testing track
+- After launch we want to ship JS-only fixes with `eas update` to the production channel; `app.config.js` switches name, scheme and backend URL on `APP_VARIANT`
 
-What credential setup is needed and how is `eas.json` configured for submission?
+What credential setup is needed, how is `eas.json` configured for submission, and how do we publish updates safely?

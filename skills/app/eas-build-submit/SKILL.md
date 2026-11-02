@@ -1,8 +1,8 @@
 ---
 name: eas-build-submit
-description: Build and submit Expo apps to Google Play and the App Store using EAS — credential setup, eas.json configuration, CI/CD integration, and the EAS CLI submission workflow
+description: Build and submit Expo apps to Google Play and the App Store using EAS, and publish OTA updates safely — credential setup, eas.json configuration, CI/CD integration, and the EAS CLI submission and update workflow
 author: PowerData
-version: 1.4.0
+version: 1.5.0
 license: MIT
 ---
 
@@ -10,11 +10,11 @@ license: MIT
 
 ## Purpose
 
-Guide the configuration and execution of Expo Application Services (EAS) Build and Submit for both Google Play and the App Store — covering credential setup (GCP service account for Android, App Store Connect API key for iOS), `eas.json` submit profile configuration, EAS environment variables, CI/CD integration via GitHub Actions, and the EAS CLI submission workflow.
+Guide the configuration and execution of Expo Application Services (EAS) Build and Submit for both Google Play and the App Store — covering credential setup (GCP service account for Android, App Store Connect API key for iOS), `eas.json` submit profile configuration, EAS environment variables, build version counters, CI/CD integration via GitHub Actions, the EAS CLI submission workflow, and publishing EAS Update (OTA) releases to production channels without shipping the wrong variant.
 
 ## When to use
 
-After an Expo React Native app builds successfully via EAS Build. Apply when setting up Google Play or App Store submission for the first time, integrating EAS into a GitHub Actions pipeline, or diagnosing credential, environment, or build-reuse errors during build or submission. Use alongside `expo-react-native-app` for app development setup, `google-play-listing` for Play Console listing content, and `app-store-listing` for App Store Connect listing content.
+After an Expo React Native app builds successfully via EAS Build. Apply when setting up Google Play or App Store submission for the first time, integrating EAS into a GitHub Actions pipeline, publishing an OTA update with `eas update`, or diagnosing credential, environment, or build-reuse errors during build or submission. Use alongside `expo-react-native-app` for app development setup, `google-play-listing` for Play Console listing content, and `app-store-listing` for App Store Connect listing content.
 
 ## Inputs expected
 
@@ -22,6 +22,7 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 - Expo project with `app.json` / `app.config.js` and `eas.json` present or to be created
 - Google Play Developer account with the app created in Play Console
 - Access to Google Play Console → Setup → API access
+- For OTA updates: the channel each build profile reads, and how `app.config.js` selects the app variant
 
 ---
 
@@ -29,7 +30,7 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 
 - **EAS Submit requires a GCP service account JSON key — not your personal Google account.** The credential for `eas submit` is a JSON key file downloaded from a GCP service account, not your Play Console login. Generate it in Play Console → Setup → API access → Create new service account → follow the GCP link → download JSON key.
 - **The Release Manager role must be granted in Play Console, not just in GCP.** Creating the GCP service account and assigning GCP roles is not sufficient. The account must also be added and granted Release Manager in Play Console → Users and permissions. Both steps are required.
-- **Reference the key file via `serviceAccountKeyPath` in `eas.json` — never inline credentials.** Store the JSON file outside version control (gitignored) and reference it as `"serviceAccountKeyPath": "./google-service-account.json"` in the submit profile. Commit the path, not the file.
+- **Reference the key file via `serviceAccountKeyPath` in `eas.json` — never inline credentials.** Store the JSON file outside version control (gitignored) and reference it as `"serviceAccountKeyPath": "./google-service-account.json"` in the submit profile. Commit the path, not the file. Gitignore whatever the path points at when wiring the submit config — for keys under `secrets/`, add `secrets/` itself, not just `*.p8` — and confirm with `git check-ignore <path>`: an `eas.json` pointing at `./secrets/play-service-account.json` with only `*.p8` ignored leaves a key that can publish the app one `git add .` from being committed.
 - **Configure separate `eas.json` submit profiles for each track.** Use named profiles (`production`, `internal`) to target different Play Console tracks. Each profile sets its own `track` and `releaseStatus` so internal test releases and production releases don't share configuration.
 - **Run `eas submit` from the directory containing `eas.json`.** The CLI reads credentials and configuration from `eas.json` in the working directory. If the file is missing or the profile name doesn't match, submission will fail or prompt for manual input.
 - **Check existing GitHub Secrets before creating a new Expo access token.** `EXPO_TOKEN` may already exist in the repo from a prior setup run. Expo access tokens are only shown once at creation — if the value is lost, delete the token in the Expo dashboard and create a new one with a descriptive name (e.g. `<ProjectName>_GH_Actions_CI`).
@@ -42,34 +43,41 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 - **EAS caches the native build layer.** When only JavaScript changes (no native package added or removed), subsequent builds reuse the cached native output and only re-bundle JS, cutting build time from ~25 min to ~6–7 min. Adding or removing a native package invalidates the cache and forces a full rebuild.
 - **If Sentry source-map upload fails an EAS production build, disable it to unblock.** A missing `SENTRY_ORG`/auth token fails the `@sentry/react-native/expo` upload step ("An organization ID or slug is required"); set `SENTRY_DISABLE_AUTO_UPLOAD: "true"` + `SENTRY_ALLOW_FAILURE: "true"` in the profile's `env` so the build succeeds. Runtime crash reporting still works — crashes are just unsymbolicated until you wire `SENTRY_ORG`/`SENTRY_AUTH_TOKEN` and re-enable upload in a later build.
 - **When enabling Sentry upload, set `SENTRY_ORG` + `SENTRY_PROJECT` in EVERY build profile whose env carries the Sentry DSN.** A preview profile inheriting the production environment fails its Gradle source-map upload step without the slugs — the same failure class as the production profile. Auth via a `SENTRY_AUTH_TOKEN` EAS secret (org token with source-map-upload scope).
-- **An .aab cannot be sideloaded onto a device** (it's a Play-upload format; the device just offers "Open with") — for direct-install testing build an APK via a separate profile (e.g. `preview`) pointed at the same production env. Keep both: AAB for the store track, APK for handing testers a direct link.
+- **An .aab cannot be sideloaded onto a device** (it's a Play-upload format; the device just offers "Open with") — for direct-install testing build an APK via a separate profile (e.g. `preview`) pointed at the same production env. Keep both: AAB for the store track, APK for handing testers a direct link. EAS build artefacts (APKs) expire after about 30 days, so sideload testers need a fresh build after that.
 - **EAS free plan is 15 Android + 15 iOS builds/month** (not 30 as older docs state). The Starter plan ($19/month) provides $45 in build credits — enough for active CI/CD. Cancel once the pipeline is stable to avoid ongoing cost.
 - **Treat a build as a scarce resource, not a per-change action.** The free tier's ~30 builds/month is exhausted fast by iterative per-tweak app rebuilds — batch app-code changes into ONE build and iterate anything web/portal (deployed separately) for free.
 - **`eas build:view` shows "Build Artifacts URL: null" for a finished app build** — the installable APK/IPA is under the separate **Application Archive URL** field. Set `EAS_SKIP_AUTO_FINGERPRINT=1` before `eas build ... --no-wait` to skip a slow project-fingerprint step that can otherwise make the kickoff exceed a short shell timeout before it prints the build URL.
 - **Auto-submit an iOS build to internal TestFlight from the build command.** Put the App Store Connect API key config (`ascAppId`, `appleTeamId`, `ascApiKeyPath` to a local `.p8`, `ascApiKeyId`, `ascApiKeyIssuerId`) in a `submit.<profile>` block in `eas.json`, then `eas build --profile <p> --platform ios --auto-submit`; the build number auto-increments and the submission is scheduled after the build, with Apple's TestFlight processing adding roughly 10–30 min before it is installable.
+- **With `appVersionSource: remote` and `autoIncrement`, the store build counters live on EAS, not in git.** A static `buildNumber`/`versionCode` written from git history can sit below the live binary (the repo recorded versionCode 1 while the store was on 11). Read the live counters with `eas build:version:get` before writing static values, and set them above the live store code.
+- **A build reads the channel set in its eas.json build profile.** A TestFlight/APK "test" build reads `test`, not `development` — check eas.json before telling anyone which channel to publish an update to.
+- **`eas update` does not choose the app variant — publish production updates only through a wrapper.** `app.config.js` resolves the variant from `APP_VARIANT` in the publishing shell, not from the channel, and EAS environment variables load only with `--environment` (the build-profile `environment` rule above is for `eas build`). A bare `eas update --channel production` shipped the development variant's settings (name, scheme, `appEnv`, page URLs) to production phones for a month. The wrapper sets both, refuses a dirty tree and reads the published manifest back. In scripts, set `CI=1` rather than passing `--non-interactive`, which `eas update` warns about (see *Production OTA publish* in [`reference.md`](reference.md)).
+- **Verify a published update from its manifest, not the dashboard.** Request the manifest from the EAS update server with the Expo protocol headers (multipart response) and assert name, scheme, `appEnv`, bundle id and backend URL per platform — this caught production updates carrying development settings that no dashboard view showed.
+- **A workflow that publishes a production OTA on any push to `release/**` is a production deploy with no approval.** Make it `workflow_dispatch` only, bound to a GitHub environment with required reviewers, and have the preview workflow use the same variant-setting wrapper (see *Gated production OTA workflow* in `reference.md`).
 
 ## Process
 
 1. **Create the service account.** In Play Console → Setup → API access, link or create a GCP project. Click Create new service account → follow the GCP console link → create the account → download the JSON key → save as `google-service-account.json` in the project root.
 2. **Grant the Play Console role.** In Play Console → Users and permissions → Invite new users, enter the service account email and grant Release Manager under Account permissions.
-3. **Gitignore the key file.** Add `google-service-account.json` to `.gitignore` immediately. Never commit it.
+3. **Gitignore the key file.** Add `google-service-account.json` (or the whole `secrets/` folder if keys live there) to `.gitignore` immediately and confirm with `git check-ignore <path>`. Never commit it.
 4. **Configure the `eas.json` submit profile.** Add a `submit` section with `serviceAccountKeyPath` and `track` set for the target Play Console track.
 5. **For iOS, register an App Store Connect API key.** Create the key in App Store Connect → Users and Access → Integrations, then run `eas credentials --platform ios` and select the API key option so EAS can submit non-interactively.
 6. **Store build-time config as EAS environment variables.** Use `eas env:create --environment production` for any value `app.config.js` needs at build time — GitHub secrets do not reach EAS servers. Link the environment via `environment: "production"` in the eas.json build profile (do not also pass `--environment` on the CLI).
-7. **Build via EAS.** Run `eas build --platform android|ios --profile <profile>` (with `EAS_SKIP_AUTO_FINGERPRINT=1` and `--no-wait` for a fast kickoff) or reuse an existing build ID; batch changes — builds are rationed. For iOS internal TestFlight, add `--auto-submit` with a `submit.<profile>` ASC key block.
+7. **Build via EAS.** Before writing any static `buildNumber`/`versionCode`, read the live counters with `eas build:version:get`. Run `eas build --platform android|ios --profile <profile>` (with `EAS_SKIP_AUTO_FINGERPRINT=1` and `--no-wait` for a fast kickoff) or reuse an existing build ID; batch changes — builds are rationed. For iOS internal TestFlight, add `--auto-submit` with a `submit.<profile>` ASC key block.
 8. **Submit.** Run `eas submit --platform android|ios --profile <profile>`. Pass `--id <build-id>` to target a specific build. If a build succeeded but the deploy failed, re-run in deploy-only mode with the existing `build_id` rather than rebuilding.
+9. **Publish OTA updates through the wrapper.** Confirm the target channel from the build profile in eas.json, publish with the variant-setting wrapper (`APP_VARIANT` + `--environment`, clean tree), then read the published manifest back and assert its settings per platform. In CI, trigger production publishing by `workflow_dispatch` behind a GitHub environment with required reviewers.
 
 ## Output format
 
 1. **Credential setup summary** — service account created, JSON key downloaded, Play Console role assigned
 2. **`eas.json` submit profile** — the relevant JSON block configured for the target track
 3. **Submission result** — build submitted, track confirmed, any errors surfaced with resolution
+4. **OTA publish result** (when updating) — channel, variant and environment used, and the manifest read-back per platform
 
 ## Quality checklist
 
 - [ ] GCP service account JSON key downloaded from Play Console → Setup → API access
 - [ ] Service account email granted Release Manager in Play Console → Users and permissions
-- [ ] `google-service-account.json` added to `.gitignore` — not committed
+- [ ] `google-service-account.json` (or `secrets/`) gitignored and confirmed with `git check-ignore` — not committed
 - [ ] `serviceAccountKeyPath` and `track` set in `eas.json` submit profile
 - [ ] `eas submit --platform android|ios` completes and build appears in the target store track
 - [ ] For iOS: App Store Connect API key registered with EAS via `eas credentials --platform ios`
@@ -79,6 +87,10 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 - [ ] `package-lock.json` committed and in sync before relying on `npm ci`
 - [ ] App-code changes batched into one build; artefact fetched from **Application Archive URL**, not Build Artifacts URL
 - [ ] iOS `submit.<profile>` block holds `ascAppId`/`appleTeamId`/`ascApiKeyPath`/`ascApiKeyId`/`ascApiKeyIssuerId` when using `--auto-submit`
+- [ ] Live build counters read with `eas build:version:get`; any static `buildNumber`/`versionCode` set above the live store code
+- [ ] Update channel confirmed from the build profile in eas.json before naming it to anyone
+- [ ] Production OTA published via the wrapper (`APP_VARIANT` + `--environment`, clean tree) and its manifest read back per platform
+- [ ] Production OTA workflow is `workflow_dispatch` only, behind a GitHub environment with required reviewers; preview uses the same wrapper
 
 ## Avoid
 
@@ -93,6 +105,10 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 - Running `eas submit --non-interactive` for iOS without a pre-registered App Store Connect API key — it cannot prompt for one in non-interactive mode
 - Rebuilding the app for every small tweak — the free tier's ~30 builds/month runs out; batch, and iterate web/portal separately
 - Reading "Build Artifacts URL: null" as a failed build — the APK/IPA is under Application Archive URL
+- Gitignoring only `*.p8` when `eas.json` points at other keys under `secrets/` — a `git add .` commits a key that can publish the app
+- Writing `buildNumber`/`versionCode` from git history under `appVersionSource: remote` — it can sit below the live store binary
+- Running a bare `eas update --channel production` — without `APP_VARIANT` and `--environment` it ships the development variant's settings
+- Publishing production OTAs automatically on push to `release/**` — that is a production deploy with no approval
 
 ## Example usage
 

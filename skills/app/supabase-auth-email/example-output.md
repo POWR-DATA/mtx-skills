@@ -31,13 +31,15 @@ Early test emails landed in spam despite passing SPF/DKIM — expected warm-up, 
 
 ## 4. Flow config
 
-- **Confirmation:** switched from `{{ .ConfirmationURL }}` to a hosted page calling `verifyOtp({ token_hash, type: 'signup' })` → deep-links into the app. Outlook Safe Links can no longer consume the link.
-- **Reset:** added the reset page URL to `uri_allow_list`, so `redirectTo` is honoured instead of falling back to Site URL.
-- **Hosted pages:** `/reset-password` and `/confirm-email` are static pages reading `window.TRACKMYPLANTS_AUTH` from `auth-config.js` (URL + anon key only); CSP `connect-src https://*.supabase.co`; supabase-js pinned from the CDN with SRI and a fail-closed guard; `persistSession: false`; no `redirect_to`; both paths excluded from AASA/intent filters.
-- **Unconfirmed state:** `mailer_autoconfirm = false` stays on, so the app shows a "check your inbox, then sign in" screen with a resend button; sign-up on an existing email (empty `identities`) is shown as "already registered — sign in or reset".
+- **Confirmation:** switched from `{{ .ConfirmationURL }}` to a hosted page that does nothing on load and calls `verifyOtp({ token_hash, type: 'signup' })` only when the user taps **Confirm** → deep-links into the app. Outlook Safe Links opens the page but no longer spends the link; the email also carries the 6-digit code as a fallback.
+- **Confirm page guards:** only `signup` and `email` OTP types are accepted (anything else is a login-CSRF vector), and the page shows which account is now signed in. A refused link shows "Already confirmed? Sign in" when the account is confirmed, otherwise "This link was already used or has expired" with **Sign in** and **Send a new link**.
+- **Reset:** added the reset page URL to `uri_allow_list`, so `redirectTo` is honoured instead of falling back to Site URL. The page waits for a tap, and its wording matches the live recovery email (button only, no code).
+- **Hosted pages:** `/reset-password` and `/confirm-email` are static pages reading `window.TRACKMYPLANTS_AUTH` from `auth-config.js` (URL, anon key and app scheme only); a CI check pins DEV pages to the DEV scheme and project ref; CSP `connect-src https://*.supabase.co`; supabase-js pinned from the CDN with SRI and a fail-closed guard; `persistSession: false`; no `redirect_to`; both paths excluded from AASA/intent filters.
+- **Unconfirmed state:** `mailer_autoconfirm = false` stays on, so the app shows a "check your inbox, then sign in" screen with a resend button; sign-up on an existing email (empty `identities`) is shown as "already registered — sign in or reset". Session refresh runs only when `getUser()` reports confirmed but the JWT does not, debounced, so two open tabs no longer loop into a 429.
 
 ## 5. Verification
 
 - Sign-up now returns 200 and the confirmation email arrives and completes.
+- Opening the confirm link a second time shows "Already confirmed? Sign in", not an expiry error.
 - Password reset lands on the correct page.
 - `auth_logs` (Management API analytics) clean — no more "535" entries.

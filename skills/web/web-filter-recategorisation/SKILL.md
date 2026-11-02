@@ -2,7 +2,7 @@
 name: web-filter-recategorisation
 description: Diagnose and fix a corporate web filter blocking a young domain — proving it is the filter not the site, and requesting a category from each major filtering vendor
 author: PowerData
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -31,7 +31,7 @@ When a recently launched domain fails to load on some networks but works on othe
 - **Prove it is the filter by comparing against the host's default hostname.** From a Zscaler-protected machine, HTTPS to the custom domain failed with curl `(35) Recv failure: Connection was reset` and plain HTTP returned `403` with `Server: Zscaler` and `reasoncode=CATEGORY_DENIED`, while the site's own `*.azurestaticapps.net` hostname answered normally. Same origin, same content, different result — that is the filter, conclusively.
 - **Read the plain-HTTP response, not just the HTTPS failure.** HTTPS gives you a reset with no explanation; HTTP often returns the filter's own branded 403 naming the vendor and the reason code. That response is the diagnosis.
 - **A filtered network also blinds your tooling.** The block stops agents and web-fetch tools running on that machine from reaching production at all, so verification of the live site must move to another network — do not interpret an agent's fetch failure as a site outage.
-- **Request one honest category, never two.** Some networks block a site if *any* of its categories is restricted, so an additional category can only add risk. Pick the single category that genuinely describes the site.
+- **Request one honest category, never two.** Some networks block a site if *any* of its categories is restricted, so an additional category can only add risk. Pick the single category that genuinely describes the site — for a corporate consulting site, one business-family category per vendor — and skip vendors that already rate it sensibly.
 - **Submit the short-link host too.** A redirect host is a separate domain and is categorised separately; include a comment saying it only redirects to the main site.
 - **Each vendor has its own quirks — expect a different form per vendor, not one submission.** See the table below. Several vendors share a database with their other products, so one submission can cover a family of filtering services.
 
@@ -43,22 +43,27 @@ When a recently launched domain fails to load on some networks but works on othe
 | Palo Alto, Cisco Talos | their public lookups | check first — both had already categorised the site correctly with no request needed |
 | Forcepoint | customer hub | now requires a login, so non-customers cannot submit |
 
+- **Script the lookups only where the vendor allows it.** For Cisco Talos, `GET https://talosintelligence.com/cloud_intel/url_reputation?url=<domain>` sent with a `Referer` of its lookup page returns JSON whose `aup_cat` gives the category. Broadcom's lookup returned nothing to scripts and Fortinet blocks them, so check those by hand.
+- **Read each vendor's reply for what it actually means.** Zscaler's "URL Category Changed" and Fortinet's "URL Rating Update Notification" mean the change is done (both arrived within a day); Broadcom's "WebPulse Site Review Request Submitted" is only an acknowledgement, so re-check its lookup days later. Zscaler sends one email per submitted URL, each with its own case number.
+- **Confirm the test machine is behind the filter before calling the block fixed.** `http://ip.zscaler.com` says whether traffic goes through Zscaler. A laptop that was blocked earlier was off the corporate proxy later, so a clean fetch from it proved nothing; test from a machine where `ip.zscaler.com` confirms the proxy, in a private window.
+
 ## Process
 
 1. **Reproduce on the blocking network** — `curl` the custom domain over HTTPS and over plain HTTP, and capture both results.
 2. **Run the control** — request the hosting platform's default hostname from the same machine. If it answers, the site is fine and the domain is being filtered.
 3. **Read the 403 body and headers** for the vendor name and reason code.
 4. **Move verification to another network** so tooling can see production while the block is being resolved.
-5. **Check each vendor's public lookup** to see which already categorise the domain and which report it unknown.
-6. **Submit a single honest category** to every vendor that reports it unrated, including the short-link host with an explanatory comment.
-7. **Re-check the lookups after a few days**, and re-test from the originally blocking network.
+5. **Check each vendor's public lookup** to see which already categorise the domain and which report it unknown — Talos by script, Broadcom and Fortinet by hand.
+6. **Submit a single honest category** to every vendor that reports it unrated, including the short-link host with an explanatory comment; skip vendors that already rate it sensibly.
+7. **Read each reply** — Zscaler's and Fortinet's confirmations mean done; Broadcom's acknowledgement means re-check its lookup days later.
+8. **Re-check the lookups after a few days**, and re-test from the blocking network on a machine where `http://ip.zscaler.com` confirms the proxy, in a private window.
 
 ## Output format
 
 1. **Diagnosis** — HTTPS result, HTTP result with vendor and reason code, control hostname result
 2. **Vendor status table** — per vendor: current category, action needed, submitted or not
-3. **Submissions made** — URLs, category requested, comment text, date
-4. **Verification plan** — when to re-check lookups and re-test from the blocking network
+3. **Submissions made** — URLs, category requested, comment text, date, and each reply (done or acknowledgement only, case number)
+4. **Verification plan** — when to re-check lookups, and re-testing from a machine confirmed behind the filter
 5. **Notes** — any vendor that could not be submitted to, and why
 
 ## Quality checklist
@@ -70,6 +75,8 @@ When a recently launched domain fails to load on some networks but works on othe
 - [ ] One category requested per domain — no second category added
 - [ ] Short-link/redirect host submitted separately with an explanatory comment
 - [ ] Re-check scheduled for the lookups and the blocking network
+- [ ] Each vendor reply read for what it means; Broadcom's acknowledgement followed by a later lookup re-check
+- [ ] Fix confirmed from a machine that `http://ip.zscaler.com` shows is behind the proxy, in a private window
 
 ## Avoid
 
@@ -80,6 +87,8 @@ When a recently launched domain fails to load on some networks but works on othe
 - Submitting only to the vendor that blocked you, leaving the rest unrated
 - Forgetting the short-link host, which is categorised as its own domain
 - Assuming a submission is instant — allow days, then verify from the network that failed
+- Treating Broadcom's "Site Review Request Submitted" email as a completed change
+- Calling the block fixed from a machine that has since left the corporate proxy
 
 ## Example usage
 

@@ -46,6 +46,20 @@
   gh run watch $id --exit-status                # then curl the new file; it 404s until the deploy completes
   ```
 
+### 7. Secret typed on the command line
+
+- **Why it failed:** a secret in a command lands in history, and an `$env:` assignment stays set for the rest of the window
+- **Corrected:** treat the typed key as exposed and rotate it, then read the new one at a masked prompt (`Read-SecretIntoEnv` from `reference.md`):
+  ```powershell
+  try { Read-SecretIntoEnv -Name SERVICE_KEY -Prompt 'Service key'; node scripts/seed.mjs }
+  finally { Remove-Item Env:SERVICE_KEY -ErrorAction SilentlyContinue }
+  ```
+
+### 8. Wrapper stopped on `az` stderr
+
+- **Why it failed:** `az` writes progress notices to stderr; under strict error handling PowerShell reported failure and the script aborted after the deploy itself had finished, skipping its verification step
+- **Rule:** do not re-run yet. Check the real outcome first (`az ... show` for the resource, then fetch the live site), and run only the skipped verification step if the deploy landed.
+
 ### Shell split adopted for the session
 
 | Tool | Shell |

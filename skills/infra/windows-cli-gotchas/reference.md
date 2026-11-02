@@ -70,3 +70,37 @@ Test-Routes; if ($script:failCount -eq 0) { "PASS" }
 ```bash
 MSYS_NO_PATHCONV=1 gh issue comment 7 --body "/publish 2"    # without it: C:/Program Files/Git/publish 2
 ```
+
+## Edit list as typed objects
+
+Nested array literals flatten when passed to a function. Use typed objects, validate every edit, then write once.
+
+```powershell
+$edits = [System.Collections.Generic.List[object]]::new()
+$edits.Add([pscustomobject]@{ Old = '<old text 1>'; New = '<new text 1>' })
+$edits.Add([pscustomobject]@{ Old = '<old text 2>'; New = '<new text 2>' })
+
+$c = [System.IO.File]::ReadAllText($p, [Text.Encoding]::UTF8)
+foreach ($e in $edits) {                                   # validate everything before writing anything
+    $n = [regex]::Matches($c, [regex]::Escape($e.Old)).Count
+    if ($n -ne 1) { throw "Expected 1 match, found ${n}: $($e.Old)" }
+}
+foreach ($e in $edits) { $c = $c.Replace($e.Old, $e.New) }
+[System.IO.File]::WriteAllText($p, $c, (New-Object Text.UTF8Encoding $false))   # one write
+```
+
+## Read a secret into an environment variable
+
+Masked prompt, never on the command line (history); removed in `finally` so it cannot leak into later commands in the same window.
+
+```powershell
+function Read-SecretIntoEnv {
+  param([Parameter(Mandatory)][string]$Name, [Parameter(Mandatory)][string]$Prompt)
+  $secure = Read-Host -AsSecureString -Prompt $Prompt
+  $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+  try { Set-Item -Path "Env:$Name" -Value ([Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)) }
+  finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
+}
+try { Read-SecretIntoEnv -Name API_KEY -Prompt 'API key'; node script.mjs }
+finally { Remove-Item Env:API_KEY -ErrorAction SilentlyContinue }
+```

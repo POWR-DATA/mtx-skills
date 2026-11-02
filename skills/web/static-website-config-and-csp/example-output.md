@@ -47,7 +47,7 @@ Notes: headers moved from `/*` to `globalHeaders` (they were missing on CSS/JS/i
 | Step | Action |
 |---|---|
 | Now | `Content-Security-Policy-Report-Only` with `script-src 'self'` (above); `style-src` keeps `'unsafe-inline'` — 14 `style=""` attributes remain |
-| Externalise | contact page inline `<script>` → `/scripts.js`; two `onclick=""` → `addEventListener` in `/scripts.js` |
+| Externalise | contact page inline `<script>` → `/scripts.js` (not a `sha256-` hash, which would break whenever the script text changes); two `onclick=""` → `addEventListener` in `/scripts.js` |
 | Verify | open every page, DevTools Console shows zero CSP report violations |
 | Enforce | rename header to `Content-Security-Policy`; deploy |
 | Later | extract inline styles, then drop `'unsafe-inline'` from `style-src` in a second Report-Only pass |

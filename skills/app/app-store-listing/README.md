@@ -12,6 +12,7 @@ Guides an iOS app through App Store Connect: API key setup, store screenshots at
 - Setting up the App Store Connect API key for automated EAS submission
 - Configuring TestFlight internal testing
 - Diagnosing why "Add for Review" is unavailable or why submission fails
+- Planning seasonal releases — which listing fields need a new version, and which features must leave the binary
 
 ## Example use cases
 

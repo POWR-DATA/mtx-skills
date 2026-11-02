@@ -75,3 +75,13 @@ To mask hidden paths as the branded 404 page instead (a bare `statusCode` + `rew
 var y = document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
 var btn = document.getElementById('menu-toggle'); if (btn) btn.addEventListener('click', toggleMenu);   // never onclick=""
 ```
+
+## Fixed card grid
+
+`repeat(auto-fit, minmax(240px, 1fr))` wraps four cards 3 + 1 in a 992 px container. For a fixed set, step the columns explicitly.
+
+```css
+.pricing { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+@media (min-width: 560px) { .pricing { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 960px) { .pricing { grid-template-columns: repeat(4, 1fr); } }
+```

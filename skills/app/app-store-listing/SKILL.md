@@ -2,7 +2,7 @@
 name: app-store-listing
 description: Prepare and submit an iOS app to the App Store — App Store Connect setup, screenshot dimensions, App Privacy, TestFlight, review submission, and ASC API key
 author: PowerData
-version: 1.3.0
+version: 1.4.0
 license: MIT
 ---
 
@@ -45,6 +45,8 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 - **An App Store URL without a storefront segment 404s for a single-country app.** `https://apps.apple.com/app/id<ID>` returns 404 when the app is published in one country; only the storefront form (`https://apps.apple.com/au/app/id<ID>`) works. Test the exact URL before staging it anywhere, and check the forced-update prompt and rate-this-app links inside the app — they commonly carry the same broken form.
 - **Never restyle a store badge.** Apple and Google both prohibit altering their badge artwork, so a live badge must not carry "coming soon" treatment such as opacity or grayscale. Put the dimming on a modifier class used only for stores where the app is not yet published, leave the base badge class untouched, and keep clear space of a quarter of the badge height around each badge.
 - **Audit what the App Store actually serves from `application/ld+json`.** Read the description out of that block in the apps.apple.com page source rather than a web-fetch summary, which paraphrased the text and invented a duplicated opening sentence. The served App Store copy carried drafting typos the Play listing did not, so compare the two listings side by side before each release.
+- **Only promotional text changes without a new build.** Name, subtitle, keywords, description and What's New are tied to an App Store version and only change with a new build, while promotional text can be edited on the version already on sale. Plan seasonal copy accordingly — a season-specific app name needs another version before the next season.
+- **Remove last season's features from the binary in the seasonal build — do not hide them behind a date check.** App Review can ask to see features still in the binary, such as last season's promotional notices or buttons. A date gate is only a stopgap on the website until that code is deleted.
 
 ## Process
 
@@ -52,7 +54,7 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 2. **Create the app in App Store Connect.** Register the bundle identifier and create the app record. Note the numeric App ID (`ascAppId`) for `eas.json`.
 3. **Complete the three submission-gating fields.** Set Primary Category, Price, and Content Rights before anything else — they block "Add for Review" otherwise.
 4. **Capture store screenshots.** Use Chrome DevTools device emulation: iPhone 6.5" at 414×896 DPR 3; iPad 13" at 516×688 DPR 4 (or 512×683 DPR 4). Capture at full physical resolution.
-5. **Complete the store listing.** App name, subtitle, description, keywords, app icon, and screenshots for each required device class.
+5. **Complete the store listing.** App name, subtitle, description, keywords, app icon, and screenshots for each required device class. For a seasonal app, write version-bound copy (name, subtitle, keywords, description, What's New) for the season the build will be on sale, and keep in-season changes to promotional text.
 6. **Complete App Privacy.** Declare every data type collected, reading the actual service/database code to answer the linkage and tracking questions correctly.
 7. **Set up TestFlight internal testing.** Create a group, add testers by Apple ID, assign a "Ready to Test" build.
 8. **Submit for review.** Once the three gating fields, listing, and App Privacy are complete, "Add for Review" becomes available — submit.
@@ -80,6 +82,8 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 - [ ] Every App Store link uses the storefront form and has been fetched; in-app update/rate links checked too
 - [ ] Live store badges unmodified; any "coming soon" dimming confined to a modifier class for unpublished stores
 - [ ] Served listing copy read from `application/ld+json` and compared against the Play listing
+- [ ] Seasonal copy planned per version — only promotional text expected to change without a build
+- [ ] Last season's features deleted from the binary, not date-gated
 
 ## Avoid
 
@@ -95,6 +99,8 @@ After an iOS app builds successfully and produces a signed `.ipa` (typically via
 - Staging a storefront-less `apps.apple.com/app/id...` URL — it 404s for a single-country app
 - Applying opacity or grayscale to a live store badge, or crowding it below a quarter-badge-height of clear space
 - Trusting a summarised fetch of the store page when auditing listing copy
+- Planning to change the name, subtitle, keywords, description or What's New mid-season without a new build
+- Shipping last season's features behind a date check — App Review can ask to see them
 
 ## Example usage
 

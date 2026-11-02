@@ -1,16 +1,18 @@
 # Supabase Edge Functions
 
-Write, deploy, and debug Supabase Edge Functions — Deno import constraints, CLI auth, LLM provider integration, and cache invalidation patterns
+Write, deploy, secure, and debug Supabase Edge Functions — Deno import constraints, CLI auth, gateway JWT, CORS and shared secrets, monitored pg_cron jobs, LLM provider integration, and cache invalidation
 
 ## What this skill does
 
-Covers the authoring and operational concerns of Supabase Edge Functions running on the Deno runtime: how to call LLM providers without npm SDK imports, how to authenticate the Supabase CLI in non-interactive terminals, how to extract real error detail from client-side errors, how to identify deprecated model names and quota issues, and how to fix client caches that have bad data written into them.
+Covers the authoring and operational concerns of Supabase Edge Functions running on the Deno runtime: how to call LLM providers without npm SDK imports, how to authenticate the Supabase CLI in non-interactive terminals, how to extract real error detail from client-side errors, how to keep the gateway JWT check, CORS, shared-secret guards and rate limits sound, how to schedule and monitor `pg_cron` callers, how to identify deprecated model names and quota issues, and how to fix client caches that have bad data written into them.
 
 ## When to use it
 
 - Writing a Supabase Edge Function that calls an LLM provider (Gemini, OpenAI, Anthropic)
 - Deploying a function from PowerShell or CI where `supabase login` hangs
 - Debugging a `FunctionsHttpError` where the error message gives no useful detail
+- A web call fails the CORS preflight, or a webhook/cron function needs its own secret check
+- Scheduling a function with `pg_cron` and alerting when a run goes missing
 - Investigating why the client keeps showing stale or incorrect data after a function fix
 
 ## Example use cases

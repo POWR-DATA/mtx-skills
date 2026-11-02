@@ -129,7 +129,9 @@ Token: `$t = (az staticwebapp secrets list -n stapp-example-prod -g rg-example-p
 - [ ] Local preview served from the repo root over HTTP (`python -m http.server 8080 --directory .`) — root-absolute `/styles.css` resolved; redirects/CSP/clean URLs not judged from this server
 - [ ] Bicep deployed successfully, SWA resource exists in `rg-example-prod`
 - [ ] GitHub Actions workflow running on push to `main`
+- [ ] Deploy run found by polling `gh run list --json headSha,status,conclusion` for the pushed sha, not by waiting on `gh run watch`
 - [ ] Site returns 200 on `https://<swa-default-hostname>.azurestaticapps.net/`
+- [ ] Smoke test passed: `/styles.css`, `/components.js` and the logo return 200, no 4xx in the console, page content painted
 - [ ] `sitemap.xml` reachable and returns `Content-Type: application/xml`
 - [ ] `robots.txt` reachable at `/robots.txt`
 - [ ] Security headers present on CSS/JS/image responses too (set via `globalHeaders`)

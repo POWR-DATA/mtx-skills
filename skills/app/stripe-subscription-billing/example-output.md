@@ -13,17 +13,19 @@ create table if not exists plans (
   currency             text not null default 'aud',
   interval             text not null default 'month',
   lookup_key           text not null unique,
+  seat_limit           integer not null,
   stripe_product_id    text not null,
   stripe_price_id_test text,
   stripe_price_id_live text
 );
 
-insert into plans (code, price_cents, lookup_key, stripe_product_id)
-values ('standard', 2900, 'standard_monthly', '<prod_id>')
+insert into plans (code, price_cents, lookup_key, seat_limit, stripe_product_id)
+values ('standard', 2900, 'standard_monthly', 3,  '<prod_id>'),
+       ('plus',     4900, 'plus_monthly',     10, '<prod_id>')
 on conflict (code) do nothing;          -- no price id here, deliberately
 ```
 
-Migration `0014_add_price.sql` is superseded: the hardcoded id is removed and the app now reads `stripe_price_id_test` or `stripe_price_id_live` according to the environment it is running in. That single change fixes the staging checkout error — staging was pointing at a live-mode price because there was only ever one column.
+`free` (1 linked user) lives in the app only; it has no Stripe Price. Migration `0014_add_price.sql` is superseded: the hardcoded id is removed and the app now reads `stripe_price_id_test` or `stripe_price_id_live` according to the environment it is running in. That single change fixes the staging checkout error — staging was pointing at a live-mode price because there was only ever one column.
 
 ## 2. Setup script behaviour
 
@@ -35,7 +37,7 @@ Migration `0014_add_price.sql` is superseded: the hardcoded id is removed and th
 4. Otherwise create a new Price with `tax_behavior="inclusive"` and `transfer_lookup_key=True` when one already existed.
 5. Write the resulting id back to `stripe_price_id_<env>`.
 
-Run against test, then live. Ids are never copied between environments.
+Run against test, then live. Ids are never copied between environments, and the test key was confirmed to belong to the sandbox in use, not the legacy Test mode.
 
 > The fresh-create path is the one proven in use. The reuse and rotate branches are implemented to this design but unverified end to end — the $34 change below is the first real exercise of them, so check the resulting Price and lookup key by hand that once.
 
@@ -46,7 +48,9 @@ Run against test, then live. Ids are never copied between environments.
 3. Verify the pricing page shows $34 and a test checkout charges $34.
 4. Run against **live**. Existing subscribers stay on the Price they were created with until they are deliberately migrated — changing the catalogue does not reprice anyone retroactively.
 
-## 4. Comp procedure
+## 4. Complimentary access
+
+**Foundation customers (permanent):**
 
 ```python
 coupon = stripe.Coupon.create(percent_off=100, duration="forever", name="Foundation comp")
@@ -54,19 +58,46 @@ for sub_id in FOUNDATION_SUBS:
     stripe.Subscription.modify(sub_id, trial_end="now", proration_behavior="none", coupon=coupon.id)
 ```
 
-The `trial_end=2099` attempt failed because Stripe caps it at five years ahead. It was also the wrong shape: a subscription parked in `trialing` forever misreports its own state to dunning, renewal and reporting logic.
+The `trial_end=2099` attempt failed because Stripe caps it at five years ahead, and a subscription parked in `trialing` forever misreports its state to dunning, renewal and reporting logic. Each subscription now shows `status: active` with a 100%-off discount and $0.00 invoices. **Reversal**, when one converts: `stripe.Subscription.delete_discount(sub_id)` — billing resumes at the next renewal.
 
-After the change each subscription shows `status: active` with a 100%-off discount, and every invoice totals $0.00.
+**Time-limited:**
 
-**Reversal**, when one converts:
+| Case | Mechanism | How it ends |
+|---|---|---|
+| Launch promotion, 3 months on `standard` | Stripe free period, card collected at Checkout (Checkout shows the first-charge date) | first charge on that date |
+| Reviewer access, no card | admin grant, no Stripe subscription | scheduled job moves the account to `free` |
 
-```python
-stripe.Subscription.delete_discount(sub_id)     # billing resumes at the next renewal
-```
+Both get an automatic email 14 days before the end; the "notice sent" record is keyed on the end date truncated to whole seconds. Approvals recorded against each account: who granted the access and when.
 
-Approvals recorded against each account: who granted the comp and when.
+## 5. Webhook and guard rules
 
-## 5. Verification
+- **Plan mirror:** plan from the subscription's price, except while a promotion subscription is `trialing` — then it stays locked to `standard`, so choosing `plus` mid-promotion does not make `plus` free until the trial ends.
+- **Status mirror:** `invoice.payment_failed` retrieves the live subscription and applies its status only if the event is newer than the stored ordering marker. This fixes problem 7: the final failure arrived after `customer.subscription.deleted` and the handler had hard-coded `past_due`.
+- **Period end:** entitled until `current_period_end + 3 days`, covering the gap between renewal and its webhook.
+- **Checkout:** refused when Stripe already bills the customer; their other open sessions are expired before a new one opens (problem 5). `free` is offered only to accounts with no billing history.
+- **Plan changes:** read the live subscription's `discount` and `cancel_at_period_end`, never the local row.
+- **Upgrades:** `payment_behavior="error_if_incomplete"`; a decline leaves the plan unchanged and `requires_action` goes to the 3D Secure path. Problem 8 was a false pass — the test account carried a downgrade's proration credit, so the upgrade invoice netted to $0 and the card was never charged. Re-run with `4000 0000 0000 0341` on a fresh account: refused, plan unchanged.
+
+## 6. Plan-limit enforcement
+
+`claim_seat(account_id, invitee)` takes `select ... for update` on the account's subscription row, counts connections plus pending invitations, and inserts only below `seat_limit`. Invite create, invite accept and the over-limit refresh all call it; the application-code check is removed (problem 6 came from counting connections only, in a separate statement). Proof: 12 parallel claims against a cap of 3 → exactly 3 wins.
+
+## 7. State map
+
+| Situation | Stripe | App access | Terms and notice |
+|---|---|---|---|
+| Renewal fails | retries ~2 weeks (8 attempts) | full access, overdue banner | — |
+| Retries exhausted | subscription cancelled | locked "overdue payment" screen with restart button; open invoices voided | "cancelled and access suspended until payment is made"; linked users' access stated |
+| Promotion ends | first charge | unchanged | 14-day email |
+| Promotion cancelled before first charge | subscription cancelled | `free`; complimentary markers cleared | — |
+| Reviewer grant ends | none | entitled until the job moves it to `free` | 14-day email |
+
+## 8. Account settings (test and live)
+
+- **Tax invoice:** AU ABN `<your-abn>` as the default tax ID; memo "Tax invoice. Total price includes GST."; footer "`<legal entity name>` · ABN `<your-abn>`". All charges are under A$1,000, so the GST-inclusive statement is the permitted form. Earlier beta invoices keep their old layout.
+- **Customer Portal:** plan switching off; brand name, support email and URL, privacy and terms URLs set so the "Return to …" link shows the brand.
+
+## 9. Verification
 
 | Check | Result |
 |---|---|
@@ -76,3 +107,6 @@ Approvals recorded against each account: who granted the comp and when.
 | Comped subscription status | `active`, not `trialing` ✓ |
 | Discount removed on a test account | next renewal invoiced $29.00 ✓ |
 | Price id present in any migration | none ✓ |
+| Declined upgrade (`…0341`, no proration credit) | refused, plan unchanged ✓ |
+| 12 parallel claims, cap 3 | 3 wins ✓ |
+| New invoice | ABN in header, GST memo, legal-entity footer ✓ |

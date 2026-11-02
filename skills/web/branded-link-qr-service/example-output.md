@@ -8,7 +8,7 @@
 
 - **Host:** `go.example.com` — second Azure SWA deployed from `go/` with its own deploy token (see Static Website Hosting).
 - **People:** `/card/<person-slug>` — lowercase, hyphenated, one per staff member. Printed once, never renamed.
-- **Campaigns:** short nouns — `/training`.
+- **Campaigns:** short nouns, registered as a pair — `/qr/training` (encoded in the flyer QR) and `/training` (printed beneath it for typing). Both are in the registry; an unregistered `/qr/` path is never assumed to work.
 - **Aliases:** legacy `/card` kept forever as a 302 to the team page.
 - **All redirects 302.** UTM parameters live on the destination, never in the printed URL.
 
@@ -25,7 +25,8 @@ Registry fields: `path`, `destination`, `status` (always `302`), `owner`, `notes
     { "path": "/card/priya-nair",   "destination": "https://www.example.com/team/priya-nair.vcf",   "status": 302, "owner": "Priya" },
     { "path": "/card/tom-okafor",   "destination": "https://www.example.com/team/tom-okafor.vcf",   "status": 302, "owner": "Tom" },
     { "path": "/card",              "destination": "https://www.example.com/team",                  "status": 302, "owner": "Marketing", "notes": "Legacy generic card route from the first print run — permanent alias, never remove" },
-    { "path": "/training", "destination": "https://www.example.com/courses/data-foundations?utm_source=flyer&utm_medium=qr", "status": 302, "owner": "Marketing" }
+    { "path": "/qr/training", "destination": "https://www.example.com/courses/data-foundations?utm_source=flyer&utm_medium=qr",  "status": 302, "owner": "Marketing", "notes": "Encoded in the flyer QR" },
+    { "path": "/training",    "destination": "https://www.example.com/courses/data-foundations?utm_source=flyer&utm_medium=url", "status": 302, "owner": "Marketing", "notes": "Typed path printed under the QR" }
   ]
 }
 ```
@@ -51,7 +52,8 @@ The legacy `/card` is a first-class registry entry (not a per-person alias) beca
     { "route": "/card/priya-nair",   "redirect": "https://www.example.com/team/priya-nair.vcf",   "statusCode": 302 },
     { "route": "/card/tom-okafor",   "redirect": "https://www.example.com/team/tom-okafor.vcf",   "statusCode": 302 },
     { "route": "/card",              "redirect": "https://www.example.com/team",                  "statusCode": 302 },
-    { "route": "/training",          "redirect": "https://www.example.com/courses/data-foundations?utm_source=flyer&utm_medium=qr", "statusCode": 302 }
+    { "route": "/qr/training",       "redirect": "https://www.example.com/courses/data-foundations?utm_source=flyer&utm_medium=qr",  "statusCode": 302 },
+    { "route": "/training",          "redirect": "https://www.example.com/courses/data-foundations?utm_source=flyer&utm_medium=url", "statusCode": 302 }
   ]
 }
 ```
@@ -64,11 +66,11 @@ No 301s. Query strings on incoming requests are dropped by the static redirect �
 
 | Link | Encoded URL | Files | EC level (boosted) | Version |
 |---|---|---|---|---|
-| Jane | `https://go.example.com/card/jane-citizen` | `jane-citizen.svg/.png` | Q | 3 |
-| Sam | `https://go.example.com/card/sam-lee` | `sam-lee.svg/.png` | Q | 3 |
-| Priya | `https://go.example.com/card/priya-nair` | `priya-nair.svg/.png` | Q | 3 |
-| Tom | `https://go.example.com/card/tom-okafor` | `tom-okafor.svg/.png` | Q | 3 |
-| Training | `https://go.example.com/training` | `training.svg/.png` | H | 2 |
+| Jane | `https://go.example.com/card/jane-citizen` | `jane-citizen.svg/.png` | M | 3 |
+| Sam | `https://go.example.com/card/sam-lee` | `sam-lee.svg/.png` | M | 3 |
+| Priya | `https://go.example.com/card/priya-nair` | `priya-nair.svg/.png` | M | 3 |
+| Tom | `https://go.example.com/card/tom-okafor` | `tom-okafor.svg/.png` | M | 3 |
+| Training | `https://go.example.com/qr/training` | `training.svg/.png` | M | 3 |
 
 ## 6. Validation report
 
@@ -78,13 +80,15 @@ No 301s. Query strings on incoming requests are dropped by the static redirect �
 | `sam-lee.png` | `https://go.example.com/card/sam-lee` | ✓ | absent / absent | ✓ |
 | `priya-nair.png` | `https://go.example.com/card/priya-nair` | ✓ | absent / absent | ✓ |
 | `tom-okafor.png` | `https://go.example.com/card/tom-okafor` | ✓ | absent / absent | ✓ |
-| `training.png` | `https://go.example.com/training` | ✓ | absent / absent | ✓ `…?utm_source=flyer&utm_medium=qr` |
+| `training.png` | `https://go.example.com/qr/training` | ✓ | absent / absent | ✓ `…?utm_source=flyer&utm_medium=qr` |
+| typed `/training` | — | — | — | ✓ `…?utm_source=flyer&utm_medium=url` |
 | alias `/card` | — | — | — | ✓ `…/team` |
 
-CI `--check`: passing on `main`. Print sign-off: cleared.
+Every path was tested exactly as printed, checking the `Location` as well as the status — a path that fell through to a catch-all would also return 302. CI `--check`: passing on `main`. Print sign-off: cleared.
 
 ## 7. Operating notes
 
 - **To move a destination:** edit `destination` in the registry → `python scripts/build_links.py` → commit → deploy. The printed QR is untouched.
-- **Never** rename or delete `/card/<slug>`, `/card`, or `/training` — add aliases if a path must change.
+- **Never** rename or delete `/card/<slug>`, `/card`, `/qr/training` or `/training` — add aliases if a path must change.
+- New campaigns: register both `/qr/<campaign>` and `/<campaign>` before generating the QR.
 - New staff: add a `/card/<person-slug>` entry, regenerate, generate the QR, validate, then print.

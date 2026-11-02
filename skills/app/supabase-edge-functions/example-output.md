@@ -74,7 +74,7 @@ If calls fail with quota `limit: 0`, check GCP → APIs & Services → Quotas fo
 
 ## Fix 4 — Extracting the real error from FunctionsHttpError
 
-`FunctionsHttpError.message` is always `"non-2xx status code"`. Read the actual response body from the edge function:
+`FunctionsHttpError.message` is always `"Edge Function returned a non-2xx status code"` and `data` is null, so matching the message for "404" never fires. Read the status and the actual response body from `error.context`:
 
 ```ts
 try {
@@ -85,10 +85,11 @@ try {
   return data;
 } catch (err) {
   if (err?.name === 'FunctionsHttpError') {
+    const status = err.context.status;
     const body = await err.context.clone().json();
-    console.error('Edge function error:', body);
+    console.error(`Edge function error (${status}):`, body);
   }
-  throw err;
+  throw err; // re-throw — never show success after a failed call
 }
 ```
 
@@ -112,6 +113,6 @@ The next client request finds no row, triggers a fresh edge function call, and w
 
 - [ ] `fetch`-based Gemini call tested with `supabase functions serve`
 - [ ] Function deployed with `SUPABASE_ACCESS_TOKEN` set
-- [ ] Error handling reads `error.context.clone().json()` on failure
+- [ ] Error handling reads `error.context.status` and the body on failure
 - [ ] Model name confirmed as `gemini-2.0-flash` or `gemini-flash-lite-latest`
 - [ ] Bad cached rows deleted; fresh fetch confirmed

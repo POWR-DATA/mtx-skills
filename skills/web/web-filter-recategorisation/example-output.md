@@ -35,19 +35,19 @@ The plain-HTTP request is what made this diagnosable — HTTPS only produced a r
 | Broadcom / Symantec WebPulse | uncategorised | **submit** — Health, reason "Other" |
 | Fortinet | uncategorised | **submit** — Health and Wellness (manual, one URL per request) |
 | Palo Alto | Health and Medicine | none needed |
-| Cisco Talos | Health and Medicine | none needed |
+| Cisco Talos | Health and Medicine (scripted check, `aup_cat`) | none needed |
 | Forcepoint | unknown — lookup now requires a customer hub login | cannot submit as a non-customer |
 
 Two vendors had already categorised the domain correctly, which is why the site worked on some networks and not others.
 
 ## 3. Submissions made
 
-| Domain | Vendor | Category | Comment |
-|---|---|---|---|
-| `www.example.com.au` | Zscaler | Health | "Patient-facing health information and practitioner sign-up." |
-| `go.example.com.au` | Zscaler | Health | "Redirect host only — all paths 302 to www.example.com.au." |
-| both | Broadcom WebPulse | Health | as above, reason "Other" |
-| both | Fortinet | Health and Wellness | submitted individually by hand |
+| Domain | Vendor | Category | Comment | Reply |
+|---|---|---|---|---|
+| `www.example.com.au` | Zscaler | Health | "Patient-facing health information and practitioner sign-up." | "URL Category Changed", own case number — done |
+| `go.example.com.au` | Zscaler | Health | "Redirect host only — all paths 302 to www.example.com.au." | separate "URL Category Changed" email and case number — done |
+| both | Broadcom WebPulse | Health | as above, reason "Other" | "WebPulse Site Review Request Submitted" — acknowledgement only |
+| both | Fortinet | Health and Wellness | submitted individually by hand | "URL Rating Update Notification" — done |
 
 **One category per domain.** "Health" alone was requested — no second category such as Software or Business, because some networks deny a site if *any* of its categories is restricted, so a second category can only add risk.
 
@@ -55,8 +55,8 @@ The short-link host was submitted separately: it is its own domain and is catego
 
 ## 4. Verification plan
 
-- Re-check all five lookups at +3 days and +7 days.
-- Re-test from the hospital machine once Zscaler shows Health: both `curl` forms plus the browser.
+- Re-check all five lookups at +3 days and +7 days — Broadcom especially, since its email was only an acknowledgement.
+- Re-test from a hospital machine once Zscaler shows Health: first confirm at `http://ip.zscaler.com` that its traffic goes through Zscaler, then both `curl` forms plus the browser in a private window. A clean fetch from a laptop that has since left the corporate proxy proves nothing.
 - Hold the launch email until the Zscaler lookup reports a category, since that audience is dominated by the blocking network.
 
 ## 5. Notes

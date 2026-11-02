@@ -17,7 +17,7 @@ Northwind Analytics is launching its first outreach campaign for a training cour
 
 **Audience:** 380 contacts from a conference list — roughly half private practices (Gmail/Outlook.com/own domains), half public-sector staff who all share one government email domain
 
-**Compliance:** no prior relationship for most contacts; Australian audience; published privacy stance is **no tracking**
+**Compliance:** no prior relationship for most contacts; Australian audience; published privacy stance is **no tracking**; the course portal is adding a marketing opt-in at registration, and portal accounts can be deleted on request
 
 **Tooling:** sends go through an internal tool; coordinators should compose subject/preheader/body and pick a recipient group, nothing else
 

@@ -12,12 +12,14 @@ A newly launched domain is often blocked on corporate and institutional networks
 - `curl` reports a connection reset over HTTPS from a managed machine
 - An agent or web-fetch tool on a filtered machine cannot reach production
 - A domain is about to launch to an audience that sits behind corporate proxies
+- A vendor has replied, or the site now loads, and you need to know whether the block is really fixed
 
 ## Example use cases
 
 - Prove a Zscaler `CATEGORY_DENIED` block rather than debugging the static host
 - Submit a health site to Zscaler, Broadcom/Symantec and Fortinet for one honest category
-- Check Palo Alto and Cisco Talos, which may already have categorised the domain correctly
+- Check Palo Alto and Cisco Talos (Talos from a script via its JSON reputation endpoint), which may already have categorised the domain correctly
+- Confirm a fix from a machine that `http://ip.zscaler.com` shows is still behind the proxy
 - Get a `go.<domain>` short-link host categorised alongside the main site
 
 ## Files in this folder
