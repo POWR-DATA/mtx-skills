@@ -2,7 +2,7 @@
 name: supabase-edge-functions
 description: Write, deploy, and debug Supabase Edge Functions — Deno import constraints, CLI auth, LLM provider integration, and cache invalidation patterns
 author: PowerData
-version: 1.4.0
+version: 1.5.0
 license: MIT
 ---
 
@@ -34,6 +34,8 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 - **Client-side caches will serve bad data even after the edge function is fixed — delete the bad row.** When an edge function writes incorrect data to a database cache table, the client will keep reading the bad row because stale checks typically only trigger when no row exists for the expected key. Delete the affected row directly in the Supabase SQL Editor to force a fresh fetch.
 - **New-format Supabase PATs (`sbp_v0_…`) are rejected by older CLI versions.** PATs issued in 2026 start with `sbp_v0_`, and the Supabase CLI (v2.101.0) rejects them with "Invalid access token format". There is no CLI workaround — set Edge Function secrets directly via the Supabase dashboard (Edge Functions → function → Secrets) instead.
 - **On Windows, `supabase login` stores credentials in Windows Credential Manager, not `~/.supabase/credentials`.** The token is saved under `LegacyGeneric:target=Supabase CLI:supabase` and can conflict with the `SUPABASE_ACCESS_TOKEN` environment variable or carry restricted permissions for management API operations. Remove it with `cmdkey /delete:"Supabase CLI:supabase"` if it causes auth conflicts.
+- **If `supabase db push` or `supabase functions deploy` hangs connecting to the project, add `--dns-resolver https`.** Observed on Linux: both commands hung against the dev project and completed once the flag was added. The root cause is not confirmed and it was not Windows-specific, so treat it as a first thing to try rather than a known fault.
+- **Baseline migration history before the first `db push` on a project whose schema was applied directly.** With no migration history, `db push` tries to re-apply migrations that already exist in the database. Mark each already-applied migration with `supabase migration repair --status applied <version>` first, then push only the genuinely new ones.
 - **Updating a secret does not refresh already-warm function instances.** `supabase secrets set NAME=... --project-ref <ref>` leaves warm instances reading the stale value — redeploy the function (`supabase functions deploy <fn>`) so new instances boot with the new secret.
 - **The functions gateway rejects non-JWT bearer tokens before your code runs.** Any bearer that is not a JWT fails at the gateway with `UNAUTHORIZED_INVALID_JWT_FORMAT`. A function that must accept a non-JWT shared secret (a system or cron caller) has to set `verify_jwt = false` in `supabase/config.toml` and do its own authorization inside. Keep `verify_jwt = true` for functions only ever called with a real user JWT (e.g. a signed-in user submitting feedback); flip it to false only when a trusted non-JWT caller is involved.
 - **Never pass `--no-verify-jwt` to `supabase functions deploy`.** It turns OFF the gateway JWT check for that function (a silent security regression); deploy WITHOUT the flag to keep the default `verify_jwt=true`, which the CLI takes from `config.toml` where only the intentionally-public functions are listed as `false`. Verify the live state empirically: an unauthenticated POST returns the gateway body `{"code":"UNAUTHORIZED_NO_AUTH_HEADER"}` (401) when `verify_jwt=true`, versus the function's own JSON when it is off.
@@ -43,7 +45,7 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 ## Process
 
 1. **Write the edge function using `fetch` for external API calls.** Do not import npm SDK packages — use the provider's REST API endpoint directly. Structure the function to return a consistent JSON response with explicit status codes.
-2. **Authenticate for deployment without interactive login.** Set `SUPABASE_ACCESS_TOKEN` in the environment before deploying: `$env:SUPABASE_ACCESS_TOKEN = "sbp_..."` (PowerShell) or `export SUPABASE_ACCESS_TOKEN="sbp_..."` (bash). Then run `supabase functions deploy <function-name>`.
+2. **Authenticate for deployment without interactive login.** Set `SUPABASE_ACCESS_TOKEN` in the environment before deploying: `$env:SUPABASE_ACCESS_TOKEN = "sbp_..."` (PowerShell) or `export SUPABASE_ACCESS_TOKEN="sbp_..."` (bash). Then run `supabase functions deploy <function-name>` (add `--dns-resolver https` if it hangs connecting). Before the first `supabase db push` to a project whose schema was applied by hand, run `supabase migration repair --status applied <version>` for each migration already in the database.
 3. **Test the deployed function and extract errors properly.** Call via `supabase.functions.invoke`. On error, read `error.context.clone().json()` — not `error.message` — to see the actual response from the function.
 4. **Verify LLM model availability and quota.** If calls return 404, check the model name against the provider's current API. If quota shows `limit: 0`, check GCP → APIs & Services → Quotas for org-level policy restrictions, not just per-project limits.
 5. **Invalidate bad cached data by deleting the affected rows.** If incorrect data was written to a cache table, delete the row via the Supabase SQL Editor. Do not rely on the client's stale check — it only triggers on absence, not on bad data.
@@ -63,6 +65,8 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 - [ ] LLM model name verified against current provider API (not deprecated `gemini-1.5-flash`)
 - [ ] Any bad cached rows deleted directly before verifying the fix
 - [ ] New-format `sbp_v0_` PATs set via the dashboard if the CLI rejects them
+- [ ] Hanging `db push`/`functions deploy` retried with `--dns-resolver https` before deeper debugging
+- [ ] Directly applied migrations marked with `supabase migration repair --status applied` before the first `db push`
 - [ ] On Windows, no stale `supabase login` token in Credential Manager conflicting with `SUPABASE_ACCESS_TOKEN`
 - [ ] `verify_jwt = false` set only for functions with non-JWT callers (cron/system), which authorize internally
 - [ ] Deployed without `--no-verify-jwt`; unauthenticated POST to a protected function returns `UNAUTHORIZED_NO_AUTH_HEADER` (401)
@@ -77,6 +81,7 @@ When writing a new Supabase Edge Function or debugging a deployment, error, or d
 - Using deprecated Gemini model names (`gemini-1.5-flash`) — they return 404 on the v1beta API
 - Assuming a quota error with `limit: 0` means exhausted quota — it usually means the GCP project has no free tier enabled
 - Fighting the CLI to accept a new-format `sbp_v0_` PAT — older CLI versions reject it; set secrets via the Supabase dashboard instead
+- Running `supabase db push` against a schema applied outside the CLI without repairing the migration history first; it tries to re-apply existing migrations
 - Overlooking Windows Credential Manager when `supabase login` auth misbehaves on Windows — the stored token can conflict with `SUPABASE_ACCESS_TOKEN`; clear it with `cmdkey /delete`
 - Leaving `verify_jwt = true` on a function called by a non-JWT system/cron caller — the gateway rejects it before your code runs; set `verify_jwt = false` and authorize inside
 - Deploying with `--no-verify-jwt` — it silently disables the gateway check; let `config.toml` decide and prove the live 401

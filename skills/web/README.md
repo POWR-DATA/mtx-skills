@@ -18,6 +18,7 @@ These skills cover the delivery lifecycle for static websites: infrastructure se
 | [Branded Link QR Service](branded-link-qr-service/) | Build a permanent branded short-link and QR code service on a static host — 302 indirection, link registry, CI drift checks, validated QR generation | — |
 | [Marketing Email Campaign](marketing-email-campaign/) | Design, test and send a marketing email campaign — template, seed-test protocol, Spam Act compliance, scanner-safe unsubscribe, deliverability forensics, warm-up batching | Resend Email Sending (app) |
 | [Email Address Obfuscation](email-address-obfuscation/) | Protect published email addresses from scrapers — JavaScript-assembled mailto links, accessible fallbacks, CSP-clean implementation, payload verification | — |
+| [Server-Side Map Images](server-side-map-images/) | Render static map images on the server for share cards and previews, covering tile licensing, in-house styling, full tile coverage and versioned cache keys | — |
 
 ## Suggested delivery sequence
 
