@@ -2,7 +2,7 @@
 name: eas-build-submit
 description: Build and submit Expo apps to Google Play and the App Store using EAS, and publish OTA updates safely — credential setup, eas.json configuration, CI/CD integration, and the EAS CLI submission and update workflow
 author: PowerData
-version: 1.5.0
+version: 1.6.0
 license: MIT
 ---
 
@@ -53,6 +53,7 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 - **`eas update` does not choose the app variant — publish production updates only through a wrapper.** `app.config.js` resolves the variant from `APP_VARIANT` in the publishing shell, not from the channel, and EAS environment variables load only with `--environment` (the build-profile `environment` rule above is for `eas build`). A bare `eas update --channel production` shipped the development variant's settings (name, scheme, `appEnv`, page URLs) to production phones for a month. The wrapper sets both, refuses a dirty tree and reads the published manifest back. In scripts, set `CI=1` rather than passing `--non-interactive`, which `eas update` warns about (see *Production OTA publish* in [`reference.md`](reference.md)).
 - **Verify a published update from its manifest, not the dashboard.** Request the manifest from the EAS update server with the Expo protocol headers (multipart response) and assert name, scheme, `appEnv`, bundle id and backend URL per platform — this caught production updates carrying development settings that no dashboard view showed.
 - **A workflow that publishes a production OTA on any push to `release/**` is a production deploy with no approval.** Make it `workflow_dispatch` only, bound to a GitHub environment with required reviewers, and have the preview workflow use the same variant-setting wrapper (see *Gated production OTA workflow* in `reference.md`).
+- **Promote a tested OTA with `eas update:republish`, not a rebuild.** Once a group has been tested, run `eas update:republish --group <group-id> --destination-channel production --platform all` so production gets the byte-identical bundle. Rebuilding can introduce a different binary than the one that passed the test.
 
 ## Process
 
@@ -91,6 +92,7 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 - [ ] Update channel confirmed from the build profile in eas.json before naming it to anyone
 - [ ] Production OTA published via the wrapper (`APP_VARIANT` + `--environment`, clean tree) and its manifest read back per platform
 - [ ] Production OTA workflow is `workflow_dispatch` only, behind a GitHub environment with required reviewers; preview uses the same wrapper
+- [ ] A tested OTA is promoted with `eas update:republish` to the production channel rather than rebuilt
 
 ## Avoid
 
@@ -109,6 +111,7 @@ After an Expo React Native app builds successfully via EAS Build. Apply when set
 - Writing `buildNumber`/`versionCode` from git history under `appVersionSource: remote` — it can sit below the live store binary
 - Running a bare `eas update --channel production` — without `APP_VARIANT` and `--environment` it ships the development variant's settings
 - Publishing production OTAs automatically on push to `release/**` — that is a production deploy with no approval
+- Rebuilding a tested OTA to send it to production — use `eas update:republish` so production gets the same group that passed the test
 
 ## Example usage
 
