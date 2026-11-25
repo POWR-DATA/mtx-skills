@@ -2,7 +2,7 @@
 name: github-actions-scheduled-automation
 description: Run time-sensitive scheduled work on GitHub Actions — external dispatch when cron slips, idempotency guards for every trigger, per-job secret validation, and safe issue-comment chatops
 author: PowerData
-version: 1.0.0
+version: 1.0.1
 license: MIT
 ---
 
@@ -39,7 +39,7 @@ Partial inputs are fine — infer the rest from the workflow file.
 ## Process
 
 1. **Classify the work** — what must happen on time, what costs money, what overwrites state.
-2. **Keep the repo cron as a backup**, then add an external scheduler calling the dispatches API with a fine-grained, single-repo PAT.
+2. **Keep the repo cron as a backup**, then add an external scheduler calling the dispatches API with a fine-grained, single-repo PAT. Label schedule comments in UTC, because an expression written in UTC will name the wrong local weekday.
 3. **Write the idempotency guard** against the stored state, applying to every trigger, with a `force` input for deliberate re-runs.
 4. **Make publish steps idempotent** so a duplicate slot is a no-op rather than a double post.
 5. **Scope secrets per job** — pass only what the job uses, and make shared startup validate only that.
@@ -75,6 +75,7 @@ Partial inputs are fine — infer the rest from the workflow file.
 - Treating any comment containing a number as a command — a closing note triggered an approval
 - Acting on comments from a closed issue or an unverified author
 - Pushing without rebasing when the workflow commits state with `GITHUB_TOKEN`
+- Labelling a cron in local weekdays when the expression is written in UTC
 
 ## Example usage
 
